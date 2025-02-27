@@ -8,7 +8,7 @@ suppressPackageStartupMessages(library(tidyverse))
 if(!file.exists(file.path("Import", "SharkWeb", "BY31", "phytoplankton.csv")) |
    !file.exists(file.path("Import", "SharkWeb", "BY31", "zooplankton.csv")) |
    !file.exists(file.path("Import", "SharkWeb", "BY31", "temperature.csv"))) {
-  getmonitoring <- file.path("Scripts", "GetMonitoringData.R")
+  getmonitoring <- file.path("Code", "GetMonitoringData.R")
   # Get the monitoring data
   system(paste("nohup Rscript", getmonitoring))
 }

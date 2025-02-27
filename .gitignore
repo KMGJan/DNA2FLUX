@@ -51,3 +51,6 @@ rsconnect/
 .Rdata
 .DS_Store
 .quarto
+
+# Imports
+Import/SharkWeb/
