@@ -1,0 +1,265 @@
+Taxa,dev_stage_code,sex_code,station_name,season,bodymass,bodymass_unit
+Temora,AD,F,BY31,winter,60,ug
+Temora,AD,F,BY31,spring,65,ug
+Temora,AD,F,BY31,summer,60,ug
+Temora,AD,F,BY31,fall,50,ug
+Temora,AD,M,BY31,winter,55,ug
+Temora,AD,M,BY31,spring,40,ug
+Temora,AD,M,BY31,summer,45,ug
+Temora,AD,M,BY31,fall,50,ug
+Temora,AD,NS,BY31,winter,57.5,ug
+Temora,AD,NS,BY31,spring,52.5,ug
+Temora,AD,NS,BY31,summer,52.5,ug
+Temora,AD,NS,BY31,fall,50,ug
+Temora,C1,NS,BY31,winter,9,ug
+Temora,C1,NS,BY31,spring,6,ug
+Temora,C1,NS,BY31,summer,6,ug
+Temora,C1,NS,BY31,fall,4,ug
+Temora,C4,NS,BY31,winter,18,ug
+Temora,C4,NS,BY31,spring,15,ug
+Temora,C4,NS,BY31,summer,15,ug
+Temora,C4,NS,BY31,fall,14,ug
+Pseudocalanus,AD,F,BY31,winter,50,ug
+Pseudocalanus,AD,F,BY31,spring,45,ug
+Pseudocalanus,AD,F,BY31,summer,50,ug
+Pseudocalanus,AD,F,BY31,fall,55,ug
+Pseudocalanus,AD,M,BY31,winter,35,ug
+Pseudocalanus,AD,M,BY31,spring,30,ug
+Pseudocalanus,AD,M,BY31,summer,35,ug
+Pseudocalanus,AD,M,BY31,fall,50,ug
+Pseudocalanus,AD,NS,BY31,winter,42.5,ug
+Pseudocalanus,AD,NS,BY31,spring,37.5,ug
+Pseudocalanus,AD,NS,BY31,summer,42.5,ug
+Pseudocalanus,AD,NS,BY31,fall,52.5,ug
+Pseudocalanus,C1,NS,BY31,winter,7,ug
+Pseudocalanus,C1,NS,BY31,spring,8,ug
+Pseudocalanus,C1,NS,BY31,summer,10,ug
+Pseudocalanus,C1,NS,BY31,fall,10,ug
+Pseudocalanus,C4,NS,BY31,winter,20,ug
+Pseudocalanus,C4,NS,BY31,spring,20,ug
+Pseudocalanus,C4,NS,BY31,summer,20,ug
+Pseudocalanus,C4,NS,BY31,fall,20,ug
+Eurytemora,AD,F,BY31,winter,25,ug
+Eurytemora,AD,F,BY31,spring,50,ug
+Eurytemora,AD,F,BY31,summer,25,ug
+Eurytemora,AD,F,BY31,fall,25,ug
+Eurytemora,AD,M,BY31,winter,20,ug
+Eurytemora,AD,M,BY31,spring,40,ug
+Eurytemora,AD,M,BY31,summer,20,ug
+Eurytemora,AD,M,BY31,fall,20,ug
+Eurytemora,AD,NS,BY31,winter,22.5,ug
+Eurytemora,AD,NS,BY31,spring,45,ug
+Eurytemora,AD,NS,BY31,summer,22.5,ug
+Eurytemora,AD,NS,BY31,fall,22.5,ug
+Eurytemora,C1,NS,BY31,winter,5,ug
+Eurytemora,C1,NS,BY31,spring,5,ug
+Eurytemora,C1,NS,BY31,summer,5,ug
+Eurytemora,C1,NS,BY31,fall,5,ug
+Eurytemora,C4,NS,BY31,winter,13,ug
+Eurytemora,C4,NS,BY31,spring,14,ug
+Eurytemora,C4,NS,BY31,summer,14,ug
+Eurytemora,C4,NS,BY31,fall,13,ug
+Centropages,AD,F,BY31,winter,55,ug
+Centropages,AD,F,BY31,spring,50,ug
+Centropages,AD,F,BY31,summer,45,ug
+Centropages,AD,F,BY31,fall,50,ug
+Centropages,AD,M,BY31,winter,45,ug
+Centropages,AD,M,BY31,spring,40,ug
+Centropages,AD,M,BY31,summer,40,ug
+Centropages,AD,M,BY31,fall,40,ug
+Centropages,AD,NS,BY31,winter,50,ug
+Centropages,AD,NS,BY31,spring,45,ug
+Centropages,AD,NS,BY31,summer,42.5,ug
+Centropages,AD,NS,BY31,fall,45,ug
+Centropages,C1,NS,BY31,winter,6,ug
+Centropages,C1,NS,BY31,spring,6,ug
+Centropages,C1,NS,BY31,summer,6,ug
+Centropages,C1,NS,BY31,fall,6,ug
+Centropages,C4,NS,BY31,winter,17,ug
+Centropages,C4,NS,BY31,spring,15,ug
+Centropages,C4,NS,BY31,summer,15,ug
+Centropages,C4,NS,BY31,fall,16,ug
+Acartia tonsa,AD,F,BY31,winter,35,ug
+Acartia tonsa,AD,F,BY31,spring,35,ug
+Acartia tonsa,AD,F,BY31,summer,35,ug
+Acartia tonsa,AD,F,BY31,fall,35,ug
+Acartia tonsa,AD,M,BY31,winter,32,ug
+Acartia tonsa,AD,M,BY31,spring,32,ug
+Acartia tonsa,AD,M,BY31,summer,32,ug
+Acartia tonsa,AD,M,BY31,fall,32,ug
+Acartia tonsa,AD,NS,BY31,winter,33.5,ug
+Acartia tonsa,AD,NS,BY31,spring,33.5,ug
+Acartia tonsa,AD,NS,BY31,summer,33.5,ug
+Acartia tonsa,AD,NS,BY31,fall,33.5,ug
+Acartia tonsa,C1,NS,BY31,winter,6,ug
+Acartia tonsa,C1,NS,BY31,spring,6,ug
+Acartia tonsa,C1,NS,BY31,summer,6,ug
+Acartia tonsa,C1,NS,BY31,fall,6,ug
+Acartia tonsa,C4,NS,BY31,winter,17,ug
+Acartia tonsa,C4,NS,BY31,spring,17,ug
+Acartia tonsa,C4,NS,BY31,summer,17,ug
+Acartia tonsa,C4,NS,BY31,fall,17,ug
+Acartia,AD,F,BY31,winter,20,ug
+Acartia,AD,F,BY31,spring,25,ug
+Acartia,AD,F,BY31,summer,22.5,ug
+Acartia,AD,F,BY31,fall,22.5,ug
+Acartia,AD,M,BY31,winter,16.5,ug
+Acartia,AD,M,BY31,spring,17.5,ug
+Acartia,AD,M,BY31,summer,17.5,ug
+Acartia,AD,M,BY31,fall,17.5,ug
+Acartia,AD,NS,BY31,winter,18.25,ug
+Acartia,AD,NS,BY31,spring,21.25,ug
+Acartia,AD,NS,BY31,summer,20,ug
+Acartia,AD,NS,BY31,fall,20,ug
+Acartia,C1,NS,BY31,winter,4.5,ug
+Acartia,C1,NS,BY31,spring,7,ug
+Acartia,C1,NS,BY31,summer,4.5,ug
+Acartia,C1,NS,BY31,fall,4.5,ug
+Acartia,C4,NS,BY31,winter,12,ug
+Acartia,C4,NS,BY31,spring,16,ug
+Acartia,C4,NS,BY31,summer,12,ug
+Acartia,C4,NS,BY31,fall,10.5,ug
+Acartia longiremis,AD,F,BY31,winter,20,ug
+Acartia longiremis,AD,F,BY31,spring,20,ug
+Acartia longiremis,AD,F,BY31,summer,20,ug
+Acartia longiremis,AD,F,BY31,fall,20,ug
+Acartia longiremis,AD,M,BY31,winter,18,ug
+Acartia longiremis,AD,M,BY31,spring,15,ug
+Acartia longiremis,AD,M,BY31,summer,15,ug
+Acartia longiremis,AD,M,BY31,fall,15,ug
+Acartia longiremis,AD,NS,BY31,winter,19,ug
+Acartia longiremis,AD,NS,BY31,spring,17.5,ug
+Acartia longiremis,AD,NS,BY31,summer,17.5,ug
+Acartia longiremis,AD,NS,BY31,fall,17.5,ug
+Acartia longiremis,C1,NS,BY31,winter,5,ug
+Acartia longiremis,C1,NS,BY31,spring,5,ug
+Acartia longiremis,C1,NS,BY31,summer,5,ug
+Acartia longiremis,C1,NS,BY31,fall,5,ug
+Acartia longiremis,C4,NS,BY31,winter,12,ug
+Acartia longiremis,C4,NS,BY31,spring,12,ug
+Acartia longiremis,C4,NS,BY31,summer,11,ug
+Acartia longiremis,C4,NS,BY31,fall,9,ug
+Acartia bifilosa,AD,F,BY31,winter,20,ug
+Acartia bifilosa,AD,F,BY31,spring,30,ug
+Acartia bifilosa,AD,F,BY31,summer,25,ug
+Acartia bifilosa,AD,F,BY31,fall,25,ug
+Acartia bifilosa,AD,M,BY31,winter,15,ug
+Acartia bifilosa,AD,M,BY31,spring,20,ug
+Acartia bifilosa,AD,M,BY31,summer,20,ug
+Acartia bifilosa,AD,M,BY31,fall,20,ug
+Acartia bifilosa,AD,NS,BY31,winter,17.5,ug
+Acartia bifilosa,AD,NS,BY31,spring,25,ug
+Acartia bifilosa,AD,NS,BY31,summer,22.5,ug
+Acartia bifilosa,AD,NS,BY31,fall,22.5,ug
+Acartia bifilosa,C1,NS,BY31,winter,4,ug
+Acartia bifilosa,C1,NS,BY31,spring,9,ug
+Acartia bifilosa,C1,NS,BY31,summer,4,ug
+Acartia bifilosa,C1,NS,BY31,fall,4,ug
+Acartia bifilosa,C4,NS,BY31,winter,12,ug
+Acartia bifilosa,C4,NS,BY31,spring,20,ug
+Acartia bifilosa,C4,NS,BY31,summer,13,ug
+Acartia bifilosa,C4,NS,BY31,fall,12,ug
+Evadne,AD,F,BY31,winter,30,ug
+Evadne,AD,F,BY31,spring,30,ug
+Evadne,AD,F,BY31,summer,30,ug
+Evadne,AD,F,BY31,fall,30,ug
+Evadne,AD,NS,BY31,winter,30,ug
+Evadne,AD,NS,BY31,spring,30,ug
+Evadne,AD,NS,BY31,summer,30,ug
+Evadne,AD,NS,BY31,fall,30,ug
+Evadne,JV,NS,BY31,winter,10,ug
+Evadne,JV,NS,BY31,spring,10,ug
+Evadne,JV,NS,BY31,summer,10,ug
+Evadne,JV,NS,BY31,fall,10,ug
+Evadne,NS,NS,BY31,winter,20,ug
+Evadne,NS,NS,BY31,spring,20,ug
+Evadne,NS,NS,BY31,summer,20,ug
+Evadne,NS,NS,BY31,fall,20,ug
+Podon leuckartii,AD,F,BY31,winter,25,ug
+Podon leuckartii,AD,F,BY31,spring,25,ug
+Podon leuckartii,AD,F,BY31,summer,25,ug
+Podon leuckartii,AD,F,BY31,fall,25,ug
+Podon leuckartii,AD,M,BY31,winter,20,ug
+Podon leuckartii,AD,M,BY31,spring,20,ug
+Podon leuckartii,AD,M,BY31,summer,20,ug
+Podon leuckartii,AD,M,BY31,fall,20,ug
+Podon leuckartii,AD,NS,BY31,winter,13,ug
+Podon leuckartii,AD,NS,BY31,spring,13,ug
+Podon leuckartii,AD,NS,BY31,summer,13,ug
+Podon leuckartii,AD,NS,BY31,fall,13,ug
+Podon leuckartii,JV,NS,BY31,winter,6,ug
+Podon leuckartii,JV,NS,BY31,spring,6,ug
+Podon leuckartii,JV,NS,BY31,summer,6,ug
+Podon leuckartii,JV,NS,BY31,fall,6,ug
+Podon leuckartii,NS,NS,BY31,winter,13,ug
+Podon leuckartii,NS,NS,BY31,spring,13,ug
+Podon leuckartii,NS,NS,BY31,summer,13,ug
+Podon leuckartii,NS,NS,BY31,fall,13,ug
+Podon intermedius,AD,F,BY31,winter,40,ug
+Podon intermedius,AD,F,BY31,spring,40,ug
+Podon intermedius,AD,F,BY31,summer,40,ug
+Podon intermedius,AD,F,BY31,fall,40,ug
+Podon intermedius,AD,M,BY31,winter,40,ug
+Podon intermedius,AD,M,BY31,spring,40,ug
+Podon intermedius,AD,M,BY31,summer,40,ug
+Podon intermedius,AD,M,BY31,fall,40,ug
+Podon intermedius,AD,NS,BY31,winter,40,ug
+Podon intermedius,AD,NS,BY31,spring,40,ug
+Podon intermedius,AD,NS,BY31,summer,40,ug
+Podon intermedius,AD,NS,BY31,fall,40,ug
+Podon intermedius,JV,NS,BY31,winter,25,ug
+Podon intermedius,JV,NS,BY31,spring,25,ug
+Podon intermedius,JV,NS,BY31,summer,25,ug
+Podon intermedius,JV,NS,BY31,fall,25,ug
+Podon intermedius,NS,NS,BY31,winter,40,ug
+Podon intermedius,NS,NS,BY31,spring,40,ug
+Podon intermedius,NS,NS,BY31,summer,40,ug
+Podon intermedius,NS,NS,BY31,fall,40,ug
+Podon,AD,F,BY31,winter,25,ug
+Podon,AD,F,BY31,spring,25,ug
+Podon,AD,F,BY31,summer,25,ug
+Podon,AD,F,BY31,fall,25,ug
+Podon,AD,M,BY31,winter,13,ug
+Podon,AD,M,BY31,spring,13,ug
+Podon,AD,M,BY31,summer,13,ug
+Podon,AD,M,BY31,fall,13,ug
+Podon,AD,NS,BY31,winter,13,ug
+Podon,AD,NS,BY31,spring,13,ug
+Podon,AD,NS,BY31,summer,13,ug
+Podon,AD,NS,BY31,fall,13,ug
+Podon,JV,NS,BY31,winter,6,ug
+Podon,JV,NS,BY31,spring,6,ug
+Podon,JV,NS,BY31,summer,6,ug
+Podon,JV,NS,BY31,fall,6,ug
+Podon,NS,NS,BY31,winter,20,ug
+Podon,NS,NS,BY31,spring,20,ug
+Podon,NS,NS,BY31,summer,20,ug
+Podon,NS,NS,BY31,fall,20,ug
+Bosmina,AD,F,BY31,winter,15,ug
+Bosmina,AD,F,BY31,spring,15,ug
+Bosmina,AD,F,BY31,summer,15,ug
+Bosmina,AD,F,BY31,fall,45,ug
+Bosmina,AD,M,BY31,winter,7,ug
+Bosmina,AD,M,BY31,spring,7,ug
+Bosmina,AD,M,BY31,summer,7,ug
+Bosmina,AD,M,BY31,fall,15,ug
+Bosmina,AD,NS,BY31,winter,15,ug
+Bosmina,AD,NS,BY31,spring,15,ug
+Bosmina,AD,NS,BY31,summer,15,ug
+Bosmina,AD,NS,BY31,fall,25,ug
+Bosmina,JV,NS,BY31,winter,2.5,ug
+Bosmina,JV,NS,BY31,spring,2.5,ug
+Bosmina,JV,NS,BY31,summer,2.5,ug
+Bosmina,JV,NS,BY31,fall,7,ug
+Bosmina,NS,NS,BY31,winter,7,ug
+Bosmina,NS,NS,BY31,spring,7,ug
+Bosmina,NS,NS,BY31,summer,7,ug
+Bosmina,NS,NS,BY31,fall,15,ug
+Synchaeta,NS,NS,BY31,winter,3,ug
+Synchaeta,NS,NS,BY31,spring,3,ug
+Synchaeta,NS,NS,BY31,summer,3,ug
+Synchaeta,NS,NS,BY31,fall,3,ug
+Keratella,NS,NS,BY31,winter,1.5,ug
+Keratella,NS,NS,BY31,spring,1.5,ug
+Keratella,NS,NS,BY31,summer,1.5,ug
+Keratella,NS,NS,BY31,fall,1,ug
