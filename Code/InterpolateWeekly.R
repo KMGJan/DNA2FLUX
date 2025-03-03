@@ -117,7 +117,6 @@ zooplankton <-
   mutate(Bodymass_g.ind = Biomass_g.m2 / Abundance_ind.m2) |> 
   na.omit() # <- remove rows with NA
 zooplankton |>
-  filter(Year != 2011) |> # Because all depths are 999 so not included in the analysis yet
   write_csv(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"))
 cat("\nZooplankton weekly interpolated\n")
 # Temperature ------------------------------------------------------------------
