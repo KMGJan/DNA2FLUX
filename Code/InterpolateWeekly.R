@@ -51,7 +51,7 @@ zooplankton <-
       TRUE ~ as.character(taxon_genus)
       ), 
     # Calculate biomass (g/m²) using abundance and body mass
-    biomass_g = value * bodymass * 1e-6) |> # Convert from micrograms to grams (g)
+    biomass_g = value * bodymass) |>
   # Summarise the dataset so we have one value per week
   filter(!is.na(sample_week)) |>
   group_by(sample_week, taxon_genus, station_name, sample_date) |>
