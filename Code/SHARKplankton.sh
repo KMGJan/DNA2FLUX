@@ -23,7 +23,8 @@ dataset_keys=$(curl -X 'POST' \
     "months": [],
     "dataTypes": [
       "Zooplankton",
-      "Phytoplankton"
+      "Phytoplankton",
+      "Picoplankton"
     ],
     "parameters": [],
     "checkStatus": "",
@@ -37,7 +38,10 @@ dataset_keys=$(curl -X 'POST' \
     "redListedCategory": [],
     "taxonName": [],
     "stationName": [
-      "BY31 LANDSORTSDJ"
+      "BY31 LANDSORTSDJ",
+      "BY5 BORNHOLMSDJ",
+      "BY15 GOTLANDSDJ",
+      "BY2 ARKONA"
     ],
     "vattenDistrikt": [],
     "seaBasins": [],
