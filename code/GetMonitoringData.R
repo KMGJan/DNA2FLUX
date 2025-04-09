@@ -2,20 +2,24 @@
 
 cat("\nRunning GetMonitoringData.R\n")
 
-# Create necessary directories if they do not exist
-if (!dir.exists(file.path("data","imported", "sharkweb"))) {
-  dir.create(file.path("data","imported", "sharkweb"))
-}
+## Create necessary directories if they do not exist
+#if (!dir.exists(file.path("data","imported", "sharkweb"))) {
+#  dir.create(file.path("data","imported", "sharkweb"))
+#}
 raw_dir <- file.path("data","imported","sharkweb")
-if (!dir.exists(raw_dir)) {
-  dir.create(raw_dir)
-}
-SHARKphysical <- file.path("code", "SHARKphysical.sh")
-# Run the data download scripts in the background using `nohup`
-system(paste("nohup bash", SHARKphysical, raw_dir)) # Download physical-chemical data
+#if (!dir.exists(raw_dir)) {
+#  dir.create(raw_dir)
+#}
+#SHARKphysical <- file.path("code", "SHARKphysical.sh")
+## Run the data download scripts in the background using `nohup`
+#system(paste("nohup bash", SHARKphysical, raw_dir)) # Download physical-chemical data
+#
+#SHARKplankton <- file.path("code", "SHARKplankton.sh")
+#system(paste("nohup bash", SHARKplankton, raw_dir)) # Download plankton data
 
-SHARKplankton <- file.path("code", "SHARKplankton.sh")
-system(paste("nohup bash", SHARKplankton, raw_dir)) # Download plankton data
+
+
+
 
 cat(paste("\nAll data packages are downloaded in", raw_dir, "and up to date\n"))
 

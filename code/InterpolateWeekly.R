@@ -4,7 +4,21 @@ cat("\nRunning InterpolateWeekly.R\n")
 
 suppressPackageStartupMessages(library(tidyverse))
 
-# this will download the data if they have not been downloaded yet, or will update them if a new version was released (it takes 20-30 min): 
+if (!dir.exists(file.path("data", "processed"))) {
+  dir.create(file.path("data", "processed"))
+}
+
+if (!dir.exists(file.path("data", "processed", "interpolation"))) {
+  dir.create(file.path("data", "processed", "interpolation"))
+}
+
+if (!dir.exists(file.path("data", "processed", "shark"))) {
+  dir.create(file.path("data", "processed", "shark"))
+}
+
+
+
+#this will download the data if they have not been downloaded yet, or will update them if a new version was released (it takes 20-30 min): 
 if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
    !file.exists(file.path("data", "processed", "shark", "zooplankton.csv")) |
    !file.exists(file.path("data", "processed", "shark", "temperature.csv")) |
@@ -13,9 +27,7 @@ if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
   # Get the monitoring data
   system(paste("nohup Rscript", getmonitoring))
 }
-if (!dir.exists(file.path("data", "processed", "interpolation"))) {
-  dir.create(file.path("data", "processed", "interpolation"))
-}
+
 # Zooplankton ------------------------------------------------------------------
 zooplankton <-
   # Load zooplankton data
@@ -47,15 +59,8 @@ zooplankton <-
     by = c("station_name", "sex_code", "dev_stage_code", "taxon_genus", "taxon_species", "season")
     ) |> 
 #> 
-  # Pleopis and Podon are the same taxa
-  mutate(
-    taxon_genus = case_when(
-      str_detect(taxon_genus, "^Pleopis") ~ "Podon",
-      str_detect(taxon_genus, "^Podon") ~ "Podon",
-      TRUE ~ as.character(taxon_genus)
-      ), 
-    # Calculate biomass (g/m²) using abundance and body mass
-    biomass_g = value * bodymass) |>
+  # Calculate biomass (g/m²) using abundance and body mass
+  mutate(biomass_g = value * bodymass) |>
   # Summarise the dataset so we have one value per week
   filter(!is.na(sample_week)) |>
   group_by(sample_week, taxon_genus, station_name, sample_date) |>
@@ -139,6 +144,7 @@ temperature <-
   mutate(sample_week = floor_date(sample_date, unit = "week", week_start = 1)) |>   # Change date to the first day of the week
   # Some checks and filters
   filter(
+    station_name == "BY31 LANDSORTSDJ",
     sample_min_depth_m == sample_max_depth_m, # First check that the the depth is fixed while taking the temperature
     sample_min_depth_m %in% seq(from = 0, to = 60, by = 10) # And only select depth strata from 0 to 60m with 10m interval
     ) |>
