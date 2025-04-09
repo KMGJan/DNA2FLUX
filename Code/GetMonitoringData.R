@@ -44,11 +44,11 @@ lapply(
   read_csv,
   show_col_types = FALSE,
   col_types = col_type,
-  col_select = c(delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
+  col_select = c(shark_sample_id_md5, delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
                  sample_date, sample_latitude_dd, sample_longitude_dd, sample_min_depth_m, sample_max_depth_m,
                  sampling_laboratory_name_sv, scientific_name, dyntaxa_id, aphia_id, parameter, value, unit,
                  sex_code, dev_stage_code, trophic_type_code, taxon_kingdom, taxon_phylum, taxon_class, 
-                 taxon_order, taxon_family, taxon_genus, taxon_species)
+                 taxon_order, taxon_family, taxon_genus, taxon_species, scientific_name)
   ) |>
   bind_rows() |>
   filter(station_name %in% c( "BY31 LANDSORTSDJ",
@@ -107,7 +107,7 @@ lapply(
   read_csv,
   show_col_types = FALSE,
   col_types = col_type,
-  col_select = c(delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
+  col_select = c(sample_id, delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
                  sample_date, sample_latitude_dd, sample_longitude_dd, sample_min_depth_m, sample_max_depth_m,
                  sampling_laboratory_name_sv, scientific_name, dyntaxa_id, aphia_id, parameter, value, unit,
                  sex_code, dev_stage_code, trophic_type_code, taxon_kingdom, taxon_phylum, taxon_class, 

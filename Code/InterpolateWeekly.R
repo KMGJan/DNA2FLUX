@@ -5,9 +5,9 @@ cat("\nRunning InterpolateWeekly.R\n")
 suppressPackageStartupMessages(library(tidyverse))
 
 # this will download the data if they have not been downloaded yet, or will update them if a new version was released (it takes 20-30 min): 
-if(!file.exists(file.path("Import", "SharkWeb", "BY31", "phytoplankton.csv")) |
-   !file.exists(file.path("Import", "SharkWeb", "BY31", "zooplankton.csv")) |
-   !file.exists(file.path("Import", "SharkWeb", "BY31", "temperature.csv"))) {
+if(!file.exists(file.path("Import", "SharkWeb", "Processed", "phytoplankton.csv")) |
+   !file.exists(file.path("Import", "SharkWeb", "Processed", "zooplankton.csv")) |
+   !file.exists(file.path("Import", "SharkWeb", "Processed", "temperature.csv"))) {
   getmonitoring <- file.path("Code", "GetMonitoringData.R")
   # Get the monitoring data
   system(paste("nohup Rscript", getmonitoring))
@@ -16,7 +16,7 @@ if(!file.exists(file.path("Import", "SharkWeb", "BY31", "phytoplankton.csv")) |
 # Zooplankton ------------------------------------------------------------------
 zooplankton <-
   # Load zooplankton data
-  read_csv(file.path("Import", "SharkWeb", "BY31", "zooplankton.csv"), show_col_types = FALSE) |>
+  read_csv(file.path("Import", "SharkWeb", "Processed", "zooplankton.csv"), show_col_types = FALSE) |>
   mutate(sample_week = floor_date(sample_date, unit = "week", week_start = 1)) |>   # Change date to the first day of the week
   # Apply the filters
   filter(
@@ -120,6 +120,34 @@ zooplankton |>
   filter(Year != 2011) |> # Because all depths are 999 so not included in the analysis yet
   write_csv(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"))
 cat("\nZooplankton weekly interpolated\n")
+
+
+# Picophytoplankton ------------------------------------------------------------------
+library(zoo)
+# Read and filter
+picoplankton <-
+  read_csv("Import/SharkWeb/Processed/picoplankton.csv") |> 
+  filter(scientific_name == "Synechococcus") |> 
+  group_by(sample_id, station_name, sample_date) |> 
+  summarise(value = sum(value)) |>
+  filter(sample_date < date("2021-01-01"),
+         sample_date > date("2018-10-30")) |> 
+  arrange(sample_date) |> 
+  group_by(station_name) |> 
+  complete(sample_date = seq.Date(min(sample_date), max(sample_date), by = "week")) |>  # Fill in missing weekly dates
+  arrange(sample_date) |> 
+  mutate(value = na.approx(value, sample_date, na.rm = FALSE)) |>   # Linear interpolation
+  ungroup() |> 
+  filter(is.na(value) == F) |> 
+  mutate(week = isoweek(sample_date)) |>   # Extract week of the year
+  group_by(week) %>%
+  summarize(value = mean(value, na.rm = TRUE), .groups = "drop")  # Average across years
+
+# Phytoplankton ------------------------------------------------------------------
+
+
+
+
 # Temperature ------------------------------------------------------------------
 temperature <-
   read_csv(file.path("Import", "Sharkweb", "BY31", "temperature.csv"), show_col_types = FALSE) |>  # Load the dataset
