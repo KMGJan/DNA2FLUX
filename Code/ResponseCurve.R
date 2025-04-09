@@ -5,14 +5,14 @@ suppressPackageStartupMessages(library(minpack.lm))
 
 
 # this will make sure that the interpolated zooplankton data exists: 
-if(!file.exists(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"))) {
-  getinterpolation <- file.path("Code", "InterpolateWeekly.R")
+if(!file.exists(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"))) {
+  getinterpolation <- file.path("code", "InterpolateWeekly.R")
   # Get the monitoring data
   system(paste("nohup Rscript", getinterpolation))
   rm(getinterpolation)
 } else {
   cat(paste(
-    file.path("Import", "SharkWeb", "weekly_zooplankton.csv"),
+    file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"),
     "exists. Proceed with the analyses...")
     )
 }
@@ -21,12 +21,12 @@ if(!file.exists(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"))) {
 ## COI -------------------------------------------------------------------------
 df_COI <-
   # COI metadata
-  read_csv(file.path("Data", "Fish_COI_Metadata.csv"), show_col_types = FALSE) |>
+  read_csv(file.path("data", "raw", "fish_coi_metadata.csv"), show_col_types = FALSE) |>
   # The column sample_name contains multiple information
   extract(sample_name, into = c("station_ID", "sample_ID", "barcode"), 
           regex = "([^.]*)\\.(.*)_(.*)", remove = FALSE) |>
   full_join(# Combine ASV table with metadata
-    read_csv(file.path("Data", "Fish_COI_ASV.csv"), show_col_types = FALSE) |>
+    read_csv(file.path("data","raw", "fish_coi_asv.csv"), show_col_types = FALSE) |>
       pivot_longer(cols = where(is.numeric),  # Pivot  numeric columns (abundance values)
                    names_to = "source_material_ID", 
                    values_to = "Abundance"),
@@ -51,12 +51,12 @@ df_COI <-
   ungroup() 
 ## 18S -------------------------------------------------------------------------
 df_18S <-
-  read_csv(file.path("Data", "Fish_18S_Metadata.csv"), show_col_types = FALSE) |>
+  read_csv(file.path("data", "raw", "fish_18s_metadata.csv"), show_col_types = FALSE) |>
   # The column sample_name contains multiple information
   extract(sample_name, into = c("station_ID", "sample_ID", "barcode"), 
           regex = "([^.]*)\\.(.*)_(.*)", remove = FALSE) |> 
   full_join(# Combine ASV table with metadata
-    read_csv(file.path("Data", "Fish_18S_ASV.csv"), show_col_types = FALSE) |>
+    read_csv(file.path("data", "raw", "fish_18s_asv.csv"), show_col_types = FALSE) |>
       pivot_longer(cols = where(is.numeric),  # Pivot  numeric columns (abundance values)
                    names_to = "source_material_ID", 
                    values_to = "Abundance"),
@@ -75,7 +75,7 @@ df_18S <-
   group_by(sample_ID) |>
   filter(sum(Abundance, na.rm = T) > 10000) |> 
   # work in relative abundance
-  mutate(RRA = Abundance/sum(Abundance, na.rm = T)) |>
+  mutate(RRA = Abundance / sum(Abundance, na.rm = T)) |>
   ungroup() 
 # Quick inspection of the data ----------------------------------------------- #
 df <-
@@ -121,21 +121,21 @@ indices_df <-
   ungroup()
 # Quick inspection of the data ----------------------------------------------- #
 indices_df |>
-  ggplot(aes(x = organism, y = ForageRatio, fill = Taxa))+
+  ggplot(aes(x = organism, y = ForageRatio+1, fill = Taxa))+
   geom_boxplot() +
   labs(y = "Forage ratio (Rgut/Renv)")+
-  scale_y_log10()+
+  scale_y_log10() +
   facet_grid(barcode~organism, scales = "free")+
-  geom_hline(yintercept = 1)+
+  geom_hline(yintercept = 2)+
   theme_bw()+
   theme(axis.text.x = element_blank())
 # Combine with monitoring dataset ----------------------------------------------
 test_df <-
-  read_csv(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"), show_col_types = F) |> 
+  read_csv(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"), show_col_types = F) |> 
   #work in relative biomass
   group_by(sample_week) |> 
-  mutate(rel_biomass = (Biomass_g.m2 / sum(Biomass_g.m2, na.rm = T)),
-         ) |> 
+  mutate(rel_biomass = (biomass / sum(biomass, na.rm = T)),
+         Taxa = node_name) |> 
   ungroup() |> 
   right_join(indices_df, 
              by = c("sample_week", "Taxa"),
@@ -286,10 +286,11 @@ bootstrapped_values <-
 print(bootstrapped_values, n = nrow(bootstrapped_values))
 #
 split_boot <- bind_rows(boot_results) |> group_split(Iteration, organism)
-weekly_plankton <- read_csv(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"), show_col_types = F) |> 
+weekly_plankton <- read_csv(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"), show_col_types = F) |> 
   #work in relative biomass
   group_by(sample_week) |> 
-  mutate(rel_biomass = (Biomass_g.m2 / sum(Biomass_g.m2, na.rm = T))) |> ungroup()
+  mutate(rel_biomass = (biomass / sum(biomass, na.rm = T)),
+         Taxa = node_name) |> ungroup()
 projectionForageRatio <-
   future_map(1:length(split_boot), ~{
     boot_data <- split_boot[[.x]]  # Extract each group of bootstrapped data
@@ -299,7 +300,7 @@ projectionForageRatio <-
       na.omit() |> 
       mutate(ForageRatio = (a * rel_biomass^k) / (1 + a * h * rel_biomass^k) / rel_biomass) |> 
       group_by(sample_week) |> 
-      mutate(Prop = ForageRatio * Biomass_g.m2 / sum(ForageRatio * Biomass_g.m2, na.rm = T),
+      mutate(Prop = ForageRatio * biomass / sum(ForageRatio * biomass, na.rm = T),
              Chesson = ForageRatio / sum(ForageRatio, na.rm = T)) |> 
       ungroup()
     }, .options = furrr_options(seed = TRUE))  # Ensures reproducibility
@@ -397,7 +398,7 @@ modeled_out <-
   left_join(results, by = "Taxa", relationship = "many-to-many") |>
   mutate(ForageRatio = (a*rel_biomass^k)/(1+a*h*rel_biomass^k)/rel_biomass) |> 
   group_by(sample_week, organism) |> 
-  mutate(Prop = ForageRatio * Biomass_g.m2 / sum(ForageRatio * Biomass_g.m2, na.rm = T)) |> ungroup() 
+  mutate(Prop = ForageRatio * biomass / sum(ForageRatio * biomass, na.rm = T)) |> ungroup() 
 ggplot(mapping = aes(x = sample_week, col = organism, fill = organism))+
   geom_ribbon(data = projectionUncertainty,
               mapping = aes(ymin = Low_fr, ymax = High_fr), 
@@ -441,7 +442,7 @@ modeled_out |>
   mutate(Month = month(sample_week)) |> 
   na.omit() |> 
   group_by(Month, organism) |> 
-  mutate(Prop = ForageRatio * Biomass_g.m2 / sum(ForageRatio * Biomass_g.m2, na.rm =T)) |> ungroup() |> 
+  mutate(Prop = ForageRatio * biomass / sum(ForageRatio * biomass, na.rm =T)) |> ungroup() |> 
   
   ggplot(aes(x = as.factor(Month), y = Prop, fill = Taxa)) +
   geom_bar(stat = "identity", alpha = 1) +

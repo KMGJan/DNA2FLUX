@@ -5,19 +5,22 @@ cat("\nRunning InterpolateWeekly.R\n")
 suppressPackageStartupMessages(library(tidyverse))
 
 # this will download the data if they have not been downloaded yet, or will update them if a new version was released (it takes 20-30 min): 
-if(!file.exists(file.path("Import", "SharkWeb", "Processed", "phytoplankton.csv")) |
-   !file.exists(file.path("Import", "SharkWeb", "Processed", "zooplankton.csv")) |
-   !file.exists(file.path("Import", "SharkWeb", "Processed", "temperature.csv"))) {
-  getmonitoring <- file.path("Code", "GetMonitoringData.R")
+if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
+   !file.exists(file.path("data", "processed", "shark", "zooplankton.csv")) |
+   !file.exists(file.path("data", "processed", "shark", "temperature.csv")) |
+   !file.exists(file.path("data", "processed", "shark", "picoplankton.csv"))) {
+  getmonitoring <- file.path("code", "GetMonitoringData.R")
   # Get the monitoring data
   system(paste("nohup Rscript", getmonitoring))
 }
-
+if (!dir.exists(file.path("data", "processed", "interpolation"))) {
+  dir.create(file.path("data", "processed", "interpolation"))
+}
 # Zooplankton ------------------------------------------------------------------
 zooplankton <-
   # Load zooplankton data
 
-  read_csv(file.path("Import", "SharkWeb", "Processed", "zooplankton.csv"), show_col_types = FALSE) |>
+  read_csv(file.path("data", "processed", "shark", "zooplankton.csv"), show_col_types = FALSE) |>
   mutate(sample_week = floor_date(sample_date, unit = "week", week_start = 1),
          Month = month(sample_week),
          # Assign seasons based on the month
@@ -40,7 +43,7 @@ zooplankton <-
     ) |>
   # Join the bodymass dataset
   right_join(
-    read_csv(file.path("Data", "bodymass.csv"), show_col_types = FALSE),
+    read_csv(file.path("data","raw", "zooplankton_bodymass.csv"), show_col_types = FALSE),
     by = c("station_name", "sex_code", "dev_stage_code", "taxon_genus", "taxon_species", "season")
     ) |> 
 #> 
@@ -91,15 +94,17 @@ zooplankton <-
   # Reshape back to wide format using 'Parameter' to create columns
   pivot_wider(names_from = parameter, values_from = value) |>
   
-  # Rename columns for clarity
-  rename("Abundance_ind.m2" = abundance,
-         "Biomass_g.m2" = biomass) |>
-  
   # Calculate Bodymass per individual by dividing Biomass by Abundance
-  mutate(Bodymass_g.ind = Biomass_g.m2 / Abundance_ind.m2) |> 
-  na.omit() # <- remove rows with NA
+  mutate(bodymass = biomass / abundance) |> 
+  na.omit() |> # <- remove rows with NA 
+  rename("node_name" = Taxa,
+         "year" = Year)
 zooplankton |>
-  write_csv(file.path("Import", "SharkWeb", "weekly_zooplankton.csv"))
+  select(node_name, year, station_name, bodymass, sample_week) |> 
+  write_csv(file.path("data", "processed", "interpolation", "zooplankton_bodymass.csv"))
+zooplankton |>
+  select(node_name, year, station_name, biomass, sample_week) |> 
+  write_csv(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"))
 cat("\nZooplankton weekly interpolated\n")
 
 
@@ -107,7 +112,7 @@ cat("\nZooplankton weekly interpolated\n")
 library(zoo)
 # Read and filter
 picoplankton <-
-  read_csv("Import/SharkWeb/Processed/picoplankton.csv") |> 
+  read_csv(file.path("data", "processed", "shark", "picoplankton.csv")) |> 
   filter(scientific_name == "Synechococcus") |> 
   group_by(sample_id, station_name, sample_date) |> 
   summarise(value = sum(value)) |>
@@ -128,10 +133,9 @@ picoplankton <-
 
 
 
-
 # Temperature ------------------------------------------------------------------
 temperature <-
-  read_csv(file.path("Import", "Sharkweb", "BY31", "temperature.csv"), show_col_types = FALSE) |>  # Load the dataset
+  read_csv(file.path("data", "processed","shark", "temperature.csv"), show_col_types = FALSE) |>  # Load the dataset
   mutate(sample_week = floor_date(sample_date, unit = "week", week_start = 1)) |>   # Change date to the first day of the week
   # Some checks and filters
   filter(
@@ -152,6 +156,36 @@ temperature <-
   mutate(temperature = zoo::na.approx(temperature, na.rm = FALSE), 
          station_name = "BY31")
 temperature |>
-  write_csv(file.path("Import", "SharkWeb", "weekly_temperature.csv"))
+  write_csv(file.path("data","processed", "interpolation","temperature.csv"))
 
 cat("\nTemperature weekly interpolated\n")
+
+# Fish ----
+## Biomass ----
+read_csv(file.path("data", "raw","fish_parameters.csv")) |> 
+  group_by(node_name, year) |> 
+  summarise(biomass = mean(biomass, na.rm = T),
+            bodymass = mean(bodymass, na.rm = T),
+            .groups = "drop") |> 
+  full_join(
+    tibble(
+      sample_week = read_csv(file.path("data", "processed", "interpolation", "zooplankton.csv")) |> pull(sample_week) |> unique()) |> 
+      mutate(year = year(sample_week)),
+    by = "year",
+    relationship = "many-to-many") |>
+  select(node_name, year, biomass, sample_week) |>
+  write_csv(file = file.path("data", "processed", "interpolation", "fish_biomass.csv"))
+## Bodymass ----
+read_csv(file.path("data", "raw","fish_parameters.csv")) |> 
+  group_by(node_name, year) |> 
+  summarise(biomass = mean(biomass, na.rm = T),
+            bodymass = mean(bodymass, na.rm = T),
+            .groups = "drop") |> 
+  full_join(
+    tibble(
+      sample_week = read_csv(file.path("data", "processed", "interpolation", "zooplankton.csv")) |> pull(sample_week) |> unique()) |> 
+      mutate(year = year(sample_week)),
+    by = "year",
+    relationship = "many-to-many") |>
+  select(node_name, year, bodymass, sample_week) |> 
+  write_csv(file = file.path("data", "processed", "interpolation", "fish_bodymass.csv"))
