@@ -1,19 +1,19 @@
 node_name,taxon_genus,taxon_species,dev_stage_code,sex_code,station_name,season,bodymass,bodymass_unit
-Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,fall,2.4999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,fall,2.5e-5,g
 Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,spring,2.9999999999999997e-5,g
-Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,summer,2.4999999999999998e-5,g
-Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,winter,1.4999999999999999e-5,g
-Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,fall,1.4999999999999999e-5,g
-Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,spring,1.4999999999999999e-5,g
-Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,summer,1.4999999999999999e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,summer,2.5e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,winter,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,fall,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,spring,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,summer,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY31 LANDSORTSDJ,winter,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,fall,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,spring,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,summer,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY31 LANDSORTSDJ,winter,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,fall,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,spring,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,summer,1.5e-5,g
 Acartia,Acartia,Acartia longiremis,AD,M,BY31 LANDSORTSDJ,winter,1.8e-5,g
 Acartia,Acartia,Acartia tonsa,AD,F,BY31 LANDSORTSDJ,fall,3.5e-5,g
 Acartia,Acartia,Acartia tonsa,AD,F,BY31 LANDSORTSDJ,spring,3.5e-5,g
@@ -23,10 +23,10 @@ Acartia,Acartia,Acartia tonsa,AD,M,BY31 LANDSORTSDJ,fall,3.2e-5,g
 Acartia,Acartia,Acartia tonsa,AD,M,BY31 LANDSORTSDJ,spring,3.2e-5,g
 Acartia,Acartia,Acartia tonsa,AD,M,BY31 LANDSORTSDJ,summer,3.2e-5,g
 Acartia,Acartia,Acartia tonsa,AD,M,BY31 LANDSORTSDJ,winter,3.2e-5,g
-Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,fall,2.2499999999999998e-5,g
-Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,spring,2.4999999999999998e-5,g
-Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,summer,2.2499999999999998e-5,g
-Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
+Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,fall,2.25e-5,g
+Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,spring,2.5e-5,g
+Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,summer,2.25e-5,g
+Acartia,Acartia,NA,AD,F,BY31 LANDSORTSDJ,winter,2e-5,g
 Acartia,Acartia,NA,C1,I,BY31 LANDSORTSDJ,fall,4.5e-6,g
 Acartia,Acartia,NA,C1,I,BY31 LANDSORTSDJ,spring,7e-6,g
 Acartia,Acartia,NA,C1,I,BY31 LANDSORTSDJ,summer,4.5e-6,g
@@ -35,58 +35,58 @@ Acartia,Acartia,NA,C4,I,BY31 LANDSORTSDJ,fall,1.05e-5,g
 Acartia,Acartia,NA,C4,I,BY31 LANDSORTSDJ,spring,1.6e-5,g
 Acartia,Acartia,NA,C4,I,BY31 LANDSORTSDJ,summer,1.2e-5,g
 Acartia,Acartia,NA,C4,I,BY31 LANDSORTSDJ,winter,1.2e-5,g
-Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,fall,4.4999999999999996e-5,g
-Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,spring,1.4999999999999999e-5,g
-Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,summer,1.4999999999999999e-5,g
-Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,winter,1.4999999999999999e-5,g
-Bosmina,Bosmina,Bosmina coregoni,AD,M,BY31 LANDSORTSDJ,fall,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,fall,4.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,spring,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,summer,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY31 LANDSORTSDJ,winter,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY31 LANDSORTSDJ,fall,1.5e-5,g
 Bosmina,Bosmina,Bosmina coregoni,AD,M,BY31 LANDSORTSDJ,spring,7e-6,g
 Bosmina,Bosmina,Bosmina coregoni,AD,M,BY31 LANDSORTSDJ,summer,7e-6,g
 Bosmina,Bosmina,Bosmina coregoni,AD,M,BY31 LANDSORTSDJ,winter,7e-6,g
 Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,fall,7e-6,g
-Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,spring,2.4999999999999998e-6,g
-Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,summer,2.4999999999999998e-6,g
-Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,winter,2.4999999999999998e-6,g
-Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,fall,4.4999999999999996e-5,g
-Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,spring,1.4999999999999999e-5,g
-Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,summer,1.4999999999999999e-5,g
-Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,winter,1.4999999999999999e-5,g
-Bosmina,Bosmina,Bosmina longispina,AD,M,BY31 LANDSORTSDJ,fall,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,spring,2.5e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,summer,2.5e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY31 LANDSORTSDJ,winter,2.5e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,fall,4.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,spring,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,summer,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY31 LANDSORTSDJ,winter,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY31 LANDSORTSDJ,fall,1.5e-5,g
 Bosmina,Bosmina,Bosmina longispina,AD,M,BY31 LANDSORTSDJ,spring,7e-6,g
 Bosmina,Bosmina,Bosmina longispina,AD,M,BY31 LANDSORTSDJ,summer,7e-6,g
 Bosmina,Bosmina,Bosmina longispina,AD,M,BY31 LANDSORTSDJ,winter,7e-6,g
 Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,fall,7e-6,g
-Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,spring,2.4999999999999998e-6,g
-Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,summer,2.4999999999999998e-6,g
-Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,winter,2.4999999999999998e-6,g
-Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,fall,4.9999999999999996e-5,g
-Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,spring,4.9999999999999996e-5,g
-Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,summer,4.4999999999999996e-5,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,spring,2.5e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,summer,2.5e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY31 LANDSORTSDJ,winter,2.5e-6,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,fall,5e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,spring,5e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,summer,4.5e-5,g
 Centropages,Centropages,Centropages hamatus,AD,F,BY31 LANDSORTSDJ,winter,5.4999999999999995e-5,g
-Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,fall,3.9999999999999996e-05,g
-Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,spring,3.9999999999999996e-05,g
-Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,summer,3.9999999999999996e-05,g
-Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,winter,4.4999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,fall,4e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,spring,4e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,summer,4e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY31 LANDSORTSDJ,winter,4.5e-5,g
 Centropages,Centropages,Centropages hamatus,C1,I,BY31 LANDSORTSDJ,fall,6e-6,g
 Centropages,Centropages,Centropages hamatus,C1,I,BY31 LANDSORTSDJ,spring,6e-6,g
 Centropages,Centropages,Centropages hamatus,C1,I,BY31 LANDSORTSDJ,summer,6e-6,g
 Centropages,Centropages,Centropages hamatus,C1,I,BY31 LANDSORTSDJ,winter,6e-6,g
 Centropages,Centropages,Centropages hamatus,C4,I,BY31 LANDSORTSDJ,fall,1.6e-5,g
-Centropages,Centropages,Centropages hamatus,C4,I,BY31 LANDSORTSDJ,spring,1.4999999999999999e-5,g
-Centropages,Centropages,Centropages hamatus,C4,I,BY31 LANDSORTSDJ,summer,1.4999999999999999e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY31 LANDSORTSDJ,spring,1.5e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY31 LANDSORTSDJ,summer,1.5e-5,g
 Centropages,Centropages,Centropages hamatus,C4,I,BY31 LANDSORTSDJ,winter,1.7e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,fall,2.4999999999999998e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,spring,4.9999999999999996e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,summer,2.4999999999999998e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,winter,2.4999999999999998e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,spring,3.9999999999999996e-05,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,fall,4.9999999999999996e-6,g
-Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,spring,4.9999999999999996e-6,g
-Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,summer,4.9999999999999996e-6,g
-Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,winter,4.9999999999999996e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,fall,2.5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,spring,5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,summer,2.5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY31 LANDSORTSDJ,winter,2.5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,fall,2e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,spring,4e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,summer,2e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY31 LANDSORTSDJ,winter,2e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,fall,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,spring,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,summer,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY31 LANDSORTSDJ,winter,5e-6,g
 Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY31 LANDSORTSDJ,fall,1.3e-5,g
 Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY31 LANDSORTSDJ,spring,1.4e-5,g
 Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY31 LANDSORTSDJ,summer,1.4e-5,g
@@ -95,14 +95,14 @@ Evadne,Evadne,Evadne nordmanni,AD,F,BY31 LANDSORTSDJ,fall,2.9999999999999997e-5,
 Evadne,Evadne,Evadne nordmanni,AD,F,BY31 LANDSORTSDJ,spring,2.9999999999999997e-5,g
 Evadne,Evadne,Evadne nordmanni,AD,F,BY31 LANDSORTSDJ,summer,2.9999999999999997e-5,g
 Evadne,Evadne,Evadne nordmanni,AD,F,BY31 LANDSORTSDJ,winter,2.9999999999999997e-5,g
-Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,fall,2e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,spring,2e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,summer,2e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY31 LANDSORTSDJ,winter,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,fall,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,spring,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,summer,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY31 LANDSORTSDJ,winter,2e-5,g
 Keratella,Keratella,Keratella cochlearis,NS,U,BY31 LANDSORTSDJ,fall,1e-6,g
 Keratella,Keratella,Keratella cochlearis,NS,U,BY31 LANDSORTSDJ,spring,1.5e-6,g
 Keratella,Keratella,Keratella cochlearis,NS,U,BY31 LANDSORTSDJ,summer,1.5e-6,g
@@ -127,82 +127,42 @@ Keratella,Keratella,Keratella quadrata,NS,X,BY31 LANDSORTSDJ,fall,1e-6,g
 Keratella,Keratella,Keratella quadrata,NS,X,BY31 LANDSORTSDJ,spring,1.5e-6,g
 Keratella,Keratella,Keratella quadrata,NS,X,BY31 LANDSORTSDJ,summer,1.5e-6,g
 Keratella,Keratella,Keratella quadrata,NS,X,BY31 LANDSORTSDJ,winter,1.5e-6,g
-Podon,Pleopis,Pleopis polyphemoides,AD,F,BY31 LANDSORTSDJ,fall,2.4999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,AD,F,BY31 LANDSORTSDJ,spring,2.4999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,AD,F,BY31 LANDSORTSDJ,summer,2.4999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,AD,F,BY31 LANDSORTSDJ,winter,2.4999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,NS,U,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,NS,U,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,NS,U,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Podon,Pleopis,Pleopis polyphemoides,NS,U,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Podon,Podon,Podon intermedius,AD,F,BY31 LANDSORTSDJ,fall,3.9999999999999996e-05,g
-Podon,Podon,Podon intermedius,AD,F,BY31 LANDSORTSDJ,spring,3.9999999999999996e-05,g
-Podon,Podon,Podon intermedius,AD,F,BY31 LANDSORTSDJ,summer,3.9999999999999996e-05,g
-Podon,Podon,Podon intermedius,AD,F,BY31 LANDSORTSDJ,winter,3.9999999999999996e-05,g
-Podon,Podon,Podon intermedius,MX,X,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Podon,Podon,Podon intermedius,MX,X,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Podon,Podon,Podon intermedius,MX,X,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Podon,Podon,Podon intermedius,MX,X,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Podon,Podon,Podon leuckartii,AD,F,BY31 LANDSORTSDJ,fall,2.4999999999999998e-5,g
-Podon,Podon,Podon leuckartii,AD,F,BY31 LANDSORTSDJ,spring,2.4999999999999998e-5,g
-Podon,Podon,Podon leuckartii,AD,F,BY31 LANDSORTSDJ,summer,2.4999999999999998e-5,g
-Podon,Podon,Podon leuckartii,AD,F,BY31 LANDSORTSDJ,winter,2.4999999999999998e-5,g
-Podon,Podon,Podon leuckartii,MX,X,BY31 LANDSORTSDJ,fall,1.3e-5,g
-Podon,Podon,Podon leuckartii,MX,X,BY31 LANDSORTSDJ,spring,1.3e-5,g
-Podon,Podon,Podon leuckartii,MX,X,BY31 LANDSORTSDJ,summer,1.3e-5,g
-Podon,Podon,Podon leuckartii,MX,X,BY31 LANDSORTSDJ,winter,1.3e-5,g
-Podon,Podon,Podon leuckartii,NS,X,BY31 LANDSORTSDJ,fall,1.3e-5,g
-Podon,Podon,Podon leuckartii,NS,X,BY31 LANDSORTSDJ,spring,1.3e-5,g
-Podon,Podon,Podon leuckartii,NS,X,BY31 LANDSORTSDJ,summer,1.3e-5,g
-Podon,Podon,Podon leuckartii,NS,X,BY31 LANDSORTSDJ,winter,1.3e-5,g
-Podon,Podon,Podon polyphemoides,AD,F,BY31 LANDSORTSDJ,fall,2.4999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,AD,F,BY31 LANDSORTSDJ,spring,2.4999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,AD,F,BY31 LANDSORTSDJ,summer,2.4999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,AD,F,BY31 LANDSORTSDJ,winter,2.4999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,U,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,U,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,U,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,U,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,X,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,X,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,X,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Podon,Podon,Podon polyphemoides,NS,X,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
 Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,fall,5.4999999999999995e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,spring,4.4999999999999996e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,summer,4.9999999999999996e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,winter,4.9999999999999996e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY31 LANDSORTSDJ,fall,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,spring,4.5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,summer,5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY31 LANDSORTSDJ,winter,5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY31 LANDSORTSDJ,fall,5e-5,g
 Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY31 LANDSORTSDJ,spring,2.9999999999999997e-5,g
 Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY31 LANDSORTSDJ,summer,3.5e-5,g
 Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY31 LANDSORTSDJ,winter,3.5e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY31 LANDSORTSDJ,fall,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY31 LANDSORTSDJ,fall,1e-5,g
 Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY31 LANDSORTSDJ,spring,8e-6,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY31 LANDSORTSDJ,summer,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY31 LANDSORTSDJ,summer,1e-5,g
 Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY31 LANDSORTSDJ,winter,7e-6,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,fall,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,spring,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,summer,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY31 LANDSORTSDJ,winter,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,fall,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,spring,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,summer,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY31 LANDSORTSDJ,winter,2e-5,g
 Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,fall,5.4999999999999995e-5,g
-Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,spring,4.4999999999999996e-5,g
-Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,summer,4.9999999999999996e-5,g
-Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,winter,4.9999999999999996e-5,g
-Pseudocalanus,Pseudocalanus,NA,AD,M,BY31 LANDSORTSDJ,fall,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,spring,4.5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,summer,5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY31 LANDSORTSDJ,winter,5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY31 LANDSORTSDJ,fall,5e-5,g
 Pseudocalanus,Pseudocalanus,NA,AD,M,BY31 LANDSORTSDJ,spring,2.9999999999999997e-5,g
 Pseudocalanus,Pseudocalanus,NA,AD,M,BY31 LANDSORTSDJ,summer,3.5e-5,g
 Pseudocalanus,Pseudocalanus,NA,AD,M,BY31 LANDSORTSDJ,winter,3.5e-5,g
-Pseudocalanus,Pseudocalanus,NA,C1,I,BY31 LANDSORTSDJ,fall,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY31 LANDSORTSDJ,fall,1e-5,g
 Pseudocalanus,Pseudocalanus,NA,C1,I,BY31 LANDSORTSDJ,spring,8e-6,g
-Pseudocalanus,Pseudocalanus,NA,C1,I,BY31 LANDSORTSDJ,summer,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY31 LANDSORTSDJ,summer,1e-5,g
 Pseudocalanus,Pseudocalanus,NA,C1,I,BY31 LANDSORTSDJ,winter,7e-6,g
-Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,fall,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,spring,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,summer,1.9999999999999998e-5,g
-Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,winter,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,fall,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,spring,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,summer,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY31 LANDSORTSDJ,winter,2e-5,g
 Synchaeta,Synchaeta,NA,NS,U,BY31 LANDSORTSDJ,fall,3e-6,g
 Synchaeta,Synchaeta,NA,NS,U,BY31 LANDSORTSDJ,spring,3e-6,g
 Synchaeta,Synchaeta,NA,NS,U,BY31 LANDSORTSDJ,summer,3e-6,g
@@ -211,19 +171,19 @@ Synchaeta,Synchaeta,NA,NS,X,BY31 LANDSORTSDJ,fall,3e-6,g
 Synchaeta,Synchaeta,NA,NS,X,BY31 LANDSORTSDJ,spring,3e-6,g
 Synchaeta,Synchaeta,NA,NS,X,BY31 LANDSORTSDJ,summer,3e-6,g
 Synchaeta,Synchaeta,NA,NS,X,BY31 LANDSORTSDJ,winter,3e-6,g
-Temora,Temora,Temora longicornis,AD,F,BY31 LANDSORTSDJ,fall,4.9999999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,F,BY31 LANDSORTSDJ,fall,5e-5,g
 Temora,Temora,Temora longicornis,AD,F,BY31 LANDSORTSDJ,spring,6.5e-5,g
 Temora,Temora,Temora longicornis,AD,F,BY31 LANDSORTSDJ,summer,5.9999999999999995e-5,g
 Temora,Temora,Temora longicornis,AD,F,BY31 LANDSORTSDJ,winter,5.9999999999999995e-5,g
-Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,fall,4.9999999999999996e-5,g
-Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,spring,3.9999999999999996e-05,g
-Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,summer,4.4999999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,fall,5e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,spring,4e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,summer,4.5e-5,g
 Temora,Temora,Temora longicornis,AD,M,BY31 LANDSORTSDJ,winter,5.4999999999999995e-5,g
 Temora,Temora,Temora longicornis,C1,I,BY31 LANDSORTSDJ,fall,4e-6,g
 Temora,Temora,Temora longicornis,C1,I,BY31 LANDSORTSDJ,spring,6e-6,g
 Temora,Temora,Temora longicornis,C1,I,BY31 LANDSORTSDJ,summer,6e-6,g
 Temora,Temora,Temora longicornis,C1,I,BY31 LANDSORTSDJ,winter,9e-6,g
 Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,fall,1.4e-5,g
-Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,spring,1.4999999999999999e-5,g
-Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,summer,1.4999999999999999e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,spring,1.5e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,summer,1.5e-5,g
 Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,winter,1.8e-5,g
