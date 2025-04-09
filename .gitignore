@@ -52,5 +52,8 @@ rsconnect/
 .DS_Store
 .quarto
 
-# Imports
-Import/SharkWeb/
+# Imported data
+data/imported/
+
+#Processed data
+data/processed/
