@@ -25,7 +25,7 @@ suppressPackageStartupMessages(library(readr))
 
 # Combine all CSV files into a single output directory
 options(readr.show_progress = FALSE)
-output_dir <- file.path("Import", "SharkWeb", "BY31")
+output_dir <- file.path("Import", "SharkWeb", "Processed")
 cat(paste("\nAll data packages are being combined and will be stored in", output_dir, "when completed\n"))
 
 # Create the output directory if it doesn't exist
@@ -44,16 +44,21 @@ lapply(
   read_csv,
   show_col_types = FALSE,
   col_types = col_type,
-  col_select = c(delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
+  col_select = c(shark_sample_id_md5, delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
                  sample_date, sample_latitude_dd, sample_longitude_dd, sample_min_depth_m, sample_max_depth_m,
                  sampling_laboratory_name_sv, scientific_name, dyntaxa_id, aphia_id, parameter, value, unit,
                  sex_code, dev_stage_code, trophic_type_code, taxon_kingdom, taxon_phylum, taxon_class, 
-                 taxon_order, taxon_family, taxon_genus, taxon_species)
-) |>
+                 taxon_order, taxon_family, taxon_genus, taxon_species, scientific_name)
+  ) |>
   bind_rows() |>
-  filter(grepl("BY31", station_name), unit == "ugC/l") |>  # Filter for station and unit
+  filter(station_name %in% c( "BY31 LANDSORTSDJ",
+                              "BY5 BORNHOLMSDJ",
+                              "BY15 GOTLANDSDJ",
+                              "BY2 ARKONA"), unit == "ugC/l") |>  # Filter for station and unit
   write_csv(file.path(output_dir, "phytoplankton.csv"))  # Save processed file
 
+
+list.files(raw_dir, pattern = "^SHARK_Phytoplankton.*\\.csv$", full.names = TRUE)
 cat("\nPhytoplankton dataset done\n")
 
 # Process Zooplankton Data
@@ -69,7 +74,10 @@ lapply(
                  taxon_order, taxon_family, taxon_genus, taxon_species)
 ) |> 
   bind_rows() |> 
-  filter(grepl("BY31", station_name), unit == "ind/m3") |>  # Filter for station and unit
+  filter(station_name %in% c( "BY31 LANDSORTSDJ",
+                              "BY5 BORNHOLMSDJ",
+                              "BY15 GOTLANDSDJ",
+                              "BY2 ARKONA"), unit == "ind/m3") |>  # Filter for station and unit
   write_csv(file.path(output_dir, "zooplankton.csv"))  # Save processed file
 
 cat("\nZooplankton dataset done\n")
@@ -85,7 +93,31 @@ lapply(
                  sampling_laboratory_name_sv, parameter, value, unit)
 ) |>
   bind_rows() |>
-  filter(grepl("BY31", station_name), parameter == "Temperature CTD") |>  # Filter for temperature data
+  filter(station_name %in% c( "BY31 LANDSORTSDJ",
+                              "BY5 BORNHOLMSDJ",
+                              "BY15 GOTLANDSDJ",
+                              "BY2 ARKONA"), parameter == "Temperature CTD") |>  # Filter for temperature data
   write_csv(file.path(output_dir, "temperature.csv"))  # Save processed file
 
 cat("\nTemperature dataset done\n")
+
+# Process Picoplankton Data
+lapply(
+  list.files(raw_dir, pattern = "^SHARK_Picoplankton.*\\.csv$", full.names = TRUE),
+  read_csv,
+  show_col_types = FALSE,
+  col_types = col_type,
+  col_select = c(sample_id, delivery_datatype, visit_year, station_name, sample_project_name_sv, sample_orderer_name_sv,
+                 sample_date, sample_latitude_dd, sample_longitude_dd, sample_min_depth_m, sample_max_depth_m,
+                 sampling_laboratory_name_sv, scientific_name, dyntaxa_id, aphia_id, parameter, value, unit,
+                 sex_code, dev_stage_code, trophic_type_code, taxon_kingdom, taxon_phylum, taxon_class, 
+                 taxon_order, taxon_family, taxon_genus, taxon_species)
+) |>
+  bind_rows() |>
+  filter(station_name %in% c( "BY31 LANDSORTSDJ",
+                              "BY5 BORNHOLMSDJ",
+                              "BY15 GOTLANDSDJ",
+                              "BY2 ARKONA"), unit == "ugC/l") |>  # Filter for station and unit
+  write_csv(file.path(output_dir, "picoplankton.csv"))  # Save processed file
+
+cat("\nPicoplankton dataset done\n")

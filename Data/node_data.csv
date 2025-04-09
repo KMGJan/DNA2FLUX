@@ -1,0 +1,29 @@
+node_name,type,16s_rrna_name,18s_rrna_name,dyntaxa_name,tax_level
+Clupea,fish,,,Clupea harengus,species
+Sprattus,fish,,,Sprattus sprattus,species
+Gasterosteus,fish,,,Gasterosteus aculeatus,species
+Acartia,zooplankton,,,Acartia,genus
+Bosmina,zooplankton,,,Bosmina,genus
+Centropages,zooplankton,,,Centropages,genus
+Eurytemora,zooplankton,,,Eurytemora,genus
+Evadne,zooplankton,,,Evadne,genus
+Keratella,zooplankton,,,Keratella,genus
+Pseudocalanus,zooplankton,,,Pseudocalanus,genus
+Synchaeta,zooplankton,,,Synchaeta,genus
+Temora,zooplankton,,,Temora,genus
+Chaetocerotales,phytoplankton,Chaetocerotales,,Chaetocerotales,order
+Peridiniales,phytoplankton,Peridiniales,,Peridiniales,order
+Pyrenomonadales,phytoplankton,Pyrenomonadales,,Pyrenomonadales,order
+Thalassiosirales,phytoplankton,Thalassiosirales,,Thalassiosirales,order
+Eutreptiales,phytoplankton,Eutreptiales,,Eutreptiales,order
+Prymnesiales,phytoplankton,Prymnesiales,,Prymnesiales,order
+Pyramimonadales,phytoplankton,Pyramimonadales,,Pyramimonadales,order
+Cryptomonadales,phytoplankton,Cryptomonadales,,Cryptomonadales,order
+Bacillariales,phytoplankton,Bacillariales,,Bacillariales,order
+Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,,Aphanizomenon; Dolichospermum,genus
+Nodularia,phytoplankton,Nodularia_PCC-9350,,Nodularia,genus
+Pseudoanabaena,phytoplankton,Pseudoanabaena_PCC-7429,,Pseudanabaena,genus
+Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,,Synechococcus,genus
+,,,,,
+,,,,,
+,,,,,
