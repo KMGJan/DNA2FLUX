@@ -181,7 +181,14 @@ predator_selectivity <-
   filter(rra_env > 0) |> 
   group_by(sample_id,barcode) |> 
   mutate(rra_gut = rra_gut / sum(rra_gut, na.rm = T),
-         rra_env = rra_env / sum(rra_env, na.rm = T))
+         rra_env = rra_env / sum(rra_env, na.rm = T)) |> 
+  group_by(sample_id, collection_date, sample_week, station_name,node_predator,node_prey, barcode) |> 
+  summarise(rra_gut = sum(rra_gut, na.rm = T),
+            rra_env = sum(rra_env, na.rm = T),
+            .groups = "drop_last") |> 
+  summarise(rra_gut = mean(rra_gut, na.rm = T),
+            rra_env = mean(rra_env, na.rm = T),
+            .groups = "drop")
 
 predator_selectivity |> 
   write_csv(file = file.path("data", "processed", "predator_selectivity.csv"))
