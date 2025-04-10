@@ -1,8 +1,12 @@
 #!/usr/bin/env Rscript
 
 cat("\nRunning InterpolateWeekly.R\n")
-
 suppressPackageStartupMessages(library(tidyverse))
+
+
+# Data preparations ----
+
+## File structure ----
 
 if (!dir.exists(file.path("data", "processed"))) {
   dir.create(file.path("data", "processed"))
@@ -16,7 +20,7 @@ if (!dir.exists(file.path("data", "processed", "shark"))) {
   dir.create(file.path("data", "processed", "shark"))
 }
 
-
+## Import and process shark ----
 
 #this will download the data if they have not been downloaded yet, or will update them if a new version was released (it takes 20-30 min): 
 if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
@@ -28,7 +32,9 @@ if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
   system(paste("nohup Rscript", getmonitoring))
 }
 
+
 # Zooplankton ------------------------------------------------------------------
+
 zooplankton <-
   # Load zooplankton data
 
@@ -58,7 +64,7 @@ zooplankton <-
     read_csv(file.path("data","raw", "zooplankton_bodymass.csv"), show_col_types = FALSE),
     by = c("station_name", "sex_code", "dev_stage_code", "taxon_genus", "taxon_species", "season")
     ) |> 
-#> 
+
   # Calculate biomass (g/m²) using abundance and body mass
   mutate(biomass_g = value * bodymass) |>
   # Summarise the dataset so we have one value per week
@@ -74,7 +80,8 @@ zooplankton <-
   summarise(abundance_ind.m2 = mean(abundance_value, na.rm = T),
             biomass_g.m2 = mean(biomass_value, na.rm = T),
             .groups = "drop") |>
-# Interpolating zooplankton data and performing necessary transformations
+  
+  # Interpolating zooplankton data and performing necessary transformations
   # Reshape to wide format
   pivot_wider(names_from = taxon_genus, values_from = c(abundance_ind.m2, biomass_g.m2)) |> 
   
@@ -104,6 +111,7 @@ zooplankton <-
   na.omit() |> # <- remove rows with NA 
   rename("node_name" = Taxa,
          "year" = Year)
+
 zooplankton |>
   select(node_name, year, station_name, bodymass, sample_week) |> 
   write_csv(file.path("data", "processed", "interpolation", "zooplankton_bodymass.csv"))
@@ -111,6 +119,8 @@ zooplankton |>
   select(node_name, year, station_name, biomass, sample_week) |> 
   write_csv(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"))
 cat("\nZooplankton weekly interpolated\n")
+
+
 
 
 # Picophytoplankton ------------------------------------------------------------------
@@ -130,12 +140,76 @@ picoplankton <-
   mutate(value = na.approx(value, sample_date, na.rm = FALSE)) |>   # Linear interpolation
   ungroup() |> 
   filter(is.na(value) == F) |> 
-  mutate(week = isoweek(sample_date)) |>   # Extract week of the year
-  group_by(week) %>%
-  summarize(value = mean(value, na.rm = TRUE), .groups = "drop")  # Average across years
+  mutate(week_number = isoweek(sample_date)) |>   # Extract week of the year
+  group_by(week_number) %>%
+  summarize(Synechococcus = mean(value, na.rm = TRUE), .groups = "drop")  # Average across years
+
+picoplankton
+
 
 # Phytoplankton ------------------------------------------------------------------
+## Read shark and modify taxa to node names ----
+node_names <- 
+  read_csv(file.path("data", "raw", "node_data.csv")) |> 
+  pivot_longer(3:5, names_to = "data_type", values_to = "name") |> 
+  filter(is.na(name) == F) |> 
+  separate_rows(name, sep = ";")
 
+order_pp <- node_names |>
+  filter(data_type == "dyntaxa_name",
+         type == "phytoplankton",
+         tax_level == "order") |> 
+  select(node_name, taxon_order = name) |> 
+  right_join(read_csv(file.path("data", "processed", "shark", "phytoplankton.csv")), 
+             by = "taxon_order") |> 
+  filter(is.na(node_name) == F)
+
+genus_pp <- node_names |>
+  filter(data_type == "dyntaxa_name",
+         type == "phytoplankton",
+         tax_level == "genus") |> 
+  select(node_name, taxon_genus = name) |> 
+  right_join(read_csv(file.path("data", "processed", "shark", "phytoplankton.csv")), 
+             by = "taxon_genus") |> 
+  filter(is.na(node_name) == F)
+
+
+## Interpolation ----
+bind_rows(genus_pp, order_pp) |> 
+  mutate(sample_week = floor_date(sample_date, unit = "week", week_start = 1),
+         #         Month = month(sample_week),
+         #         # Assign seasons based on the month
+         #         season = case_when(
+         #           Month %in% 1:3 ~ "winter",
+         #           Month %in% 4:6 ~ "spring", 
+         #           Month %in% 7:9 ~ "summer",
+         #           Month %in% 10:12 ~ "fall"
+         #         )
+  ) |>   # Change date to the first day of the week
+  group_by(station_name, sample_week, shark_sample_id_md5, node_name) |> 
+  summarise(value = sum(value)) |>
+  ungroup() |> 
+  
+  
+  # Reshape to wide format and merge with picoplankton by week
+  pivot_wider(names_from = node_name, values_from = value, values_fill = 0) |> 
+  mutate(week_number = isoweek(sample_week)) |> 
+  left_join(picoplankton, by = "week_number") |> 
+  select(!shark_sample_id_md5 & !week_number) |> 
+  
+  # Interpolating zooplankton data and performing necessary transformations
+  group_by(station_name) |> 
+  
+  # Generate a complete sequence of weekly sample dates and join
+  complete(sample_week = seq.Date(min(sample_week), max(sample_week), by = "week")) |> 
+  
+  # Arrange by date and interpolate missing values
+  arrange(sample_week) |> 
+  mutate(across(-c(sample_week), ~ zoo::na.approx(.x, na.rm = FALSE))) |> 
+  
+  # Reshape back to long format
+  pivot_longer(cols = -c(sample_week, station_name), names_to = "node_name", values_to = "value") |> 
+  write_csv(file.path("data", "processed", "interpolation", "phytoplankton_carbon.csv"))
 
 
 # Temperature ------------------------------------------------------------------
@@ -166,6 +240,8 @@ temperature |>
 
 cat("\nTemperature weekly interpolated\n")
 
+
+
 # Fish ----
 ## Biomass ----
 read_csv(file.path("data", "raw","fish_parameters.csv")) |> 
@@ -175,7 +251,7 @@ read_csv(file.path("data", "raw","fish_parameters.csv")) |>
             .groups = "drop") |> 
   full_join(
     tibble(
-      sample_week = read_csv(file.path("data", "processed", "interpolation", "zooplankton.csv")) |> pull(sample_week) |> unique()) |> 
+      sample_week = read_csv(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv")) |> pull(sample_week) |> unique()) |> 
       mutate(year = year(sample_week)),
     by = "year",
     relationship = "many-to-many") |>
@@ -189,7 +265,7 @@ read_csv(file.path("data", "raw","fish_parameters.csv")) |>
             .groups = "drop") |> 
   full_join(
     tibble(
-      sample_week = read_csv(file.path("data", "processed", "interpolation", "zooplankton.csv")) |> pull(sample_week) |> unique()) |> 
+      sample_week = read_csv(file.path("data", "processed", "interpolation", "zooplankton_bodymass.csv")) |> pull(sample_week) |> unique()) |> 
       mutate(year = year(sample_week)),
     by = "year",
     relationship = "many-to-many") |>
