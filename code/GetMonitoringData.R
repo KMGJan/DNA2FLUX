@@ -2,20 +2,24 @@
 
 cat("\nRunning GetMonitoringData.R\n")
 
-# Create necessary directories if they do not exist
-if (!dir.exists(file.path("Import", "SharkWeb"))) {
-  dir.create(file.path("Import", "SharkWeb"))
-}
-raw_dir <- file.path("Import", "SharkWeb", "Raw")
-if (!dir.exists(raw_dir)) {
-  dir.create(raw_dir)
-}
-SHARKphysical <- file.path("Code", "SHARKphysical.sh")
-# Run the data download scripts in the background using `nohup`
-system(paste("nohup bash", SHARKphysical, raw_dir)) # Download physical-chemical data
+## Create necessary directories if they do not exist
+#if (!dir.exists(file.path("data","imported", "sharkweb"))) {
+#  dir.create(file.path("data","imported", "sharkweb"))
+#}
+raw_dir <- file.path("data","imported","sharkweb")
+#if (!dir.exists(raw_dir)) {
+#  dir.create(raw_dir)
+#}
+#SHARKphysical <- file.path("code", "SHARKphysical.sh")
+## Run the data download scripts in the background using `nohup`
+#system(paste("nohup bash", SHARKphysical, raw_dir)) # Download physical-chemical data
+#
+#SHARKplankton <- file.path("code", "SHARKplankton.sh")
+#system(paste("nohup bash", SHARKplankton, raw_dir)) # Download plankton data
 
-SHARKplankton <- file.path("Code", "SHARKplankton.sh")
-system(paste("nohup bash", SHARKplankton, raw_dir)) # Download plankton data
+
+
+
 
 cat(paste("\nAll data packages are downloaded in", raw_dir, "and up to date\n"))
 
@@ -25,7 +29,7 @@ suppressPackageStartupMessages(library(readr))
 
 # Combine all CSV files into a single output directory
 options(readr.show_progress = FALSE)
-output_dir <- file.path("Import", "SharkWeb", "Processed")
+output_dir <- file.path("data", "processed", "shark")
 cat(paste("\nAll data packages are being combined and will be stored in", output_dir, "when completed\n"))
 
 # Create the output directory if it doesn't exist
