@@ -124,6 +124,10 @@ cat("\nZooplankton weekly interpolated\n")
 
 
 # Picophytoplankton ------------------------------------------------------------------
+
+# Picocyanobacteria are not included in the phytoplankton dataset, but has been
+# counted at a handful of stations separately.
+
 library(zoo)
 # Read and filter
 picoplankton <-
@@ -142,9 +146,8 @@ picoplankton <-
   filter(is.na(value) == F) |> 
   mutate(week_number = isoweek(sample_date)) |>   # Extract week of the year
   group_by(week_number) %>%
-  summarize(Synechococcus = mean(value, na.rm = TRUE), .groups = "drop")  # Average across years
+  summarize(Cyanobiaceae = mean(value, na.rm = TRUE), .groups = "drop")  # Average across years
 
-picoplankton
 
 
 # Phytoplankton ------------------------------------------------------------------
@@ -193,9 +196,8 @@ bind_rows(genus_pp, order_pp) |>
   
   # Reshape to wide format and merge with picoplankton by week
   pivot_wider(names_from = node_name, values_from = value, values_fill = 0) |> 
-  mutate(week_number = isoweek(sample_week)) |> 
-  left_join(picoplankton, by = "week_number") |> 
-  select(!shark_sample_id_md5 & !week_number) |> 
+  select(!shark_sample_id_md5) |> 
+  
   
   # Interpolating zooplankton data and performing necessary transformations
   group_by(station_name) |> 
@@ -207,9 +209,19 @@ bind_rows(genus_pp, order_pp) |>
   arrange(sample_week) |> 
   mutate(across(-c(sample_week), ~ zoo::na.approx(.x, na.rm = FALSE))) |> 
   
+  # Reshape to wide format and merge with picoplankton by week
+  mutate(week_number = isoweek(sample_week)) |> 
+  left_join(picoplankton, by = "week_number") |> 
+  select(!week_number) |> 
+  
   # Reshape back to long format
-  pivot_longer(cols = -c(sample_week, station_name), names_to = "node_name", values_to = "value") |> 
-  write_csv(file.path("data", "processed", "interpolation", "phytoplankton_carbon.csv"))
+  pivot_longer(cols = -c(sample_week, station_name), names_to = "node_name", values_to = "value") |>
+  # Convert ugC to biomass g/m2
+  # * 20 for sampling depth;  * 4 for carbon to biomass; * 0.001 ug to g
+  mutate(biomass = value * 20 * 4 * 0.001) |> 
+  select(node_name, sample_week, station_name, biomass) |> 
+  
+  write_csv(file.path("data", "processed", "interpolation", "phytoplankton_biomass.csv"))
 
 
 # Temperature ------------------------------------------------------------------
@@ -271,3 +283,16 @@ read_csv(file.path("data", "raw","fish_parameters.csv")) |>
     relationship = "many-to-many") |>
   select(node_name, year, bodymass, sample_week) |> 
   write_csv(file = file.path("data", "processed", "interpolation", "fish_bodymass.csv"))
+
+
+# Merge Biomasses ----------
+
+read_csv(file.path("data", "processed", "interpolation", "fish_biomass.csv")) |> 
+  bind_rows(read_csv(file.path("data", "processed", "interpolation", "zooplankton_biomass.csv"))) |>
+  mutate(station_name = as.character("BY31 LANDSORTSDJ")) |> 
+  bind_rows(read_csv(file.path("data", "processed", "interpolation", "phytoplankton_biomass.csv"))) |> 
+  write_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))
+
+
+
+
