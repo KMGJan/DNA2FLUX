@@ -83,7 +83,7 @@ zooplankton <-
   
   # Interpolating zooplankton data and performing necessary transformations
   # Reshape to wide format
-  pivot_wider(names_from = taxon_genus, values_from = c(abundance_ind.m2, biomass_g.m2)) |> 
+  pivot_wider(names_from = taxon_genus, values_from = c(abundance_ind.m2, biomass_g.m2), values_fill = 0) |> 
   
   # Generate a complete sequence of weekly sample dates and join
   complete(sample_week = seq.Date(min(sample_week), max(sample_week), by = "week")) |>
