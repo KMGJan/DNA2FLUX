@@ -70,7 +70,7 @@ zooplankton <-
   
   # Interpolating zooplankton data and performing necessary transformations
   # Reshape to wide format
-  pivot_wider(names_from = taxon_genus, values_from = c(abundance_ind.m2, biomass_g.m2), values_fill = 0) |> 
+  pivot_wider(names_from = taxon_genus, values_from = c(abundance_ind.m2, biomass_g.m2), values_fill = 0) |>
   
   # Generate a complete sequence of weekly sample dates and join
   complete(sample_week = seq.Date(min(sample_week), max(sample_week), by = "week")) |>
@@ -94,8 +94,9 @@ zooplankton <-
   pivot_wider(names_from = parameter, values_from = value) |>
   
   # Calculate Bodymass per individual by dividing Biomass by Abundance
-  mutate(bodymass = biomass / abundance) |> 
-  na.omit() |> # <- remove rows with NA 
+  mutate(bodymass = biomass / abundance,
+         bodymass = replace_na(bodymass, 0)) |>
+ # na.omit() |> # <- remove rows with NA 
   rename("node_name" = Taxa,
          "year" = Year)
 
