@@ -29,6 +29,11 @@ suppressPackageStartupMessages(library(readr))
 
 # Combine all CSV files into a single output directory
 options(readr.show_progress = FALSE)
+
+if (!dir.exists(file.path("data", "processed"))) {
+  dir.create(file.path("data", "processed"))
+}
+
 output_dir <- file.path("data", "processed", "shark")
 cat(paste("\nAll data packages are being combined and will be stored in", output_dir, "when completed\n"))
 
