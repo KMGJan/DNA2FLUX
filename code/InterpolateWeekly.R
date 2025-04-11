@@ -219,7 +219,12 @@ bind_rows(genus_pp, order_pp) |>
   # Convert ugC to biomass g/m2
   # * 20 for sampling depth;  * 4 for carbon to biomass; * 0.001 ug to g
   mutate(biomass = value * 20 * 4 * 0.001) |> 
-  select(node_name, sample_week, station_name, biomass) |> 
+  select(node_name, sample_week, station_name, biomass) |>
+  
+  # Average value for each sample_week, station
+  ungroup() |> 
+  group_by(node_name, sample_week, station_name) |> 
+  summarise(biomass = mean(biomass, na.rm = T), .groups = "drop") |> 
   
   write_csv(file.path("data", "processed", "interpolation", "phytoplankton_biomass.csv"))
 
