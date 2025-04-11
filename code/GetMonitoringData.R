@@ -3,20 +3,26 @@
 cat("\nRunning GetMonitoringData.R\n")
 
 ## Create necessary directories if they do not exist
-#if (!dir.exists(file.path("data","imported", "sharkweb"))) {
-#  dir.create(file.path("data","imported", "sharkweb"))
-#}
+if (!dir.exists(file.path("data","imported"))) {
+  dir.create(file.path("data","imported"))
+}
+if (!dir.exists(file.path("data","processed"))) {
+  dir.create(file.path("data","processed"))
+}
+if (!dir.exists(file.path("data","imported", "sharkweb"))) {
+  dir.create(file.path("data","imported", "sharkweb"))
+}
 raw_dir <- file.path("data","imported","sharkweb")
-#if (!dir.exists(raw_dir)) {
-#  dir.create(raw_dir)
-#}
+if (!dir.exists(raw_dir)) {
+  dir.create(raw_dir)
+}
+
 #SHARKphysical <- file.path("code", "SHARKphysical.sh")
 ## Run the data download scripts in the background using `nohup`
 #system(paste("nohup bash", SHARKphysical, raw_dir)) # Download physical-chemical data
 #
 #SHARKplankton <- file.path("code", "SHARKplankton.sh")
 #system(paste("nohup bash", SHARKplankton, raw_dir)) # Download plankton data
-
 
 
 
@@ -29,10 +35,6 @@ suppressPackageStartupMessages(library(readr))
 
 # Combine all CSV files into a single output directory
 options(readr.show_progress = FALSE)
-
-if (!dir.exists(file.path("data", "processed"))) {
-  dir.create(file.path("data", "processed"))
-}
 
 output_dir <- file.path("data", "processed", "shark")
 cat(paste("\nAll data packages are being combined and will be stored in", output_dir, "when completed\n"))
