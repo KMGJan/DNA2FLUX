@@ -3,25 +3,7 @@
 cat("\nRunning InterpolateWeekly.R\n")
 suppressPackageStartupMessages(library(tidyverse))
 
-
-# Data preparations ----
-
-## File structure ----
-
-if (!dir.exists(file.path("data", "processed"))) {
-  dir.create(file.path("data", "processed"))
-}
-
-if (!dir.exists(file.path("data", "processed", "interpolation"))) {
-  dir.create(file.path("data", "processed", "interpolation"))
-}
-
-if (!dir.exists(file.path("data", "processed", "shark"))) {
-  dir.create(file.path("data", "processed", "shark"))
-}
-
-## Import and process shark ----
-
+# Check that the data are present before interpolation
 #this will download the data if they have not been downloaded yet, or will update them if a new version was released (it takes 20-30 min): 
 if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
    !file.exists(file.path("data", "processed", "shark", "zooplankton.csv")) |
@@ -32,6 +14,11 @@ if(!file.exists(file.path("data", "processed", "shark", "phytoplankton.csv")) |
   system(paste("nohup Rscript", getmonitoring))
 }
 
+## Add output directory data/processed/interpolation  ----
+
+if (!dir.exists(file.path("data", "processed", "interpolation"))) {
+  dir.create(file.path("data", "processed", "interpolation"))
+}
 
 # Zooplankton ------------------------------------------------------------------
 
@@ -189,15 +176,14 @@ bind_rows(genus_pp, order_pp) |>
          #           Month %in% 10:12 ~ "fall"
          #         )
   ) |>   # Change date to the first day of the week
-  group_by(station_name, sample_week, shark_sample_id_md5, node_name) |> 
-  summarise(value = sum(value)) |>
-  ungroup() |> 
-  
+  group_by(station_name, sample_week, node_name, shark_sample_id_md5) |>
+  summarise(carbon = sum(value), .groups = "drop_last") |>
+  # Average value for each sample_week, station
+  summarise(carbon = mean(carbon, na.rm = T), .groups = "drop") |> 
   
   # Reshape to wide format and merge with picoplankton by week
-  pivot_wider(names_from = node_name, values_from = value, values_fill = 0) |> 
-  select(!shark_sample_id_md5) |> 
-  
+  pivot_wider(names_from = node_name, values_from = carbon, values_fill = 0) |> 
+
   
   # Interpolating zooplankton data and performing necessary transformations
   group_by(station_name) |> 
@@ -219,8 +205,8 @@ bind_rows(genus_pp, order_pp) |>
   # Convert ugC to biomass g/m2
   # * 20 for sampling depth;  * 4 for carbon to biomass; * 0.001 ug to g
   mutate(biomass = value * 20 * 4 * 0.001) |> 
-  select(node_name, sample_week, station_name, biomass) |> 
-  
+  select(node_name, sample_week, station_name, biomass) |>
+
   write_csv(file.path("data", "processed", "interpolation", "phytoplankton_biomass.csv"))
 
 

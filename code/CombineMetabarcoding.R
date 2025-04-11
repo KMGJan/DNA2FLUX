@@ -172,7 +172,7 @@ environment_df <-
 # Combine both datasets
 predator_selectivity <-
   predator_df |> 
-  full_join(environment_df,
+  left_join(environment_df,
             by = c("collection_date","sample_week", "trawl_id", "station_name", "barcode", "ASV", "node_prey"),
             relationship = "many-to-many") |>
   rename("rra_gut" = rra) |> 
