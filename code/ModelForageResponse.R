@@ -184,7 +184,8 @@ results |>
   select(node_predator, node_prey, average_forage_ratio, a, h) |> 
   arrange(node_predator, node_prey) |> 
   write_csv(file = file.path("data", "processed", "forage_ratio.csv"))
-
+bind_rows(boot_results) |> 
+  write_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 # Summarise the confidence intervals from bootstraps
 bootstrapped_values <-
   bind_rows(boot_results) |> 
@@ -237,4 +238,5 @@ results |>
   theme_bw()+
   scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
+
 
