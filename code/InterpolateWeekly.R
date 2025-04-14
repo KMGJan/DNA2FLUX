@@ -233,7 +233,7 @@ temperature <-
   arrange(sample_week) |>
   # Apply linear interpolation to all columns except 'sample_date'
   mutate(temperature = zoo::na.approx(temperature, na.rm = FALSE), 
-         station_name = "BY31")
+         station_name = "BY31 LANDSORTSDJ")
 temperature |>
   write_csv(file.path("data","processed", "interpolation","temperature.csv"))
 
@@ -279,6 +279,13 @@ read_csv(file.path("data", "processed", "interpolation", "fish_biomass.csv")) |>
   mutate(station_name = as.character("BY31 LANDSORTSDJ")) |> 
   bind_rows(read_csv(file.path("data", "processed", "interpolation", "phytoplankton_biomass.csv"))) |> 
   write_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))
+
+# Merge Bodymass ----------
+
+read_csv(file.path("data", "processed", "interpolation", "fish_bodymass.csv")) |> 
+  bind_rows(read_csv(file.path("data", "processed", "interpolation", "zooplankton_bodymass.csv"))) |>
+  mutate(station_name = as.character("BY31 LANDSORTSDJ")) |> 
+  write_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"))
 
 
 

@@ -10,16 +10,36 @@ suppressPackageStartupMessages(library(ggraph))
 sel_sample_week <- date("2007-03-12")
 sel_station_name <- "BY31 LANDSORTSDJ"
 
-# Calculate Weights ----
-# Subset biomasses for day and station
+# Calculate temperature constant
+temp <-
+  read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv")) |> 
+  filter(sample_week == sel_sample_week,
+         station_name == sel_station_name) |> 
+  pull(temperature)
+boltz <- 0.00008617343  # Boltzmann constant
+tkonst <- 0.69/(boltz*(273.15+temp)) #Temperature metabolic constant
+
+
+# Subset masses for day and station
 biomasses <-
   read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv")) |> 
   filter(sample_week == sel_sample_week,
          station_name == sel_station_name) |> 
   select(node_name, biomass)
 
-# Calculate forage ratio and weights
+bodymasses <-
+  read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv")) |> 
+  filter(sample_week == sel_sample_week,
+         station_name == sel_station_name) |> 
+  select(node_name, bodymass)
+
+node_data <-
+  read_csv(file = file.path("data", "raw", "node_data.csv")) |> 
+  select(node_name, efficiencies, slope)
+
+# Calculate Weights ----
 # (Without bootstrap variation here)
+
 graph <-
   read_csv(file = file.path("data", "processed", "forage_ratio.csv")) |>
   filter(is.na(node_predator) == F) |> 
@@ -32,38 +52,37 @@ graph <-
          # Check why NAs are introduced here!
          weight = (rel_biomass * forage_ratio) / sum(rel_biomass * forage_ratio, na.rm = T)) |> 
   ungroup() |> 
+  
+  # Make Table Graph
   select(node_predator, node_prey, forage_ratio, weight) |> 
   as_tbl_graph() |>
   activate(edges) |> 
   mutate(weight = replace_na(weight, 0)) |> 
   
-  # Add biomasses to node data
+  # Add node data
   activate(nodes) |> 
   left_join(biomasses, by = join_by(name == node_name)) |> 
-  mutate(biomass = replace_na(biomass, 0))
+  mutate(biomass = replace_na(biomass, 0)) |> 
+  left_join(bodymasses, by = join_by(name == node_name)) |> 
+  mutate(bodymass = replace_na(bodymass, 0)) |> 
+  left_join(node_data, by = join_by(name == node_name)) |> 
 
-
-# Modify Node Data ----
-
-graph
-
-
-
-
-
-
-
+  # Calculate losses
+  # TODO <- This calculation may not be correct!
+  mutate(losses = exp(-0.29 * log(bodymass) + slope - tkonst),
+         losses = ifelse(is.infinite(losses), 0, losses))
 
 
 # Tidygraph to fluxweb ----
 # This is the end goal - not there yet.
 
 fluxes <- 
-  fluxing(biomasses = as_adjacency_matrix(graph, attr = "W", sparse = FALSE),
+  fluxing(mat = as_adjacency_matrix(graph, attr = "weight", sparse = FALSE),
+          biomasses = pull(graph, biomass),
           losses = pull(graph, losses),
           efficiencies = pull(graph, efficiencies),
           bioms.prefs = FALSE,
           ef.level = "prey",
           bioms.losses = TRUE)
 
-
+fluxes
