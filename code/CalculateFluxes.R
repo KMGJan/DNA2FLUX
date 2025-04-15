@@ -59,14 +59,14 @@ graph <-
   activate(edges) |> 
   mutate(weight = replace_na(weight, 0)) |> 
   
-  # Add node data
+  # Add node data  
   activate(nodes) |> 
   left_join(biomasses, by = join_by(name == node_name)) |> 
   mutate(biomass = replace_na(biomass, 0)) |> 
   left_join(bodymasses, by = join_by(name == node_name)) |> 
-  mutate(bodymass = replace_na(bodymass, 0)) |> 
+  mutate(bodymass = replace_na(bodymass, 1)) |> 
   left_join(node_data, by = join_by(name == node_name)) |> 
-
+  
   # Calculate losses
   # TODO <- This calculation may not be correct!
   mutate(losses = exp(-0.29 * log(bodymass) + slope - tkonst),
@@ -82,7 +82,12 @@ fluxes <-
           losses = pull(graph, losses),
           efficiencies = pull(graph, efficiencies),
           bioms.prefs = FALSE,
-          ef.level = "prey",
-          bioms.losses = TRUE)
-
-fluxes
+          ef.level = "pred",
+          bioms.losses = TRUE) |> 
+  as_tbl_graph() |> activate(nodes) |> 
+  activate(nodes) |> 
+  left_join(biomasses, by = join_by(name == node_name)) |> 
+  mutate(biomass = replace_na(biomass, 0))
+#left_join(bodymasses, by = join_by(name == node_name)) |> 
+#mutate(bodymass = replace_na(bodymass, 1)) |> 
+#left_join(node_data, by = join_by(name == node_name))
