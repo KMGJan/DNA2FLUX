@@ -7,8 +7,11 @@ suppressPackageStartupMessages(library(ggraph))
 
 # Select Station and Day ----
 
-sel_sample_week <- date("2007-03-12")
+sel_sample_week <- date("2010-07-12")
 sel_station_name <- "BY31 LANDSORTSDJ"
+
+read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv")) |> 
+  pull(sample_week) |>  unique()
 
 # Calculate temperature constant
 temp <-
@@ -35,7 +38,7 @@ bodymasses <-
 
 node_data <-
   read_csv(file = file.path("data", "raw", "node_data.csv")) |> 
-  select(node_name, efficiencies, slope)
+  select(node_name, efficiencies, intercept, slope)
 
 # Calculate Weights ----
 # (Without bootstrap variation here)
@@ -69,7 +72,7 @@ graph <-
   
   # Calculate losses
   # TODO <- This calculation may not be correct!
-  mutate(losses = exp(-0.29 * log(bodymass) + slope - tkonst),
+  mutate(losses = exp(slope * log(bodymass) + intercept - tkonst),
          losses = ifelse(is.infinite(losses), 0, losses))
 
 
