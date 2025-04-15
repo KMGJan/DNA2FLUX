@@ -84,10 +84,23 @@ fluxes <-
           bioms.prefs = FALSE,
           ef.level = "pred",
           bioms.losses = TRUE) |> 
+  # Add biomass to node data again
   as_tbl_graph() |> activate(nodes) |> 
   activate(nodes) |> 
   left_join(biomasses, by = join_by(name == node_name)) |> 
   mutate(biomass = replace_na(biomass, 0))
-#left_join(bodymasses, by = join_by(name == node_name)) |> 
-#mutate(bodymass = replace_na(bodymass, 1)) |> 
-#left_join(node_data, by = join_by(name == node_name))
+
+# Principal visualization:
+fluxes |> 
+  ggraph() +
+  geom_edge_link(aes(width = weight), arrow = arrow(length = unit(3, 'mm')),
+                 alpha = 0.2) +
+  geom_node_point(aes(size = biomass)) +
+  geom_node_text(aes(label = name), angle = -90, size = 2.5, nudge_y = -0.2) +
+  theme_graph() +
+  #scale_color_manual(values = colors) +
+  theme(legend.position = "none")
+
+
+
+
