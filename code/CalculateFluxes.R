@@ -46,9 +46,9 @@ graph <-
   left_join(biomasses, by = join_by(node_prey == node_name)) |> 
   group_by(node_predator) |> 
   mutate(rel_biomass = biomass / sum(biomass, na.rm = T)) |> 
-  mutate(forage_ratio = (a * rel_biomass) / (1 + a * h * rel_biomass) / (rel_biomass),
+  mutate(forage_ratio = ifelse(!is.na(a) & !is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / (rel_biomass), average_forage_ratio),
          forage_ratio = ifelse(is.na(forage_ratio) == T,
-                               average_forage_ratio, forage_ratio),
+                               0, forage_ratio),
          # Check why NAs are introduced here!
          weight = (rel_biomass * forage_ratio) / sum(rel_biomass * forage_ratio, na.rm = T)) |> 
   ungroup() |> 
@@ -72,7 +72,7 @@ graph <-
   mutate(losses = exp(-0.29 * log(bodymass) + slope - tkonst),
          losses = ifelse(is.infinite(losses), 0, losses))
 
-
+graph
 # Tidygraph to fluxweb ----
 # This is the end goal - not there yet.
 
