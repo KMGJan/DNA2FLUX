@@ -5,7 +5,6 @@
 
 #' Filter data by sample week and station
 #' 
-#' 
 getStationDate <- function(data, date, station) {
   
   require(tidyverse)
@@ -13,13 +12,12 @@ getStationDate <- function(data, date, station) {
    data |> 
     filter(sample_week == date(date),
            station_name == station)
-   
 }
 
 
 
 #' Temperature metabolic constant
-#' 
+#' For specific date and station
 #' 
 getTempKonstant <- function(data, date, station) {
   
@@ -34,8 +32,7 @@ getTempKonstant <- function(data, date, station) {
 }
 #' Example
 #'    getTempKonstant(temperature, "2009-02-16", "BY31 LANDSORTSDJ")
-#'    
-#'  
+
 
 
 #' Get Node Data
@@ -72,8 +69,9 @@ getNodeData <- function(node_data, weekly_biomasses,
 
 
 
-#' Flux from tidygraph object
-#' 
+
+
+
 tidyFluxing <- function(graph) {
   
   require(fluxweb)
@@ -92,6 +90,8 @@ tidyFluxing <- function(graph) {
 
 
 
+#' Wrapper
+#' Merge all data and calculate fluxes
 dna2flux <- function(forage_ratio, node_data,
                      weekly_biomasses, weekly_bodymass,
                      temperature, date, station) {
@@ -146,7 +146,11 @@ dna2flux <- function(forage_ratio, node_data,
 
 
 
-# Execute functions ----
+# Execute functions --------------------------------------------------
+
+# Load data
+library(tidyverse)
+library(ggraph)
 temperature <- read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv"))
 weekly_biomasses <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))
 weekly_bodymass <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"))
@@ -154,22 +158,19 @@ node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"))
 forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"))
 bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 
-fluxes <- 
-  dna2flux(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
-           temperature, "2009-02-16", "BY31 LANDSORTSDJ")
-
-
-
-# Principal visualization ----
-fluxes |> 
+# Run
+dna2flux(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
+         temperature, "2009-02-16", "BY31 LANDSORTSDJ") |> 
   ggraph() +
   geom_edge_link(aes(width = weight), arrow = arrow(length = unit(3, 'mm')),
                  alpha = 0.2) +
   geom_node_point(aes(size = biomass)) +
-  geom_node_text(aes(label = name), angle = -90, size = 2.5, nudge_y = -0.2) +
+  geom_node_text(aes(label = name), angle = -90, size = 3, nudge_y = -0.2) +
   theme_graph() +
   #scale_color_manual(values = colors) +
   theme(legend.position = "none")
+
+
 
 
 

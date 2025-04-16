@@ -1,0 +1,52 @@
+---
+title: "Food Web"
+output:
+  flexdashboard::flex_dashboard:
+    source_code: embed
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+source("./code/CalculateFluxes.R")
+```
+
+
+# Inputs {.sidebar}
+
+### Change Model Input:
+
+```{r}
+dates <- weekly_bodymass |> 
+  pull(sample_week) |>  unique()
+
+selectizeInput( 
+    "date", 
+    "Select date below:", 
+    list(dates = dates) 
+  )
+```
+
+
+# Base Model
+
+## Column {data-width="650"}
+
+### Mass & Growth
+
+```{r}
+
+renderPlot({
+  
+  dna2flux(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
+         temperature, input$date, "BY31 LANDSORTSDJ") |> 
+  ggraph() +
+  geom_edge_link(aes(width = weight), arrow = arrow(length = unit(3, 'mm')),
+                 alpha = 0.2) +
+  geom_node_point(aes(size = biomass, color = name)) +
+  geom_node_text(aes(label = name), angle = -90, size = 2.5, nudge_y = -0.2) +
+  theme_graph(base_size = 20)
+})
+
+```
+
