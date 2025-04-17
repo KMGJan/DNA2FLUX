@@ -57,12 +57,13 @@ smhi_stations <-
 spras <-
   read_csv(file.path("data", "raw", "fish_coi_metadata.csv")) |> 
   rbind(read_csv(file.path("data", "raw", "fish_18s_metadata.csv"))) |>
-  filter(month(collection_date) == 05) |> 
+  filter(month(collection_date) == 05,
+         collection_method == "Trawl") |> 
   select(lat_lon) |>
   separate(lat_lon, into = c("sample_latitude_dd", "sample_longitude_dd"), sep = " ") |> 
   mutate(across(c(sample_latitude_dd, sample_longitude_dd), as.numeric),
          sample_latitude_dd = round(sample_latitude_dd, 4),
-         sample_longitude_dd = round(sample_longitude_dd,4)) |> 
+         sample_longitude_dd = round(sample_longitude_dd, 4)) |> 
   unique()
 
 # Baltic Sea area
