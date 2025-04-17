@@ -78,14 +78,15 @@ tidyFluxing <- function(graph) {
   require(igraph)
   require(tidyverse)
   
-  fluxes <- 
-    fluxing(mat = as_adjacency_matrix(graph, attr = "weight", sparse = FALSE),
+
+    fluxing(mat = t(as_adjacency_matrix(graph, attr = "weight", sparse = FALSE)),
             biomasses = pull(graph, biomass),
             losses = pull(graph, losses),
             efficiencies = pull(graph, efficiencies),
             bioms.prefs = FALSE,
             ef.level = "pred",
-            bioms.losses = TRUE)
+            bioms.losses = TRUE) |> t() 
+  
 }
 
 
@@ -94,12 +95,14 @@ tidyFluxing <- function(graph) {
 #' Merge all data and calculate fluxes
 dna2flux <- function(forage_ratio, node_data,
                      weekly_biomasses, weekly_bodymass,
-                     temperature, date, station) {
+                     temperature, date, station,
+                     as_graph = FALSE) {
   
   require(tidyverse)
   require(tidygraph)
   
-  forage_ratio |> 
+  mat <- 
+    forage_ratio |> 
     filter(is.na(node_predator) == F) |> 
     left_join(select(getStationDate(weekly_biomasses, date, station),
                      node_name, biomass),
@@ -127,13 +130,23 @@ dna2flux <- function(forage_ratio, node_data,
                           weekly_bodymass, temperature,
                           date, station),
               by = join_by(name == node_name)) |> 
-    tidyFluxing() |> 
+    tidyFluxing()*604.8 # From J/second/m2 to kJ/week/m2 
+  mat
+
+  graph <- 
+    mat |>
     as_tbl_graph() |> 
     activate(nodes) |> 
     left_join(getNodeData(node_data, weekly_biomasses,
                           weekly_bodymass, temperature,
                           date, station),
-              by = join_by(name == node_name)) 
+              by = join_by(name == node_name))
+    
+  if (as_graph == TRUE) {
+    return(graph)
+  } else {
+    return(mat)
+  }
 }
 #' Example
 #' dna2flux(forage_ratio, node_data,
@@ -141,34 +154,77 @@ dna2flux <- function(forage_ratio, node_data,
 #'          temperature, "2009-02-16", "BY31 LANDSORTSDJ")
 
 
+fluxConfidence <- function(bootstrap_forage_ratio, node_data,
+                           weekly_biomasses, weekly_bodymass,
+                           temperature, date, station) {
+  
+  library(dplyr)
+  library(purrr)
+  
+  # Define a safe version of dna2flux that returns NULL on error
+  safe_dna2flux <- possibly(dna2flux, otherwise = NULL)
+  
+  # Split the tibble by Iteration
+  bootstrap_list <- bootstrap_forage_ratio |>
+    group_by(Iteration) |> 
+    group_split() |> 
+    # Apply the dna2flux function to each group
+    map(function(group) {
+      safe_dna2flux(forage_ratio = group, node_data, weekly_biomasses,
+                    weekly_bodymass, temperature, date, station,
+                    as_graph = FALSE)}) |> 
+    keep(~ !is.null(.)) |> 
+    abind::abind(along = 3)
+  
+  sumArray <- function(data, values_to, ...) {
+    apply(data, c(1, 2), ...) |> 
+      as.data.frame() |> 
+      rownames_to_column("predator") |> 
+      pivot_longer(!predator, names_to = "prey", values_to = values_to)
+  }
+  
+  sumArray(bootstrap_list, "mean", mean, na.rm = TRUE) |> 
+    left_join(sumArray(bootstrap_list, "lower_ci", quantile, probs = 0.025, na.rm = TRUE),
+              by = c("predator", "prey")) |>
+    left_join(sumArray(bootstrap_list, "upper_ci", quantile, probs = 0.975, na.rm = TRUE),
+              by = c("predator", "prey")) |> 
+    as_tbl_graph() |> activate(nodes) |> 
+    left_join(getNodeData(node_data, weekly_biomasses,
+                          weekly_bodymass, temperature,
+                          date, station),
+              by = join_by(name == node_name))
+  
+}
 
-
+conf <-  fluxConfidence(bootstrap_forage_ratio, node_data, weekly_biomasses,
+              weekly_bodymass, temperature, "2009-02-16", "BY31 LANDSORTSDJ")
 
 
 
 # Execute functions --------------------------------------------------
 
-# Load data
-library(tidyverse)
-library(ggraph)
-temperature <- read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv"))
-weekly_biomasses <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))
-weekly_bodymass <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"))
-node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"))
-forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"))
-bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
+## Load data
+#library(tidyverse)
+#library(ggraph)
+#temperature <- read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv"))
+#weekly_biomasses <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))
+#weekly_bodymass <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"))
+#node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"))
+#forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"))
+#bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 
 # Run
-dna2flux(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
-         temperature, "2009-02-16", "BY31 LANDSORTSDJ") |> 
-  ggraph() +
-  geom_edge_link(aes(width = weight), arrow = arrow(length = unit(3, 'mm')),
-                 alpha = 0.2) +
-  geom_node_point(aes(size = biomass)) +
-  geom_node_text(aes(label = name), angle = -90, size = 3, nudge_y = -0.2) +
-  theme_graph() +
-  #scale_color_manual(values = colors) +
-  theme(legend.position = "none")
+#dna2flux(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
+#         temperature, "2009-02-16", "BY31 LANDSORTSDJ") |> 
+#  ggraph() +
+#  geom_edge_link(aes(width = weight), arrow = arrow(length = unit(3, 'mm')),
+#                 alpha = 0.2) +
+#  geom_node_point(aes(size = biomass)) +
+#  geom_node_text(aes(label = name), angle = -90, size = 3, nudge_y = -0.2) +
+#  theme_graph() +
+#  #scale_color_manual(values = colors) +
+#  theme(legend.position = "none")
+
 
 
 
