@@ -185,6 +185,10 @@ results |>
   arrange(node_predator, node_prey) |> 
   write_csv(file = file.path("data", "processed", "forage_ratio.csv"))
 bind_rows(boot_results) |> 
+  right_join(average_forage_ratios) |> 
+  mutate(average_forage_ratio = ForageRatio) |> 
+  select(node_predator, node_prey, average_forage_ratio, a, h, Iteration) |> 
+  arrange(node_predator, node_prey) |> 
   write_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 # Summarise the confidence intervals from bootstraps
 bootstrapped_values <-
