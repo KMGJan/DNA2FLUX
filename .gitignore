@@ -55,5 +55,8 @@ rsconnect/
 # Imported data
 data/imported/
 
-#Processed data
+# Processed data
 data/processed/
+
+# Outputs
+output/
