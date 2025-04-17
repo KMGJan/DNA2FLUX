@@ -42,21 +42,21 @@ suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(sf))
 
 # Names of the ices rectangle
-ices_rect <- read_csv(file.path("data", "raw", "fish_parameters.csv")) |> 
+ices_rect <- read_csv(file.path("data", "raw", "fish_parameters.csv"), show_col_types = FALSE) |> 
   pull(ICES_rect) |>
   unique()
 
 # Coordinates of the SMHI stations
 smhi_stations <-
-  read_csv(file.path("data", "processed", "shark", "phytoplankton.csv")) |>
+  read_csv(file.path("data", "processed", "shark", "phytoplankton.csv"), show_col_types = FALSE) |>
   select(station_name, sample_latitude_dd, sample_longitude_dd) |>
   unique() |>
   slice(1:4)
 
 # Coordinates where fish gut were estimated
 spras <-
-  read_csv(file.path("data", "raw", "fish_coi_metadata.csv")) |> 
-  rbind(read_csv(file.path("data", "raw", "fish_18s_metadata.csv"))) |>
+  read_csv(file.path("data", "raw", "fish_coi_metadata.csv"), show_col_types = FALSE) |> 
+  rbind(read_csv(file.path("data", "raw", "fish_18s_metadata.csv"), show_col_types = FALSE)) |>
   filter(month(collection_date) == 05,
          collection_method == "Trawl") |> 
   select(lat_lon) |>
