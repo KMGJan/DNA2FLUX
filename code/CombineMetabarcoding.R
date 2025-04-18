@@ -85,7 +85,7 @@ df_16S <-
     Species == "Nodularia_PCC-9350" ~ "Nodularia",  # Most Rotifera_XX are Synchaeta except specific ASVs
     Species %in% c("Nostocaceaex", "Aphanizomenon_NIES81", "Aphanizomenon_MDT14a") ~ "Aphanizomenonaceae",
     Species %in% c("Cyanobium_PCC-6307", "Synechococcus_CC9902") ~ "Cyanobiaceae",
-    Species == "Pseudoanabaena_PCC-7429" ~ "Pseudoanabaena",
+    Species == "Pseudanabaena_PCC-7429" ~ "Pseudanabaena",
     TRUE ~ "Other"  # Default case
   )) |>
   filter(Taxa != "Other",

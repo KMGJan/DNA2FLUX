@@ -1,26 +1,25 @@
-node_name,type,16s_rrna_name,18s_rrna_name,dyntaxa_name,tax_level,efficiencies,intercept,slope
-Clupea,fish,,,Clupea harengus,species,0.906,18.47,-0.29
-Sprattus,fish,,,Sprattus sprattus,species,0.906,18.47,-0.29
-Gasterosteus,fish,,,Gasterosteus aculeatus,species,0.906,18.47,-0.29
-Acartia,zooplankton,,,Acartia,genus,0.77,17.17,-0.29
-Bosmina,zooplankton,,,Bosmina,genus,0.77,17.17,-0.29
-Centropages,zooplankton,,,Centropages,genus,0.77,17.17,-0.29
-Eurytemora,zooplankton,,,Eurytemora,genus,0.77,17.17,-0.29
-Evadne,zooplankton,,,Evadne,genus,0.77,17.17,-0.29
-Keratella,zooplankton,,,Keratella,genus,0.77,17.17,-0.29
-Pseudocalanus,zooplankton,,,Pseudocalanus,genus,0.77,17.17,-0.29
-Synchaeta,zooplankton,,,Synchaeta,genus,0.77,17.17,-0.29
-Temora,zooplankton,,,Temora,genus,0.77,17.17,-0.29
-Chaetocerotales,phytoplankton,Chaetocerotales,,Chaetocerotales,order,1,1,-0.29
-Peridiniales,phytoplankton,Peridiniales,,Peridiniales,order,1,1,-0.29
-Pyrenomonadales,phytoplankton,Pyrenomonadales,,Pyrenomonadales,order,1,1,-0.29
-Thalassiosirales,phytoplankton,Thalassiosirales,,Thalassiosirales,order,1,1,-0.29
-Eutreptiales,phytoplankton,Eutreptiales,,Eutreptiales,order,1,1,-0.29
-Prymnesiales,phytoplankton,Prymnesiales,,Prymnesiales,order,1,1,-0.29
-Pyramimonadales,phytoplankton,Pyramimonadales,,Pyramimonadales,order,1,1,-0.29
-Cryptomonadales,phytoplankton,Cryptomonadales,,Cryptomonadales,order,1,1,-0.29
-Bacillariales,phytoplankton,Bacillariales,,Bacillariales,order,1,1,-0.29
-Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,,Aphanizomenon; Dolichospermum,genus,1,1,-0.29
-Nodularia,phytoplankton,Nodularia_PCC-9350,,Nodularia,genus,1,1,-0.29
-Pseudoanabaena,phytoplankton,Pseudoanabaena_PCC-7429,,Pseudanabaena,genus,1,1,-0.29
-Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,,Synechococcus,genus,1,1,-0.29
+node_name,type,16s_rrna_name,18s_rrna_name,dyntaxa_name,tax_level,efficiencies,intercept,slope,trophic_level,horizontal_position
+Bacillariales,phytoplankton,Bacillariales,NA,Bacillariales,order,1,1,-0.29,1,1
+Chaetocerotales,phytoplankton,Chaetocerotales,NA,Chaetocerotales,order,1,1,-0.29,1,2
+Thalassiosirales,phytoplankton,Thalassiosirales,NA,Thalassiosirales,order,1,1,-0.29,1,3
+Peridiniales,phytoplankton,Peridiniales,NA,Peridiniales,order,1,1,-0.29,1,4
+Cryptomonadales,phytoplankton,Cryptomonadales,NA,Cryptomonadales,order,1,1,-0.29,1,5
+Pyrenomonadales,phytoplankton,Pyrenomonadales,NA,Pyrenomonadales,order,1,1,-0.29,1,6
+Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,NA,Aphanizomenon; Dolichospermum,genus,1,1,-0.29,1,7
+Nodularia,phytoplankton,Nodularia_PCC-9350,NA,Nodularia,genus,1,1,-0.29,1,8
+Pseudanabaena,Phytoplankton,Pseudanabaena_PCC-7429,NA,Pseudanabaena,genus,1,1,-0.29,1,9
+Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,NA,Synechococcus,genus,1,1,-0.29,1,10
+Eutreptiales,phytoplankton,Eutreptiales,NA,Eutreptiales,order,1,1,-0.29,1,11
+Prymnesiales,phytoplankton,Prymnesiales,NA,Prymnesiales,order,1,1,-0.29,1,12
+Pyramimonadales,phytoplankton,Pyramimonadales,NA,Pyramimonadales,order,1,1,-0.29,1,13
+Acartia,zooplankton,NA,NA,Acartia,genus,0.77,17.17,-0.29,2,2
+Centropages,zooplankton,NA,NA,Centropages,genus,0.77,17.17,-0.29,2,3.428571
+Eurytemora,zooplankton,NA,NA,Eurytemora,genus,0.77,17.17,-0.29,2,4.857143
+Pseudocalanus,zooplankton,NA,NA,Pseudocalanus,genus,0.77,17.17,-0.29,2,6.285714
+Temora,zooplankton,NA,NA,Temora,genus,0.77,17.17,-0.29,2,7.714286
+Bosmina,zooplankton,NA,NA,Bosmina,genus,0.77,17.17,-0.29,2,9.142857
+Evadne,zooplankton,NA,NA,Evadne,genus,0.77,17.17,-0.29,2,10.571429
+Synchaeta,zooplankton,NA,NA,Synchaeta,genus,0.77,17.17,-0.29,2,12
+Sprattus,fish,NA,NA,Sprattus sprattus,species,0.906,18.47,-0.29,3,4
+Clupea,fish,NA,NA,Clupea harengus,species,0.906,18.47,-0.29,3,7
+Gasterosteus,fish,NA,NA,Gasterosteus aculeatus,species,0.906,18.47,-0.29,3,10
