@@ -47,7 +47,7 @@ getNodeData <- function(node_data, weekly_biomasses,
   require(tidyverse)
   
   node_data |> 
-    select(node_name, efficiencies, intercept, slope) |> 
+    select(node_name, efficiencies, intercept, slope, trophic_level, horizontal_position) |> 
     # Add biomasses
     left_join(select(getStationDate(weekly_biomasses, date, station),
                      node_name, biomass),
