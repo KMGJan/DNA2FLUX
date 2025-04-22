@@ -14,13 +14,13 @@ if(!file.exists(file.path("data", "processed", "predator_selectivity.csv"))) {
 # Merge selectivity and biomass ----
 # Load and process biomass data
 biomass <-
-  read_csv(file.path("data", "processed", "interpolation", "weekly_biomasses.csv")) |> 
+  read_csv(file.path("data", "processed", "interpolation", "weekly_biomasses.csv"), show_col_types = FALSE) |> 
   group_by(sample_week, station_name) |>
   mutate(rel_biomass = biomass / sum(biomass)) |> 
   select(node_prey = node_name, sample_week, station_name, biomass)
 # Load and compute forage ratios
 ForageRatios <- 
-  read_csv(file.path("data", "processed", "predator_selectivity.csv")) |> 
+  read_csv(file.path("data", "processed", "predator_selectivity.csv"), show_col_types = FALSE) |> 
   ungroup() |>
   mutate(rra_gut = replace_na(rra_gut, 0),
          rra_env = replace_na(rra_env, 0),
@@ -30,12 +30,6 @@ ForageRatios <-
   group_by(sample_id) |> 
   mutate(rel_biomass = biomass / sum(biomass)) |> 
   ungroup()
-
-# Quick visualisation
-ggplot(ForageRatios, aes(x = rel_biomass, y = ForageRatio+1))+
-  geom_point()+
-  scale_y_log10()+ # it is easier to visualize with log-scale
-  facet_grid(node_prey~node_predator)
 
 # Calculate the average forage ratio for each predator-prey pairs
 average_forage_ratios <-
@@ -184,8 +178,9 @@ results |>
   select(node_predator, node_prey, average_forage_ratio, a, h) |> 
   arrange(node_predator, node_prey) |> 
   write_csv(file = file.path("data", "processed", "forage_ratio.csv"))
+
 bind_rows(boot_results) |>
-  right_join(average_forage_ratios) |>
+  right_join(average_forage_ratios |> cross_join(tibble(Iteration = 1:1000))) |>
   filter(!is.na(Iteration)) |>
   mutate(average_forage_ratio = ForageRatio) |>
   select(node_predator, node_prey, average_forage_ratio, a, h, Iteration) |> 
