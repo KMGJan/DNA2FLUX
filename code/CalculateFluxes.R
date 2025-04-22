@@ -8,8 +8,9 @@
 getStationDate <- function(data, date, station) {
   
   require(tidyverse)
- 
-   data |> 
+  # Step to ensure that any date can be used within a week to calculate fluxes from the week
+  sample_date <- floor_date(date(date), unit = "week", week_start = 1)
+  data |> 
     filter(sample_week == date(date),
            station_name == station)
 }
@@ -158,8 +159,10 @@ fluxConfidence <- function(bootstrap_forage_ratio, node_data,
                            weekly_biomasses, weekly_bodymass,
                            temperature, date, station) {
   
-  library(dplyr)
-  library(purrr)
+  require(tidygraph)
+  require(dplyr)
+  require(purrr)
+  require(furrr)
   
   # Define a safe version of dna2flux that returns NULL on error
   safe_dna2flux <- possibly(dna2flux, otherwise = NULL)
@@ -169,12 +172,16 @@ fluxConfidence <- function(bootstrap_forage_ratio, node_data,
     group_by(Iteration) |> 
     group_split() |> 
     # Apply the dna2flux function to each group
-    map(function(group) {
+    future_map(function(group) {
       safe_dna2flux(forage_ratio = group, node_data, weekly_biomasses,
                     weekly_bodymass, temperature, date, station,
-                    as_graph = FALSE)}) |> 
+                    as_graph = FALSE)
+    },
+    .options = furrr_options(seed = TRUE)  # Ensures reproducibility
+    ) |> 
     keep(~ !is.null(.)) |> 
     abind::abind(along = 3)
+
   
   sumArray <- function(data, values_to, ...) {
     apply(data, c(1, 2), ...) |> 
@@ -196,12 +203,7 @@ fluxConfidence <- function(bootstrap_forage_ratio, node_data,
   
 }
 
-#conf <-  fluxConfidence(bootstrap_forage_ratio, node_data, weekly_biomasses,
-#              weekly_bodymass, temperature, "2009-02-16", "BY31 LANDSORTSDJ")
-
-
-
-
-
-
-
+#' Example
+#' future::plan(multisession)
+#' fluxConfidence(bootstrap_forage_ratio, node_data, weekly_biomasses,
+#'                weekly_bodymass, temperature, "2009-02-16", "BY31 LANDSORTSDJ")
