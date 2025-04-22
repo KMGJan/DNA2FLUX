@@ -1,25 +1,25 @@
 node_name,type,16s_rrna_name,18s_rrna_name,dyntaxa_name,tax_level,efficiencies,intercept,slope,trophic_level,horizontal_position,color
-Bacillariales,phytoplankton,Bacillariales,NA,Bacillariales,order,1,1,-0.29,1,1,#2ca25f
-Chaetocerotales,phytoplankton,Chaetocerotales,NA,Chaetocerotales,order,1,1,-0.29,1,2,#99d8c9
-Thalassiosirales,phytoplankton,Thalassiosirales,NA,Thalassiosirales,order,1,1,-0.29,1,3,#e5f5f9
-Peridiniales,phytoplankton,Peridiniales,NA,Peridiniales,order,1,1,-0.29,1,4,#8856a7
-Cryptomonadales,phytoplankton,Cryptomonadales,NA,Cryptomonadales,order,1,1,-0.29,1,5,#43a2ca
-Pyrenomonadales,phytoplankton,Pyrenomonadales,NA,Pyrenomonadales,order,1,1,-0.29,1,6,#a8ddb5
-Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,NA,Aphanizomenon; Dolichospermum,genus,1,1,-0.29,1,7,#d7301f
-Nodularia,phytoplankton,Nodularia_PCC-9350,NA,Nodularia,genus,1,1,-0.29,1,8,#fc8d59
-Pseudanabaena,phytoplankton,Pseudanabaena_PCC-7429,NA,Pseudanabaena,genus,1,1,-0.29,1,9,#fdcc8a
-Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,NA,Synechococcus,genus,1,1,-0.29,1,10,#fef0d9
-Eutreptiales,phytoplankton,Eutreptiales,NA,Eutreptiales,order,1,1,-0.29,1,11,#ce1256
-Prymnesiales,phytoplankton,Prymnesiales,NA,Prymnesiales,order,1,1,-0.29,1,12,#78c679
-Pyramimonadales,phytoplankton,Pyramimonadales,NA,Pyramimonadales,order,1,1,-0.29,1,13,#ffffcc
-Acartia,zooplankton,NA,NA,Acartia,genus,0.77,17.17,-0.29,2,2,#993404
-Centropages,zooplankton,NA,NA,Centropages,genus,0.77,17.17,-0.29,2,3.428571,#d95f0e
-Eurytemora,zooplankton,NA,NA,Eurytemora,genus,0.77,17.17,-0.29,2,4.857143,#fe9929
-Pseudocalanus,zooplankton,NA,NA,Pseudocalanus,genus,0.77,17.17,-0.29,2,6.285714,#fed98e
-Temora,zooplankton,NA,NA,Temora,genus,0.77,17.17,-0.29,2,7.714286,#ffffd4
-Bosmina,zooplankton,NA,NA,Bosmina,genus,0.77,17.17,-0.29,2,9.142857,#a6611a
-Evadne,zooplankton,NA,NA,Evadne,genus,0.77,17.17,-0.29,2,10.571429,#dfc27d
-Synchaeta,zooplankton,NA,NA,Synchaeta,genus,0.77,17.17,-0.29,2,12,#404040
+Bacillariales,phytoplankton,Bacillariales,NA,Bacillariales,order,1,1,-0.29,1,1,#fe9929
+Chaetocerotales,phytoplankton,Chaetocerotales,NA,Chaetocerotales,order,1,1,-0.29,1,2,#cc4c02
+Thalassiosirales,phytoplankton,Thalassiosirales,NA,Thalassiosirales,order,1,1,-0.29,1,3,#662506
+Peridiniales,phytoplankton,Peridiniales,NA,Peridiniales,order,1,1,-0.29,1,4,#2e030a
+Cryptomonadales,phytoplankton,Cryptomonadales,NA,Cryptomonadales,order,1,1,-0.29,1,5,#f7fcf5
+Pyrenomonadales,phytoplankton,Pyrenomonadales,NA,Pyrenomonadales,order,1,1,-0.29,1,6,#c7e9c0
+Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,NA,Aphanizomenon; Dolichospermum,genus,1,1,-0.29,1,7,#3f007d
+Nodularia,phytoplankton,Nodularia_PCC-9350,NA,Nodularia,genus,1,1,-0.29,1,8,#6a51a3
+Pseudanabaena,phytoplankton,Pseudanabaena_PCC-7429,NA,Pseudanabaena,genus,1,1,-0.29,1,9,#dadaeb
+Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,NA,Synechococcus,genus,1,1,-0.29,1,10,#9e9ac8
+Eutreptiales,phytoplankton,Eutreptiales,NA,Eutreptiales,order,1,1,-0.29,1,11,#00441b
+Prymnesiales,phytoplankton,Prymnesiales,NA,Prymnesiales,order,1,1,-0.29,1,12,#238b45
+Pyramimonadales,phytoplankton,Pyramimonadales,NA,Pyramimonadales,order,1,1,-0.29,1,13,#74c476
+Acartia,zooplankton,NA,NA,Acartia,genus,0.77,17.17,-0.29,2,2,#543005
+Centropages,zooplankton,NA,NA,Centropages,genus,0.77,17.17,-0.29,2,3.428571,#8c510a
+Eurytemora,zooplankton,NA,NA,Eurytemora,genus,0.77,17.17,-0.29,2,4.857143,#bf812d
+Pseudocalanus,zooplankton,NA,NA,Pseudocalanus,genus,0.77,17.17,-0.29,2,6.285714,#dfc27d
+Temora,zooplankton,NA,NA,Temora,genus,0.77,17.17,-0.29,2,7.714286,#f6e8c3
+Bosmina,zooplankton,NA,NA,Bosmina,genus,0.77,17.17,-0.29,2,9.142857,#003c30
+Evadne,zooplankton,NA,NA,Evadne,genus,0.77,17.17,-0.29,2,10.571429,#35978f
+Synchaeta,zooplankton,NA,NA,Synchaeta,genus,0.77,17.17,-0.29,2,12,#8073ac
 Sprattus,fish,NA,NA,Sprattus sprattus,species,0.906,18.47,-0.29,3,4,#beaed4
 Clupea,fish,NA,NA,Clupea harengus,species,0.906,18.47,-0.29,3,7,#386cb0
 Gasterosteus,fish,NA,NA,Gasterosteus aculeatus,species,0.906,18.47,-0.29,3,10,#ffff99
