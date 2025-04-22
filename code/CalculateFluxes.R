@@ -196,34 +196,8 @@ fluxConfidence <- function(bootstrap_forage_ratio, node_data,
   
 }
 
-conf <-  fluxConfidence(bootstrap_forage_ratio, node_data, weekly_biomasses,
-              weekly_bodymass, temperature, "2009-02-16", "BY31 LANDSORTSDJ")
-
-
-
-# Execute functions --------------------------------------------------
-
-## Load data
-#library(tidyverse)
-#library(ggraph)
-#temperature <- read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv"))
-#weekly_biomasses <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))
-#weekly_bodymass <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"))
-#node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"))
-#forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"))
-#bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
-
-# Run
-#dna2flux(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
-#         temperature, "2009-02-16", "BY31 LANDSORTSDJ") |> 
-#  ggraph() +
-#  geom_edge_link(aes(width = weight), arrow = arrow(length = unit(3, 'mm')),
-#                 alpha = 0.2) +
-#  geom_node_point(aes(size = biomass)) +
-#  geom_node_text(aes(label = name), angle = -90, size = 3, nudge_y = -0.2) +
-#  theme_graph() +
-#  #scale_color_manual(values = colors) +
-#  theme(legend.position = "none")
+#conf <-  fluxConfidence(bootstrap_forage_ratio, node_data, weekly_biomasses,
+#              weekly_bodymass, temperature, "2009-02-16", "BY31 LANDSORTSDJ")
 
 
 
