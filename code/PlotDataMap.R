@@ -149,3 +149,7 @@ if (!dir.exists(file.path("output", "figure"))) {
 ggsave(plot = map,
        filename = file.path("output", "figure", "map.pdf"),
        width = 6.5, height = 7.25)
+
+ggsave(plot = map,
+       filename = file.path("output", "figure", "map.png"),
+       width = 6, height = 7.25)
