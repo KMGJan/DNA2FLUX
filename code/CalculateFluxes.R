@@ -7,7 +7,8 @@
 #' 
 getStationDate <- function(data, date, station) {
   
-  require(tidyverse)
+#  require(tidyverse)
+
   # Step to ensure that any date can be used within a week to calculate fluxes from the week
   sample_date <- floor_date(date(date), unit = "week", week_start = 1)
   data |> 
@@ -22,7 +23,7 @@ getStationDate <- function(data, date, station) {
 #' 
 getTempKonstant <- function(data, date, station) {
   
-  require(tidyverse)
+#  require(tidyverse)
   
   temp <- temperature |> 
     getStationDate(date, station) |> 
@@ -44,10 +45,10 @@ getNodeData <- function(node_data, weekly_biomasses,
                         weekly_bodymass, temperature,
                         date, station) {
   
-  require(tidyverse)
+#  require(tidyverse)
   
   node_data |> 
-    select(node_name, efficiencies, intercept, slope, trophic_level, horizontal_position) |> 
+    select(node_name, efficiencies, intercept, slope, trophic_level, horizontal_position, color) |> 
     # Add biomasses
     left_join(select(getStationDate(weekly_biomasses, date, station),
                      node_name, biomass),
@@ -75,9 +76,9 @@ getNodeData <- function(node_data, weekly_biomasses,
 
 tidyFluxing <- function(graph) {
   
-  require(fluxweb)
-  require(igraph)
-  require(tidyverse)
+#  require(fluxweb)
+#  require(igraph)
+#  require(tidyverse)
   
 
     fluxing(mat = t(as_adjacency_matrix(graph, attr = "weight", sparse = FALSE)),
@@ -99,8 +100,8 @@ dna2flux <- function(forage_ratio, node_data,
                      temperature, date, station,
                      as_graph = FALSE) {
   
-  require(tidyverse)
-  require(tidygraph)
+#  require(tidyverse)
+#  require(tidygraph)
   
   mat <- 
     forage_ratio |> 
@@ -157,30 +158,47 @@ dna2flux <- function(forage_ratio, node_data,
 
 fluxConfidence <- function(bootstrap_forage_ratio, node_data,
                            weekly_biomasses, weekly_bodymass,
-                           temperature, date, station) {
+                           temperature, date, station, parallel = F) {
   
-  require(tidygraph)
-  require(dplyr)
-  require(purrr)
-  require(furrr)
+#  require(tidygraph)
+#  require(dplyr)
+#  require(purrr)
+#  require(furrr)
   
   # Define a safe version of dna2flux that returns NULL on error
   safe_dna2flux <- possibly(dna2flux, otherwise = NULL)
   
+  if (parallel == TRUE){
   # Split the tibble by Iteration
   bootstrap_list <- bootstrap_forage_ratio |>
     group_by(Iteration) |> 
     group_split() |> 
     # Apply the dna2flux function to each group
-    future_map(function(group) {
+      future_map(function(group) {
+        safe_dna2flux(forage_ratio = group, node_data, weekly_biomasses,
+                      weekly_bodymass, temperature, date, station,
+                      as_graph = FALSE)
+      },
+      .options = furrr_options(seed = TRUE)  # Ensures reproducibility
+      ) |> 
+        keep(~ !is.null(.)) |> 
+        abind::abind(along = 3)
+    }
+  if(parallel == FALSE){
+    # Split the tibble by Iteration
+    bootstrap_list <- bootstrap_forage_ratio |>
+      group_by(Iteration) |> 
+      group_split() |> 
+      map(function(group) {
       safe_dna2flux(forage_ratio = group, node_data, weekly_biomasses,
                     weekly_bodymass, temperature, date, station,
                     as_graph = FALSE)
-    },
-    .options = furrr_options(seed = TRUE)  # Ensures reproducibility
+    }#,
+    #.options = furrr_options(seed = TRUE)  # Ensures reproducibility
     ) |> 
     keep(~ !is.null(.)) |> 
     abind::abind(along = 3)
+    }
 
   
   sumArray <- function(data, values_to, ...) {
