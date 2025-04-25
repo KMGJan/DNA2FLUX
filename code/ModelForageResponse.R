@@ -239,4 +239,5 @@ results |>
   scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
 
+ggsave("output/figure/ModeledForageResponse.pdf")
 

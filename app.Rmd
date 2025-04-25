@@ -302,7 +302,7 @@ renderPlot({
     geom_edge_link(aes(edge_width = mean, col = mean),
                    arrow = arrow(length = unit(3, 'mm'), ends = "first")) +
     geom_node_point(aes(size = pi*(biomass)^2, fill = name), shape = 21) +
-    geom_node_label(aes(label = name), angle = 45, size = 3, nudge_y = -0.05) +
+    geom_node_label(aes(label = name), angle = 45, size = 4, nudge_y = -0.05) +
     theme_graph() +
     scale_fill_manual(values = color_mapping)+
     scale_edge_color_gradient2(
@@ -311,17 +311,6 @@ renderPlot({
       high = "#fc8d59",
       midpoint = 0.05) +
     theme(legend.position = "none")
-    
-    
-    
-  #ggraph(layout = "manual", x=horizontal_position, y=trophic_level) +
-  #geom_edge_link(aes(width = mean), arrow = arrow(length = unit(3, 'mm'), ends = "first"),
-  #               alpha = 0.2) +
-  #geom_node_point(aes(size = biomass)) +
-  #geom_node_text(aes(label = name), angle = -90, size = 5, nudge_y = -0.2) +
-  #theme_graph() +
-  ##scale_color_manual(values = colors) +
-  #theme(legend.position = "none")
 })
 
 
@@ -348,8 +337,8 @@ renderPlot({
     ggplot()+
     geom_bar(aes(to, mean, fill = to), stat = "identity", position = "dodge") +
     geom_errorbar(aes(x = to, y = mean, ymin = lower_ci, ymax = upper_ci)) +
-    scale_fill_manual(values = color_mapping)+
     facet_wrap("from", scales = "free_x") +
+    scale_fill_manual(values = color_mapping)+
     theme_bw(12) +
     theme(axis.text.x = element_blank())
     
@@ -372,8 +361,8 @@ renderPlot({
     ggplot()+
     geom_bar(aes(to, mean, fill = to), stat = "identity", position = "dodge") +
     geom_errorbar(aes(x = to, y = mean, ymin = lower_ci, ymax = upper_ci)) +
-    scale_fill_manual(values = color_mapping)+
     facet_wrap("from", scales = "free_x") +
+    scale_fill_manual(values = color_mapping)+
     theme_bw(12) +
     theme(axis.text.x = element_blank())
   
@@ -393,4 +382,20 @@ Here is room for a description.
 ### Study Area
 
 ![](output/figure/map.png)
+
+# Biomasses
+
+## Column {data-width="650"}
+### Biomasses
+
+```{r}
+biomasses <- weekly_biomasses |> 
+  filter(station_name == "BY31 LANDSORTSDJ") |> 
+  ggplot() +
+  geom_line(aes(sample_week, biomass, colour = node_name)) +
+  scale_colour_manual(values = color_mapping) +
+  theme(aspect.ratio = 0.5)
+  
+  plotly::ggplotly(biomasses)
+```
 
