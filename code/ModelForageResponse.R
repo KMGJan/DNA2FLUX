@@ -242,7 +242,8 @@ bootstrapped_values <-
   ) |> 
   select( node_predator,node_prey, a, h)|> 
   arrange(node_predator, node_prey)
-print(bootstrapped_values, n = nrow(bootstrapped_values))
+if(!dir.exists(file.path("output", "table"))) dir.create(file.path("output", "table"), recursive = TRUE)
+write_csv(bootstrapped_values, file.path("output", "table", "forage_ratio_parameters.csv"))
 # Quick visualisation -------
 rel_biomass_seq <- seq(0.001, 1, length.out = 100)
 boot_prediction <-
@@ -276,9 +277,7 @@ results |>
   scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
         
-ggsave("output/figure/ModeledForageResponse.pdf")
-
+ggsave(file.path("output", "figure", "ModeledForageResponse.pdf"))
 
 # Clean the environment
  rm(list = ls())
-
