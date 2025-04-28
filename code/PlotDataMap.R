@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+cat("\nRunning PlotDataMap.R\n")
 # Dowload the shapefile data if not downloaded yet -----------------------------
 if (!dir.exists(file.path("data", "imported", "ICES_areas")) |
     !dir.exists(file.path("data", "imported", "ICES_rectangles"))) {
@@ -58,7 +59,11 @@ spras <-
   read_csv(file.path("data", "raw", "fish_coi_metadata.csv"), show_col_types = FALSE) |> 
   rbind(read_csv(file.path("data", "raw", "fish_18s_metadata.csv"), show_col_types = FALSE)) |>
   filter(month(collection_date) == 05,
-         collection_method == "Trawl") |> 
+         collection_method == "Trawl") |>
+  extract(sample_name, into = c("trawl_id", "sample_ID", "barcode"), 
+          regex = "([^.]*)\\.(.*)_(.*)", remove = FALSE) |>
+    right_join(read_csv(file.path("data", "processed", "trawl_summary.csv"), show_col_types = FALSE),
+               by = c("organism", "trawl_id")) |> 
   select(lat_lon) |>
   separate(lat_lon, into = c("sample_latitude_dd", "sample_longitude_dd"), sep = " ") |> 
   mutate(across(c(sample_latitude_dd, sample_longitude_dd), as.numeric),
@@ -75,7 +80,7 @@ baltic_sea_shp <-
   ungroup()
 rectangle_shp <- # Shapefile file with ices rectangle
   read_sf(list.files(file.path("data", "imported", "ICES_rectangles"), pattern = "\\.shp$", full.names = TRUE)) |> 
-  filter(ICESNAME %in% ices_rect)
+  filter(ICESNAME %in% c("45G8","46G8", "43G9","43H0", "39G5", "39G6"))
 
 # Combine the ices statistical rectangle to the Baltic Sea shapefile to get the fish sampling area
 if (st_crs(baltic_sea_shp) != st_crs(rectangle_shp)) {
@@ -149,3 +154,10 @@ if (!dir.exists(file.path("output", "figure"))) {
 ggsave(plot = map,
        filename = file.path("output", "figure", "map.pdf"),
        width = 6.5, height = 7.25)
+ggsave(plot = map,
+       filename = file.path("output", "figure", "map.png"),
+       width = 6.5, height = 7.25,
+       dpi = 300)
+
+# Clean the environment
+rm(list = ls())

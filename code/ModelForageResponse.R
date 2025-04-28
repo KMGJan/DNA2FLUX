@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 suppressPackageStartupMessages(library(tidyverse))
 
+
 #Prepare data ----
 # Check if biomass data exists, otherwise generate it
 if(!file.exists(file.path("data", "processed", "interpolation", "weekly_biomasses.csv"))) {
@@ -11,13 +12,33 @@ if(!file.exists(file.path("data", "processed", "predator_selectivity.csv"))) {
   system(paste("nohup Rscript", file.path("code", "CombineMetabarcoding.R")))
 }
 
+cat("\nRunning ModelForageResponse.R\n")
 # Merge selectivity and biomass ----
 # Load and process biomass data
+
+# For the fish prey, use the count data
+count_spras <-
+  read_csv(file.path("data", "raw", "count_spras2022.csv"), show_col_types = FALSE) |> 
+  left_join(read_csv(file.path("data", "processed", "interpolation", "weekly_bodymass.csv"), show_col_types = FALSE),
+            by = c("node_name", "sample_week")) |> 
+  na.omit() |> 
+  mutate(biomass = abundance * bodymass) |> 
+  select(node_prey = node_name, trawl_id, sample_week, station_name, biomass)
+
+fish_prey <- count_spras |> pull(node_prey) |> unique()
+"%!in%" <- Negate("%in%")
+
+# For the zooplankton prey, use the monitoring data
 biomass <-
   read_csv(file.path("data", "processed", "interpolation", "weekly_biomasses.csv"), show_col_types = FALSE) |> 
   group_by(sample_week, station_name) |>
   mutate(rel_biomass = biomass / sum(biomass)) |> 
-  select(node_prey = node_name, sample_week, station_name, biomass)
+  select(node_prey = node_name, sample_week, station_name, biomass) |> 
+  mutate(trawl_id = NA) |> 
+  # For the fish prey, use the count data
+  filter(node_prey %!in% fish_prey) |> 
+  rbind(count_spras)
+
 # Load and compute forage ratios
 ForageRatios <- 
   read_csv(file.path("data", "processed", "predator_selectivity.csv"), show_col_types = FALSE) |> 
@@ -26,10 +47,26 @@ ForageRatios <-
          rra_env = replace_na(rra_env, 0),
          ForageRatio = rra_gut/rra_env) |>
   filter(rra_env > 0) |> 
-  left_join(biomass) |> 
+  left_join(biomass,
+            by = c("sample_week", "station_name", "node_prey", "trawl_id")) |> 
   group_by(sample_id) |> 
-  mutate(rel_biomass = biomass / sum(biomass)) |> 
+  mutate(rel_biomass = biomass / sum(biomass, na.rm = T)) |> 
   ungroup()
+
+# Save the trawl_id for plotting the map later...
+ForageRatios |> 
+  filter(!is.na(trawl_id),
+         !is.na(biomass),
+         node_predator %in% c("Clupea", "Gasterosteus", "Sprattus")) |> 
+  mutate(organism = case_when(
+    node_predator == "Gasterosteus" ~ "Gasterosteus aculeatus",
+    node_predator == "Clupea" ~ "Clupea harengus",
+    node_predator == "Sprattus" ~ "Sprattus sprattus"
+  )) |>
+  select(organism, trawl_id) |> 
+  unique() |> 
+  write_csv(file.path("data", "processed", "trawl_summary.csv"))
+
 
 # Calculate the average forage ratio for each predator-prey pairs
 average_forage_ratios <-
@@ -93,7 +130,7 @@ run_bootstraps <- function(df, model, coef, prey, predator, n_boot = 1000) {
 # Libraries and start a multisession so it paralellise
 suppressPackageStartupMessages(library(furrr))
 plan(multisession) 
-library(minpack.lm)
+suppressPackageStartupMessages(library(minpack.lm))
 
 # Define parameter ranges
 a_values = c(0, 1, 10, 100, 1000) ; a_min = 0 ; a_max = 1000
@@ -173,14 +210,14 @@ for (df in df_list) {
 
 # Save the results -----------------------------------
 results |> 
-  right_join(average_forage_ratios) |> 
+  right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |> 
   mutate(average_forage_ratio = ForageRatio) |> 
   select(node_predator, node_prey, average_forage_ratio, a, h) |> 
   arrange(node_predator, node_prey) |> 
   write_csv(file = file.path("data", "processed", "forage_ratio.csv"))
 
 bind_rows(boot_results) |>
-  right_join(average_forage_ratios |> cross_join(tibble(Iteration = 1:1000))) |>
+  right_join(average_forage_ratios |> cross_join(tibble(Iteration = 1:1000)), by = c("node_predator", "node_prey", "Iteration")) |>
   filter(!is.na(Iteration)) |>
   mutate(average_forage_ratio = ForageRatio) |>
   select(node_predator, node_prey, average_forage_ratio, a, h, Iteration) |> 
@@ -220,14 +257,15 @@ boot_prediction <-
             Bgut_upper = quantile(Bgut, 0.975, na.rm = TRUE),
             .groups = "drop") 
 results |> 
-  right_join(average_forage_ratios) |>
+  right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
   cross_join(tibble(rel_biomass = rel_biomass_seq)) |> 
-  mutate(ForageRatio = ifelse(!is.na(a)&!is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass, ForageRatio)) |> 
+  mutate(ForageRatio = ifelse(!is.na(a)&!is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass, ForageRatio)) |>
+
   ggplot()+
   geom_ribbon(data = boot_prediction,
               mapping = aes(ymin = fr_lower+1, ymax = fr_upper+1, x = rel_biomass), alpha = .2, col = "black", linetype = 2)+
   
-  geom_point(data = ForageRatios,
+  geom_point(data = ForageRatios |> filter(!is.na(biomass)),
              mapping = aes(x = rel_biomass, y = ForageRatio+1), color = "black", shape = 21, alpha = .5, size = 1)+
   geom_line(linewidth = .5, col = "red",
             mapping = aes(x = rel_biomass, y = ForageRatio+1))+
@@ -239,4 +277,5 @@ results |>
   scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
 
-
+# Clean the environment
+ rm(list = ls())
