@@ -260,7 +260,6 @@ results |>
   right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
   cross_join(tibble(rel_biomass = rel_biomass_seq)) |> 
   mutate(ForageRatio = ifelse(!is.na(a)&!is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass, ForageRatio)) |>
-
   ggplot()+
   geom_ribbon(data = boot_prediction,
               mapping = aes(ymin = fr_lower+1, ymax = fr_upper+1, x = rel_biomass), alpha = .2, col = "black", linetype = 2)+

@@ -1,19 +1,28 @@
 #!/usr/bin/env Rscript
 
-## Load data
+# Create the directory for analyses
+if (!dir.exists(file.path("data","analyses"))) dir.create(file.path("data","analyses"))
+
+## Load libraries
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(ggraph))
 suppressPackageStartupMessages(library(tidygraph))
 suppressPackageStartupMessages(library(igraph))
 suppressPackageStartupMessages(library(rlang))
+
+# Source all needed functions for the analyses
 source("./code/CalculateFluxes.R")
 
-if (!dir.exists(file.path("data","analyses"))) dir.create(file.path("data","analyses"))
-
-if(!file.exists(file.path("data", "analyses", "weekly_fluxes.rds"))){
+# If the daily_fluxes.rds tibble was not produced before, this will run
+if(!file.exists(file.path("data", "analyses", "as_tbl_graph_daily_fluxes.rds")) |
+   !file.exists(file.path("data", "analyses", "daily_fluxes.csv")) |
+   !file.exists(file.path("data", "analyses", "monthly_fluxes.csv")) |
+   !file.exists(file.path("data", "analyses", "yearly_fluxes.csv"))){
+  
   # Load the needed libraries
   suppressPackageStartupMessages(library(fluxweb))
   suppressPackageStartupMessages(library(furrr))
+  suppressPackageStartupMessages(library(abind))
   
   # Import the data
   temperature <- read_csv(file = file.path("data", "processed", "interpolation", "temperature.csv"), show_col_types = FALSE)
@@ -23,15 +32,14 @@ if(!file.exists(file.path("data", "analyses", "weekly_fluxes.rds"))){
   forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"), show_col_types = FALSE)
   bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"), show_col_types = FALSE)
   
-  # Define the stations and the dates we want to compute
+  # Define the stations and the dates we want to compute the fluxes
   station = "BY31 LANDSORTSDJ"
-  dates <-
-    weekly_biomasses |>
+  dates <- weekly_biomasses |>
     # Filter weekly_biomasses to only include samples from 2007 to end of 2023
     filter(sample_week > as.Date("2007-03-05"),
-           sample_week <= as.Date("2011-12-04")) |> 
-    pull(sample_week) |> unique()
-
+           sample_week <= as.Date("2023-12-04")) |> 
+    pull(sample_week) |>
+    unique()
   
   # As bootstrapping with 1000 iterations is time consuming (ca. 2h)
   # It is better to do the computations once and save for later if we need to reuse
@@ -41,7 +49,6 @@ if(!file.exists(file.path("data", "analyses", "weekly_fluxes.rds"))){
 
   # Parallelize for faster computations
   plan(multisession)
-  
   future_walk(dates, function(date) {
     cacheMyFluxes(cache.dir = cache.dir,
                   bootstrap_forage_ratio = bootstrap_forage_ratio,
@@ -52,10 +59,11 @@ if(!file.exists(file.path("data", "analyses", "weekly_fluxes.rds"))){
                   date = date,
                   station = station,
                   as_graph = FALSE)
-  })
-  # Do the weekly calculations in parallel
+    })
+
+  # Create a tibble containing all dates and graph object with confidence interval 
   plan(multisession)
-  tibble(sample_week = dates) |>
+  daily_fluxes <- tibble(sample_week = dates) |>
     # For each unique sampling week, compute the confidence graph in parallel
     mutate(conf_graph = future_map(sample_week, function(sample_date) {
       fluxingWithConfidence(
@@ -75,96 +83,163 @@ if(!file.exists(file.path("data", "analyses", "weekly_fluxes.rds"))){
         mutate(sample_week = sample_date)
         },
         .options = furrr_options(seed = TRUE)  # Ensures reproducibility
-        )) #|> 
-      # Save the final tibble as a rds file
-      write_rds(file = file.path("data", "analyses", "weekly_model.rds"))
- }
+        ))
+  
+  # Save the daily_fluxes tibble as a rds file
+  write_rds(daily_fluxes, file = file.path("data", "analyses", "as_tbl_graph_daily_fluxes.rds"))
 
+  # Save daily_fluxes as a csv file too
+  daily_df <- daily_fluxes |> 
+    pull(conf_graph) |> 
+    map_dfr(~ .x |> 
+              activate(edges) |> 
+              mutate(across(c(flux_mean, flux_lower, flux_upper), ~ na_if(.x, 0))) |> 
+              extract_flux_long()) |> 
+    mutate(iso_week = isoweek(sample_week),
+           year = year(sample_week)) |> 
+    select(sample_week, year, iso_week, predator, prey, flux_mean, flux_upper, flux_lower)
+  
+  write_csv(daily_df, file = file.path("data", "analyses", "daily_fluxes.csv"))
+    
+    # Define a small tibble that contains the month abbreviations and the numeric months
+    month_abb <- tibble(month.abb = month.abb,
+                        month = 1:12)
+    # Create a tibble that have all the paths for each
+    files <- tibble(path = list.files(cache.dir, full.names = TRUE)) |>
+      mutate(filename = basename(path),
+             date = str_extract(filename, "\\d{4}-\\d{2}-\\d{2}") |> as.Date(),
+             month = month(date),
+             year = year(date),
+             station = str_extract(filename, "(?<=flux_)[^_]+")) |> 
+      left_join(month_abb, by = "month")
+    
+    # Aggregate per month
+    plan(multisession)
+    monthly_fluxes <- files |>
+      group_nest(year, month, month.abb, station) |>
+      mutate(flux = future_map(
+        data, ~ {
+          aggregated_fluxes <- aggregateFluxes(.x$path)
+          if (is.null(aggregated_fluxes)) return(NULL)
+          aggregated_fluxes
+          }, .options = furrr_options(seed = TRUE)
+        )) |>
+      select(- data) |> 
+      unnest(flux) |> 
+      filter(mean > 0 & lower > 0 & upper > 0)
+    
+    write_csv(monthly_fluxes, file = file.path("data", "analyses", "monthly_fluxes.csv"))
+  
+  
+    # Aggregate per year
+    plan(multisession)
+    yearly_fluxes <- files |>
+      group_nest(year, station) |>
+      mutate(flux = future_map(
+        data, ~ {
+          aggregated_fluxes <- aggregateFluxes(.x$path)
+          if (is.null(aggregated_fluxes)) return(NULL)
+          aggregated_fluxes
+          }, .options = furrr_options(seed = TRUE)
+        )) |>
+      select(- data) |> 
+      unnest(flux) |> 
+      filter(mean > 0 & lower > 0 & upper > 0)
+    
+    write_csv(yearly_fluxes, file = file.path("data", "analyses", "yearly_fluxes.csv"))
+    }
 
-file_tbl <- list.files(cache.dir, pattern = glue::glue("flux_{station}_.*\\.rds$"), full.names = TRUE) |>
-  tibble(path = _) |>
-  mutate(
-    filename = basename(path),
-    date = str_extract(filename, "\\d{4}-\\d{2}-\\d{2}") |> as.Date(),
-    month = floor_date(date, "month"),
-    year = year(date)
-  )
+node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"), show_col_types = FALSE)
+color_mapping = setNames(node_data$color, node_data$node_name)
 
-# --- Step 2: Aggregate by month ---
-plan(multisession)  # or multicore, depending on your OS
-library(abind)
-monthly_fluxes <- file_tbl |>
-  group_nest(month, year) |>
-  mutate(
-    flux = future_map(data, ~ aggregateFluxes(.x$path), 
-                      .options = furrr_options(seed = TRUE))
-  ) |>
-  select(year, month, flux) |>
-  filter(!map_lgl(flux, is.null))
+monthly_fluxes <- read_csv(file = file.path("data", "analyses", "monthly_fluxes.csv"))
+monthly_fluxes |>
+  mutate(mean = mean * 30.5,
+         lower = lower * 30.5,
+         upper = upper * 30.5,
+         sample_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")) |> 
+  left_join(node_data |>
+              rename("predator" = node_name),
+            by = "predator") |> 
+  filter(trophic_level == 2) |>
+  ggplot(aes(x = sample_month, y = mean+1, ymin = lower+1, ymax = upper+1)) +
+  geom_line(mapping = aes(col = prey)) +
+  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
+  facet_grid(predator~.)+
+  scale_fill_manual(values = color_mapping)+
+  scale_color_manual(values = color_mapping) +
+  theme_bw()+
+  scale_y_log10()+
+  annotation_logticks() +
+  labs(y = "Fluxes (kJ/month/m2)",
+       x = NULL)
+monthly_fluxes |>
+  mutate(mean = mean * 30.5,
+         lower = lower * 30.5,
+         upper = upper * 30.5,
+         sample_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")) |> 
+  left_join(node_data |>
+              rename("predator" = node_name),
+            by = "predator") |> 
+  filter(trophic_level == 3) |>
+  ggplot(aes(x = sample_month, y = mean+1, ymin = lower+1, ymax = upper+1)) +
+  geom_line(mapping = aes(col = prey)) +
+  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
+  facet_grid(predator~.)+
+  scale_fill_manual(values = color_mapping)+
+  scale_color_manual(values = color_mapping) +
+  theme_bw()+
+  scale_y_log10()+
+  annotation_logticks() +
+  labs(y = "Fluxes (kJ/month/m2)",
+       x = NULL)
 
-# Optional: unnest the result to get one row per predator-prey-month
-monthly_fluxes_long <- monthly_fluxes |> 
-  unnest(flux) |> 
-  filter(mean > 0 & lower > 0 & upper > 0)
-
-
-monthly_fluxes_long |> 
-  mutate(mean = (mean) * 365,
+yearly_fluxes <- read_csv(file = file.path("data", "analyses", "yearly_fluxes.csv"))
+yearly_fluxes |>
+  mutate(mean = mean * 365,
          lower = lower * 365,
          upper = upper * 365) |> 
   left_join(node_data |>
               rename("predator" = node_name),
             by = "predator") |> 
-  filter(trophic_level == 3) |> 
-  ggplot(aes(x = month, y = mean+1, ymin = lower+1, ymax = upper+1)) +
+  filter(trophic_level == 2) |>
+  ggplot(aes(x = year, y = mean+1, ymin = lower+1, ymax = upper+1)) +
   geom_line(mapping = aes(col = prey)) +
   geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
   facet_grid(predator~.)+
-  #scale_fill_manual(values = color_mapping)+
-  #scale_color_manual(values = color_mapping) +
+  scale_fill_manual(values = color_mapping)+
+  scale_color_manual(values = color_mapping) +
   theme_bw()+
   scale_y_log10()+
   annotation_logticks() +
-  labs(y = "Fluxes (kJ/d/m2)",
+  labs(y = "Fluxes (kJ/yr/m2)",
+       x = NULL)
+yearly_fluxes |>
+  mutate(mean = mean * 365,
+         lower = lower * 365,
+         upper = upper * 365) |> 
+  left_join(node_data |>
+              rename("predator" = node_name),
+            by = "predator") |> 
+  filter(trophic_level == 3) |>
+  ggplot(aes(x = year, y = mean+1, ymin = lower+1, ymax = upper+1)) +
+  geom_line(mapping = aes(col = prey)) +
+  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
+  facet_grid(predator~.)+
+  scale_fill_manual(values = color_mapping)+
+  scale_color_manual(values = color_mapping) +
+  theme_bw()+
+  scale_y_log10()+
+  annotation_logticks() +
+  labs(y = "Fluxes (kJ/yr/m2)",
        x = NULL)
 
-rds_files <- list.files(cache.dir, pattern = "\\.rds$", full.names = TRUE)
-
-# Read each .rds file and extract its dimensions
-dim_report <- rds_files %>%
-  map(~ {
-    dims <- dim(read_rds(.))
-    tibble(file = basename(.), 
-           dim_1 = dims[1], 
-           dim_2 = dims[2], 
-           dim_3 = dims[3],
-           date = str_extract(basename(.), "\\d{4}-\\d{2}-\\d{2}"))  # Extract date in YYYY-MM-DD format
-  }) %>%
-  bind_rows()
-
-# View the report
-print(dim_report)
-dim_report |>
- # filter(dim_3 < 250) |> 
-  mutate(date = as.Date(date)) |> 
-  ggplot(aes(x = date, y = dim_3))+
-  geom_line()
-
-weekly_model <- read_rds(file = file.path("data", "processed", "weekly_model.rds"))
-color_mapping = setNames(node_data$color, node_data$node_name)
-df <- weekly_model |> 
-  pull(conf_graph) |>
-  map(~ .x |>
-        activate(edges) |> 
-        mutate(flux_mean = ifelse(flux_mean == 0, NA, flux_mean),
-               flux_lower = ifelse(flux_lower == 0, NA, flux_lower),
-               flux_upper = ifelse(flux_upper == 0, NA, flux_upper)))
-
+# Little gif...
 
 if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
   suppressPackageStartupMessages(library(furrr))
   dir.create(file.path("output", "figure", "gif_frames"), showWarnings = FALSE)
-  df <- weekly_model |> 
+  df <- read_rds(file.path("data", "analyses", "as_tbl_graph_daily_fluxes.rds")) |> 
     pull(conf_graph) |>
     map(~ .x |>
           activate(edges) |> 
@@ -236,75 +311,6 @@ if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
 
 
 
-# Helper function to convert matrix to long format
-adj_to_long <- function(graph, attr, value_name) {
-  as.matrix(as_adj(graph, attr = attr, sparse = FALSE)) |>
-    as.data.frame() |>
-    rownames_to_column("predator") |>
-    pivot_longer(-predator, names_to = "prey", values_to = value_name)
-}
 
-# Wrapper to extract week + long-form fluxes from a tbl_graph
-extract_flux_long <- function(graph) {
-  week <- graph |>
-    activate(nodes) |>
-    as_tibble() |>
-    pull(sample_week) |>
-    unique()
-  
-  # Get all three matrices as long-form data frames
-  adj_long_mean <- adj_to_long(graph, "flux_mean", "flux_mean")
-  adj_long_upper <- adj_to_long(graph, "flux_upper", "flux_upper")
-  adj_long_lower <- adj_to_long(graph, "flux_lower", "flux_lower")
-  
-  # Join and annotate
-  flux_long <- adj_long_mean |>
-    filter(!is.na(flux_mean)) |>
-    left_join(adj_long_upper, by = c("predator", "prey")) |>
-    left_join(adj_long_lower, by = c("predator", "prey")) |>
-    mutate(sample_week = week)
-  
-  return(flux_long)
-}
 
-all_fluxes <- map_dfr(df, extract_flux_long)
-all_fluxes$flux_mean |> min()
-p1 <- all_fluxes |> 
-  left_join(node_data |>
-              rename("predator" = node_name),
-            by = "predator") |> 
-  filter(trophic_level == 2) |> 
-  ggplot(aes(x = sample_week, y = flux_mean+1, ymin = flux_lower+1, ymax = flux_upper+1)) +
-  geom_line(mapping = aes(col = prey)) +
-  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
-  facet_grid(predator~.)+
-  scale_fill_manual(values = color_mapping)+
-  scale_color_manual(values = color_mapping) +
-  theme_bw()+
-  scale_y_log10()+
-  annotation_logticks() +
-  labs(y = "Fluxes (kJ/week/m2)",
-       x = NULL)
-p2 <- all_fluxes |> 
-  left_join(node_data |>
-              rename("predator" = node_name),
-            by = "predator") |> 
-  filter(trophic_level == 3) |> 
-  ggplot(aes(x = sample_week, y = flux_mean+1, ymin = flux_lower+1, ymax = flux_upper+1)) +
-  geom_line(mapping = aes(col = prey)) +
-  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
-  facet_grid(predator~.)+
-  scale_fill_manual(values = color_mapping)+
-  scale_color_manual(values = color_mapping) +
-  theme_bw()+
-  scale_y_log10()+
-  annotation_logticks() +
-  labs(y = "Fluxes (kJ/week/m2)",
-       x = NULL)
-timeseries<-cowplot::plot_grid(p1,p2, ncol = 1, rel_heights = c(8,3), align = T)
-ggsave(plot = timeseries,
-       filename = file.path("output", "figure", "weekly_timeseries.pdf"),
-       height = 10,
-       width = 10)
-test <- aggregateFlux(cache.dir = cache.dir, aggregation_period = "yearly")
 
