@@ -275,6 +275,10 @@ results |>
   theme_bw()+
   scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
+        
+ggsave("output/figure/ModeledForageResponse.pdf")
+
 
 # Clean the environment
  rm(list = ls())
+
