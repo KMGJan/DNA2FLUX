@@ -19,6 +19,11 @@ if(!file.exists(file.path("data", "analyses", "as_tbl_graph_daily_fluxes.rds")) 
    !file.exists(file.path("data", "analyses", "monthly_fluxes.csv")) |
    !file.exists(file.path("data", "analyses", "yearly_fluxes.csv"))){
   
+  # Check if bootstrap_forage_ratio exist, otherwise generate it.
+  if(!file.exists(file.path("data", "processed", "bootstrap_forage_ratio.csv"))) {
+    system(paste("nohup Rscript", file.path("code", "ModelForageResponse.R")))
+  }
+  
   # Load the needed libraries
   suppressPackageStartupMessages(library(fluxweb))
   suppressPackageStartupMessages(library(furrr))
@@ -96,8 +101,8 @@ if(!file.exists(file.path("data", "analyses", "as_tbl_graph_daily_fluxes.rds")) 
               mutate(across(c(flux_mean, flux_lower, flux_upper), ~ na_if(.x, 0))) |> 
               extract_flux_long()) |> 
     mutate(iso_week = isoweek(sample_week),
-           year = year(sample_week)) |> 
-    select(sample_week, year, iso_week, predator, prey, flux_mean, flux_upper, flux_lower)
+           year = year(sample_week)) |>
+    select(sample_week, year, iso_week, predator, prey, mean = flux_mean, upper = flux_upper, lower = flux_lower)
   
   write_csv(daily_df, file = file.path("data", "analyses", "daily_fluxes.csv"))
     
@@ -149,93 +154,67 @@ if(!file.exists(file.path("data", "analyses", "as_tbl_graph_daily_fluxes.rds")) 
     write_csv(yearly_fluxes, file = file.path("data", "analyses", "yearly_fluxes.csv"))
     }
 
+# Some visualisations ----
 node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"), show_col_types = FALSE)
 color_mapping = setNames(node_data$color, node_data$node_name)
 
-monthly_fluxes <- read_csv(file = file.path("data", "analyses", "monthly_fluxes.csv"))
-monthly_fluxes |>
-  mutate(mean = mean * 30.5,
-         lower = lower * 30.5,
-         upper = upper * 30.5,
-         sample_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")) |> 
-  left_join(node_data |>
-              rename("predator" = node_name),
-            by = "predator") |> 
-  filter(trophic_level == 2) |>
-  ggplot(aes(x = sample_month, y = mean+1, ymin = lower+1, ymax = upper+1)) +
-  geom_line(mapping = aes(col = prey)) +
-  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
-  facet_grid(predator~.)+
-  scale_fill_manual(values = color_mapping)+
-  scale_color_manual(values = color_mapping) +
-  theme_bw()+
-  scale_y_log10()+
-  annotation_logticks() +
-  labs(y = "Fluxes (kJ/month/m2)",
-       x = NULL)
-monthly_fluxes |>
-  mutate(mean = mean * 30.5,
-         lower = lower * 30.5,
-         upper = upper * 30.5,
-         sample_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")) |> 
-  left_join(node_data |>
-              rename("predator" = node_name),
-            by = "predator") |> 
-  filter(trophic_level == 3) |>
-  ggplot(aes(x = sample_month, y = mean+1, ymin = lower+1, ymax = upper+1)) +
-  geom_line(mapping = aes(col = prey)) +
-  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
-  facet_grid(predator~.)+
-  scale_fill_manual(values = color_mapping)+
-  scale_color_manual(values = color_mapping) +
-  theme_bw()+
-  scale_y_log10()+
-  annotation_logticks() +
-  labs(y = "Fluxes (kJ/month/m2)",
-       x = NULL)
+# Plotting function
+plot_fluxes <- function(data, trophic_level, unit = "kJ/day/m2") {
+  data |>
+    filter(trophic_level == !!trophic_level) |>
+    ggplot(aes(x = sample_date, y = flux_mean, ymin = flux_lower, ymax = flux_upper)) +
+    geom_line(aes(color = prey)) +
+    geom_ribbon(aes(fill = prey), alpha = 0.4) +
+    facet_grid(predator ~ .) +
+    scale_fill_manual(values = color_mapping) +
+    scale_color_manual(values = color_mapping) +
+    theme_bw() +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    labs(y = paste0("Fluxes (", unit, ")"), x = NULL)
+}
 
-yearly_fluxes <- read_csv(file = file.path("data", "analyses", "yearly_fluxes.csv"))
-yearly_fluxes |>
-  mutate(mean = mean * 365,
-         lower = lower * 365,
-         upper = upper * 365) |> 
-  left_join(node_data |>
-              rename("predator" = node_name),
-            by = "predator") |> 
-  filter(trophic_level == 2) |>
-  ggplot(aes(x = year, y = mean+1, ymin = lower+1, ymax = upper+1)) +
-  geom_line(mapping = aes(col = prey)) +
-  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
-  facet_grid(predator~.)+
-  scale_fill_manual(values = color_mapping)+
-  scale_color_manual(values = color_mapping) +
-  theme_bw()+
-  scale_y_log10()+
-  annotation_logticks() +
-  labs(y = "Fluxes (kJ/yr/m2)",
-       x = NULL)
-yearly_fluxes |>
-  mutate(mean = mean * 365,
-         lower = lower * 365,
-         upper = upper * 365) |> 
-  left_join(node_data |>
-              rename("predator" = node_name),
-            by = "predator") |> 
-  filter(trophic_level == 3) |>
-  ggplot(aes(x = year, y = mean+1, ymin = lower+1, ymax = upper+1)) +
-  geom_line(mapping = aes(col = prey)) +
-  geom_ribbon(mapping = aes(fill = prey), alpha = .4)+
-  facet_grid(predator~.)+
-  scale_fill_manual(values = color_mapping)+
-  scale_color_manual(values = color_mapping) +
-  theme_bw()+
-  scale_y_log10()+
-  annotation_logticks() +
-  labs(y = "Fluxes (kJ/yr/m2)",
-       x = NULL)
+# Universal processing function
+fluxTimeSeries <- function(file, time_unit, multiplier = 1, unit_label) {
+  data <- read_csv(file.path("data", "analyses", file), show_col_types = FALSE) |>
+    mutate(
+      flux_mean = mean * multiplier,
+      flux_lower = lower * multiplier,
+      flux_upper = upper * multiplier
+    )
+  
+  # Create sample_date based on time_unit
+  data <- if (time_unit == "daily") {
+    data |> mutate(sample_date = sample_week)
+  } else if (time_unit == "monthly") {
+    data |> mutate(sample_date = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d"))
+  } else if (time_unit == "yearly") {
+    data |> mutate(sample_date = as.Date(paste(year, "01", "01", sep = "-"), format = "%Y-%m-%d"))
+  } else {
+    stop("Unknown time_unit: must be 'daily', 'monthly', or 'yearly'")
+  }
+  
+  data <- data |>
+    left_join(node_data |> rename(predator = node_name), by = "predator") |>
+    mutate(prey = factor(prey, levels = node_data$node_name))
+  
+  cowplot::plot_grid(
+    plot_fluxes(data, trophic_level = 2, unit = unit_label),
+    plot_fluxes(data, trophic_level = 3, unit = unit_label) +
+      theme(axis.text.x = element_text(), axis.ticks.x = element_line()),
+    ncol = 1,
+    rel_heights = c(8, 3),
+    align = "v"
+  )
+}
+
+fluxTimeSeries("daily_fluxes.csv",   time_unit = "daily",   multiplier = 1,      unit_label = "kJ/day/m2")
+fluxTimeSeries("monthly_fluxes.csv", time_unit = "monthly", multiplier = 30.5,   unit_label = "kJ/month/m2")
+fluxTimeSeries("yearly_fluxes.csv",  time_unit = "yearly",  multiplier = 365.25, unit_label = "kJ/yr/m2")
+
+
 
 # Little gif...
-
 if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
   suppressPackageStartupMessages(library(furrr))
   dir.create(file.path("output", "figure", "gif_frames"), showWarnings = FALSE)
@@ -307,10 +286,3 @@ if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
   
   unlink(file.path("output", "figure", "gif_frames"), recursive = TRUE)
 }
-
-
-
-
-
-
-
