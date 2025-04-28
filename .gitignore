@@ -63,3 +63,6 @@ output/
 /output
 /output/figure
 output/figure/map.pdf
+
+# Analyses directory
+data/analyses/
