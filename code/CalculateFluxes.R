@@ -377,25 +377,45 @@ fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biom
     )
 }
 
+#' Extract and reshape trophic flux matrices from a graph
+#'
+#' This function extracts flux matrices (mean, upper, lower) stored as edge attributes in a `tbl_graph` object, reshapes them into long format, and combines them into a single data frame. It also adds the corresponding sampling week to each flux record.
+#'
+#' @param graph A `tbl_graph` object where nodes have a `sample_week` attribute  and edges have `flux_mean`, `flux_upper`, and `flux_lower` attributes.
+#'
+#' @return A tibble in long format with columns: `predator`, `prey`, `flux_mean`, `flux_upper`,  `flux_lower`, and `sample_week`.
+#'
+#' @details The function internally converts adjacency matrices (for mean, upper, and lower fluxes) to long format using a helper function. Only non-NA flux values are kept.
+#'
+extract_flux_long <- function(graph) {
+  week <- graph |>
+    activate(nodes) |>
+    as_tibble() |>
+    pull(sample_week) |>
+    unique()
 
+  # Helper function to convert matrix to long format
+  adj_to_long <- function(graph, attr, value_name) {
+    as.matrix(as_adj(graph, attr = attr, sparse = FALSE)) |>
+      as.data.frame() |>
+      rownames_to_column("predator") |>
+      pivot_longer(-predator, names_to = "prey", values_to = value_name)
+  }
+  # Get all three matrices as long-form data frames
+  adj_long_mean <- adj_to_long(graph, "flux_mean", "flux_mean")
+  adj_long_upper <- adj_to_long(graph, "flux_upper", "flux_upper")
+  adj_long_lower <- adj_to_long(graph, "flux_lower", "flux_lower")
+  
+  # Join and annotate
+  flux_long <- adj_long_mean |>
+    filter(!is.na(flux_mean)) |>
+    left_join(adj_long_upper, by = c("predator", "prey")) |>
+    left_join(adj_long_lower, by = c("predator", "prey")) |>
+    mutate(sample_week = week)
+  
+  return(flux_long)
+}
 
-
-
-
-
-#pad_to_1000 <- function(array3d, target_iter = 1000) {
-#  current_iter <- dim(array3d)[3]
-#  
-#  if (current_iter >= target_iter) {
-#    return(array3d[, , 1:target_iter])  # Truncate if larger than 1000
-#  }
-#  
-#  # Create an empty array of NAs to pad
-#  pad_array <- array(NA_real_, dim = c(dim(array3d)[1], dim(array3d)[2], target_iter - current_iter))
-#  
-#  # Bind original and padding along the 3rd dimension
-#  abind::abind(array3d, pad_array, along = 3)
-#}
 #' Aggregate trophic flux arrays over time
 #'
 #' This function reads multiple 3D trophic flux arrays (predator x prey x iteration) from `.rds` files, stacks them into a 4D array (predator x prey x iteration x time), averages fluxes across the time dimension, and then summarises the result across bootstrap iterations to compute mean fluxes and 95% confidence intervals.
