@@ -159,8 +159,10 @@ node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"), show_col
 color_mapping = setNames(node_data$color, node_data$node_name)
 
 # Plotting function
-plot_fluxes <- function(data, trophic_level, unit = "kJ/day/m2") {
-  data |>
+plot_fluxes <- function(data, trophic_level, unit = "kJ/day/m2", abline = FALSE) {
+  abline_x <- if (!isFALSE(abline)) as.numeric(as.Date(abline) - as.Date("1970-01-01")) else NULL
+  
+  p <- data |>
     filter(trophic_level == !!trophic_level) |>
     ggplot(aes(x = sample_date, y = flux_mean, ymin = flux_lower, ymax = flux_upper)) +
     geom_line(aes(color = prey)) +
@@ -172,10 +174,17 @@ plot_fluxes <- function(data, trophic_level, unit = "kJ/day/m2") {
     theme(axis.text.x = element_blank(),
           axis.ticks.x = element_blank()) +
     labs(y = paste0("Fluxes (", unit, ")"), x = NULL)
+  
+  if (!is.null(abline_x)) {
+    p <- p + geom_vline(xintercept = abline_x, linetype = "dashed", color = "red")
+  }
+  
+  return(p)
 }
 
+
 # Universal processing function
-fluxTimeSeries <- function(file, time_unit, multiplier = 1, unit_label) {
+fluxTimeSeries <- function(file, time_unit, multiplier = 1, unit_label, abline = FALSE) {
   data <- read_csv(file.path("data", "analyses", file), show_col_types = FALSE) |>
     mutate(
       flux_mean = mean * multiplier,
@@ -199,8 +208,8 @@ fluxTimeSeries <- function(file, time_unit, multiplier = 1, unit_label) {
     mutate(prey = factor(prey, levels = node_data$node_name))
   
   cowplot::plot_grid(
-    plot_fluxes(data, trophic_level = 2, unit = unit_label),
-    plot_fluxes(data, trophic_level = 3, unit = unit_label) +
+    plot_fluxes(data, trophic_level = 2, unit = unit_label, abline = abline),
+    plot_fluxes(data, trophic_level = 3, unit = unit_label, abline = abline) +
       theme(axis.text.x = element_text(), axis.ticks.x = element_line()),
     ncol = 1,
     rel_heights = c(8, 3),
@@ -208,9 +217,18 @@ fluxTimeSeries <- function(file, time_unit, multiplier = 1, unit_label) {
   )
 }
 
-fluxTimeSeries("daily_fluxes.csv",   time_unit = "daily",   multiplier = 1,      unit_label = "kJ/day/m2")
-fluxTimeSeries("monthly_fluxes.csv", time_unit = "monthly", multiplier = 30.5,   unit_label = "kJ/month/m2")
-fluxTimeSeries("yearly_fluxes.csv",  time_unit = "yearly",  multiplier = 365.25, unit_label = "kJ/yr/m2")
+fluxTimeSeries("daily_fluxes.csv",
+               time_unit = "daily",
+               multiplier = 1,
+               unit_label = "kJ/day/m2")
+fluxTimeSeries("monthly_fluxes.csv",
+               time_unit = "monthly",
+               multiplier = 30.5,
+               unit_label = "kJ/month/m2")
+fluxTimeSeries("yearly_fluxes.csv",
+               time_unit = "yearly",
+               multiplier = 365.25,
+               unit_label = "kJ/yr/m2")
 
 
 
@@ -228,11 +246,11 @@ if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
   
 
   edge_color_gradient <- scale_edge_color_gradientn(
-    colours = c("#3D3D3D", "#A23C2A"),
-    values = scales::rescale(c(log10(1), log10(5)), from = c(log10(1), log10(5))),
+    colours = c("grey50", "#A23C2A", "#136F63"),
+    values = scales::rescale(c(log10(1), log10(2), log10(5)), from = c(log10(1), log10(5))),
     limits = c(log10(1), log10(5))
   )
-  edge_width_scale <- scale_edge_width(range = c(.5, 10), limits = c(log10(1), log10(5)))
+  edge_width_scale <- scale_edge_width(range = c(1, 20), limits = c(log10(1), log10(5)))
   fill_scale <- scale_fill_manual(values = color_mapping)
   theme_options <- theme_graph() + theme(
     legend.position = "none",
@@ -246,21 +264,25 @@ if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
   
   # Use future_map to process frames in parallel
   future_map(1:length(df), function(i) {
-    # Access df[[i]] just once
+
     week_data <- df[[i]]
     
-    # Extract the unique week once
     week <- week_data |>
       activate(nodes) |>
       as_tibble() |>
       pull(sample_week) |>
       unique()
     
+    ts <- fluxTimeSeries("daily_fluxes.csv",
+                         time_unit = "daily",
+                         multiplier = 1,
+                         unit_label = "kJ/day/m2",
+                         abline = as.Date(week))
     # Create the plot
-    plot <- week_data |>
+    foodweb <- week_data |>
       ggraph(layout = "manual", x = horizontal_position, y = trophic_level) +
       geom_edge_link(aes(edge_width = log10(flux_mean + 1), col = log10(flux_mean + 1)),
-                     arrow = arrow(length = unit(3, 'mm'), ends = "first")) +
+                     arrow = arrow(length = unit(2, 'mm'), ends = "first")) +
       geom_node_point(aes(size = pi*(biomass)^2, fill = name), shape = 21) +
       geom_node_label(aes(label = name), angle = 45, size = 3, nudge_y = -0.05, nudge_x = .2, hjust = 1) +
       edge_color_gradient +
@@ -273,15 +295,17 @@ if(!file.exists(file.path("output", "figure", "dna_flux.gif"))){
                label = paste("Week:", week), size = 5,
                label.size = 0.5, label.r = unit(0.15, "lines"),
                fill = "#ffffffcc", color = "black", fontface = "bold")
+    
+    plot <- cowplot::plot_grid(ts, foodweb)
 
     # Save the plot
-    ggsave(sprintf("./output/figure/gif_frames/frame_%03d.png", i), plot = plot, width = 8.5, height = 7, dpi = 300)
+    ggsave(sprintf("./output/figure/gif_frames/frame_%03d.png", i), plot = plot, width = 16, height = 9, dpi = 300)
   },
   .options = furrr_options(seed = TRUE)
   )
 
   png_files <- list.files("./output/figure/gif_frames", pattern = "*.png", full.names = TRUE)
-  gifski::gifski(png_files, gif_file = "./output/figure/dna_flux.gif", width = 2550, height = 2100, delay = 0.25)
+  gifski::gifski(png_files, gif_file = "./output/figure/dna_flux.gif", width = 4800, height = 2700, delay = 0.1)
   
   
   unlink(file.path("output", "figure", "gif_frames"), recursive = TRUE)
