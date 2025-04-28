@@ -61,6 +61,7 @@ data/processed/
 # Outputs
 output/
 /output
+
 /output/figure
 output/figure/map.pdf
 
