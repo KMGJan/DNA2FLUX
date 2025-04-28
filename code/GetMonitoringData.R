@@ -68,8 +68,6 @@ lapply(
                               "BY2 ARKONA"), unit == "ugC/l") |>  # Filter for station and unit
   write_csv(file.path(output_dir, "phytoplankton.csv"))  # Save processed file
 
-
-list.files(raw_dir, pattern = "^SHARK_Phytoplankton.*\\.csv$", full.names = TRUE)
 cat("\nPhytoplankton dataset done\n")
 
 # Process Zooplankton Data
@@ -132,3 +130,6 @@ lapply(
   write_csv(file.path(output_dir, "picoplankton.csv"))  # Save processed file
 
 cat("\nPicoplankton dataset done\n")
+
+# Clean the environment
+rm(list = ls())

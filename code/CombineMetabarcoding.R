@@ -2,9 +2,7 @@
 
 suppressPackageStartupMessages(library(tidyverse))
 
-# The goal is to have a dataset that looks like:
-# sample_id | node_predator | node_prey | barcode | predator_type | sample_date | sample_week | location | station_name | rra_gut | rra_env
-
+cat("\nRunning CombineMetabarcoding.R\n")
 # Fish forage ratio ------------------------------------------------------------
 ## COI -------------------------------------------------------------------------
 df_COI <-
@@ -176,19 +174,23 @@ predator_selectivity <-
             by = c("collection_date","sample_week", "trawl_id", "station_name", "barcode", "ASV", "node_prey"),
             relationship = "many-to-many") |>
   rename("rra_gut" = rra) |> 
-  select(sample_id, collection_date, sample_week, station_name, barcode, ASV, node_predator, node_prey, rra_gut, rra_env) |> 
+  select(sample_id, collection_date, sample_week, station_name, barcode, ASV, node_predator,trawl_id, node_prey, rra_gut, rra_env) |> 
   distinct() |>
   filter(rra_env > 0) |> 
   group_by(sample_id,barcode) |> 
   mutate(rra_gut = rra_gut / sum(rra_gut, na.rm = T),
-         rra_env = rra_env / sum(rra_env, na.rm = T)) |> 
-  group_by(sample_id, collection_date, sample_week, station_name,node_predator,node_prey, barcode) |> 
+         rra_env = rra_env / sum(rra_env, na.rm = T)) |>
+  group_by(sample_id, collection_date, sample_week, station_name,node_predator,node_prey, trawl_id, barcode) |> 
   summarise(rra_gut = sum(rra_gut, na.rm = T),
             rra_env = sum(rra_env, na.rm = T),
             .groups = "drop_last") |> 
   summarise(rra_gut = mean(rra_gut, na.rm = T),
             rra_env = mean(rra_env, na.rm = T),
-            .groups = "drop")
+            .groups = "drop") |>
+  mutate(trawl_id = ifelse(trawl_id %in% c("By31", "By2", "By5", "By16","By15"), NA, trawl_id))
 
 predator_selectivity |> 
   write_csv(file = file.path("data", "processed", "predator_selectivity.csv"))
+
+# Clean the environment
+rm(list = ls())
