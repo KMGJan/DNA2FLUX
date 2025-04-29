@@ -171,49 +171,55 @@ tidyFluxing <- function(graph) {
 #'                          as_graph = TRUE)
 #' }
 #' 
-dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE) {
-
-  mat <- 
-    forage_ratio |> 
-    filter(is.na(node_predator) == F) |> 
-    left_join(select(getStationDate(data = weekly_biomasses,
-                                    date = date,
-                                    station = station),
-                     node_name, biomass),
-              by = join_by(node_prey == node_name)) |> 
-    group_by(node_predator) |> 
-    mutate(rel_biomass = biomass / sum(biomass, na.rm = T)) |> 
-    mutate(forage_ratio =ifelse(!is.na(a) & !is.na(h),
-                                (a * rel_biomass) / (1 + a * h * rel_biomass) / (rel_biomass),
-                                average_forage_ratio),
-           forage_ratio = ifelse(is.na(forage_ratio) == T,
-                                 0,
-                                 forage_ratio),
-           weight = (rel_biomass * forage_ratio) / sum(rel_biomass * forage_ratio, na.rm = T)) |> 
-    ungroup() |> 
-    
-    # Make Table Graph
-    select(node_predator, node_prey, forage_ratio, weight) |> 
-    as_tbl_graph() |>
-    activate(edges) |> 
-    mutate(weight = replace_na(weight, 0)) |> 
-    
-    # Add node data  
-    activate(nodes) |> 
-    left_join(
-      getNodeData(node_data = node_data,
-                  weekly_biomasses = weekly_biomasses,
-                  weekly_bodymass = weekly_bodymass,
-                  temperature = temperature,
-                  date = date,
-                  station = station),
-      by = join_by(name == node_name)) |> 
-    tidyFluxing() * 86.4 # From J/second/m2 to kJ/day/m2 
+dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE) {
+   mat <- 
+     forage_ratio |> 
+     filter(!is.na(node_predator)) |> 
+     left_join(
+       select(getStationDate(data = weekly_biomasses,
+                             date = date,
+                             station = station),
+              node_name, biomass),
+       by = join_by(node_prey == node_name)
+     ) |> 
+     group_by(node_predator) |> 
+     mutate(rel_biomass = biomass / sum(biomass, na.rm = TRUE),
+     # Calculate weight depending on presence_absence
+       weight = if (presence_absence) {
+         presence <- if_else(average_forage_ratio > 0, 1, 0)
+         (rel_biomass * presence) / sum(rel_biomass * presence, na.rm = TRUE)
+       } else {
+         forage_ratio <- case_when(
+           !is.na(a) & !is.na(h) ~ (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass,
+           TRUE ~ average_forage_ratio
+         )
+         forage_ratio <- replace_na(forage_ratio, 0)
+         (rel_biomass * forage_ratio) / sum(rel_biomass * forage_ratio, na.rm = TRUE)
+       }
+     ) |> ungroup() |> 
+   
+     # Make Table Graph
+     select(node_predator, node_prey, weight) |> 
+     as_tbl_graph() |>
+     activate(edges) |> 
+     mutate(weight = replace_na(weight, 0)) |> 
+     
+     # Add node data  
+     activate(nodes) |> 
+     left_join(
+       getNodeData(node_data = node_data,
+                   weekly_biomasses = weekly_biomasses,
+                   weekly_bodymass = weekly_bodymass,
+                   temperature = temperature,
+                   date = date,
+                   station = station),
+       by = join_by(name == node_name)) |> 
+     tidyFluxing() * 86.4 # From J/second/m2 to kJ/day/m2 
 
   graph <- 
     mat |>
     as_tbl_graph() |> 
-    activate(nodes) |> 
+    activate(nodes) |>
     left_join(
       getNodeData(node_data = node_data,
                   weekly_biomasses = weekly_biomasses,
@@ -255,7 +261,7 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
 #' boot_array <- bootstrapFluxes(bootstrap_forage_ratio, node_data, biomasses, bodymass, temperature, date = "2012-06-01", station = "BY31 LANDSORTSDJ")
 #' }
 #'
-bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE) {
+bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE) {
   
   safe_dna2flux <- possibly(dna2flux, otherwise = matrix(nrow = 24, ncol = 24))
   
@@ -270,7 +276,8 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
                     temperature = temperature,
                     date = date,
                     station = station,
-                    as_graph = FALSE)
+                    as_graph = FALSE,
+                    presence_absence = FALSE)
     }) |> 
     keep(~ !is.null(.)) |> 
     abind::abind(along = 3)
@@ -292,7 +299,7 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
 #'
 #' @return No return value. This function is called for its side effect of writing a `.rds` file to `cache.dir` if the file does not already exist.
 #'
-cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE) {
+cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE) {
   
   cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
   if (!dir.exists(cache.dir)) dir.create(cache.dir)
@@ -305,7 +312,8 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
                     temperature = temperature,
                     date = date,
                     station = station,
-                    as_graph = FALSE) |> 
+                    as_graph = FALSE,
+                    presence_absence = FALSE) |> 
       write_rds(cache_file)
   }
 }
@@ -332,11 +340,11 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
 #' - Resulting graph is ready for further analysis or visualization using the `tidygraph` and `ggraph` ecosystems.
 #'
 #'
-fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, ...) {
+fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, presence_absence = FALSE, ...) {
   
   # read boostrap_list from cache if it exists
   if (cache.dir != FALSE) {
-    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE)
+    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE)
     cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
     bootstrap_array <- read_rds(cache_file)
   } else {
@@ -347,7 +355,8 @@ fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biom
                                       temperature = temperature,
                                       date = date,
                                       station = station,
-                                      as_graph = FALSE)
+                                      as_graph = FALSE,
+                                      presence_absence = FALSE)
   }
   
   
