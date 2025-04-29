@@ -151,7 +151,8 @@ df_list <-
 
 
 # Fit models and perform bootstrapping in parallel
-
+if(!dir.exists(file.path("output", "ModelForageResponse"))) dir.create(file.path("output", "ModelForageResponse"), recursive = TRUE)
+pdf(file.path("output", "ModelForageResponse", "residual_plot.pdf"), width = 6, height = 6)
 #Iterates over each predator-prey group:
 for (df in df_list) {
   # Skip if there are 5 or fewer observations
@@ -207,7 +208,7 @@ for (df in df_list) {
     boot_results[[paste(prey, predator)]] <- run_bootstraps(df, model, coef, prey, predator, n_boot = 1000)
   }
 }
-
+dev.off()
 # Save the results -----------------------------------
 results |> 
   right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |> 
@@ -257,7 +258,7 @@ boot_prediction <-
             Bgut_lower = quantile(Bgut, 0.025, na.rm = TRUE),
             Bgut_upper = quantile(Bgut, 0.975, na.rm = TRUE),
             .groups = "drop") 
-results |> 
+curves <- results |> 
   right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
   cross_join(tibble(rel_biomass = rel_biomass_seq)) |> 
   mutate(ForageRatio = ifelse(!is.na(a)&!is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass, ForageRatio)) |>
@@ -277,7 +278,6 @@ results |>
   scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
         
-ggsave(file.path("output", "figure", "ModeledForageResponse.pdf"))
-
+ggsave(filename = file.path("output", "ModelForageResponse", "curves.pdf"), plot = curves, width = 10, height = 15)
 # Clean the environment
  rm(list = ls())

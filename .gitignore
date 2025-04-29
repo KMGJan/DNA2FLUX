@@ -67,3 +67,6 @@ output/figure/map.pdf
 
 # Analyses directory
 data/analyses/
+
+# test directory
+data/test/
