@@ -184,7 +184,7 @@ tidyFluxing <- function(graph) {
 #' }
 #' 
 dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE) {
-   mat <- 
+   tbl <- 
      forage_ratio |> 
      filter(!is.na(node_predator)) |> 
      left_join(
@@ -225,7 +225,9 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
                    temperature = temperature,
                    date = date,
                    station = station),
-       by = join_by(name == node_name)) |> 
+       by = join_by(name == node_name))
+   
+   mat <- tbl |> 
      tidyFluxing() * 86.4 # From J/second/m2 to kJ/day/m2 
 
   graph <- 
@@ -247,6 +249,7 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
     return(mat)
   }
 }
+
 
 #' Bootstrap Trophic Fluxes
 #'
