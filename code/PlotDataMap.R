@@ -3,7 +3,8 @@
 cat("\nRunning PlotDataMap.R\n")
 # Dowload the shapefile data if not downloaded yet -----------------------------
 if (!dir.exists(file.path("data", "imported", "ICES_areas")) |
-    !dir.exists(file.path("data", "imported", "ICES_rectangles"))) {
+    !dir.exists(file.path("data", "imported", "ICES_rectangles")) |
+    !dir.exists(file.path("data", "imported", "HELCOM_subbasins"))) {
   
   # 1. ICES Areas
   # The URL for getting the data for ICES areas
@@ -36,6 +37,23 @@ if (!dir.exists(file.path("data", "imported", "ICES_areas")) |
   unlink(rect_zip_path)
   
   rm(rect_url, rect_zip_path, rect_unziped_dir)
+  
+  # 3. HELCOM sub basins
+  # The URL for getting the data for HELCOM sub basins
+  HELCOM_url <- "https://gis.ices.dk/shapefiles/HELCOM_subbasins.zip"
+  # and the path to save it
+  HELCOM_zip_path <- file.path("data", "imported", "HELCOM_subbasins.zip")
+  
+  # Download
+  download.file(HELCOM_url, HELCOM_zip_path, mode = "wb")
+  
+  # Unzip and delete the zip file
+  HELCOM_unziped_dir <- file.path("data", "imported", "HELCOM_subbasins")
+  unzip(HELCOM_zip_path, exdir = HELCOM_unziped_dir)
+  unlink(HELCOM_zip_path)
+  
+  rm(HELCOM_url, HELCOM_zip_path, HELCOM_unziped_dir)
+  
 }
 
 # Prepare the data -------------------------------------------------------------
@@ -81,6 +99,10 @@ baltic_sea_shp <-
 rectangle_shp <- # Shapefile file with ices rectangle
   read_sf(list.files(file.path("data", "imported", "ICES_rectangles"), pattern = "\\.shp$", full.names = TRUE)) |> 
   filter(ICESNAME %in% c("45G8","46G8", "43G9","43H0", "39G5", "39G6"))
+
+#helcom_subbasin_shp <- # Shapefile with the helcom subbasin
+#  read_sf(list.files(file.path("data", "imported", "HELCOM_subbasins"), pattern = "\\.shp$", full.names = TRUE)) |> 
+#  filter(Name %in% c("Bornholm Basin", "Eastern Gotland Basin", "Northern Baltic Proper"))
 
 # Combine the ices statistical rectangle to the Baltic Sea shapefile to get the fish sampling area
 if (st_crs(baltic_sea_shp) != st_crs(rectangle_shp)) {

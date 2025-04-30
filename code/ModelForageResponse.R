@@ -64,13 +64,14 @@ ForageRatios |>
     node_predator == "Sprattus" ~ "Sprattus sprattus"
   )) |>
   select(organism, trawl_id) |> 
-  unique() |> 
+  unique() |>
   write_csv(file.path("data", "processed", "trawl_summary.csv"))
 
 
 # Calculate the average forage ratio for each predator-prey pairs
 average_forage_ratios <-
-  ForageRatios |> 
+  ForageRatios |>  
+  filter(!is.na(biomass)) |> 
   group_by(node_predator, node_prey) |> 
   summarise(ForageRatio = mean(ForageRatio, na.rm = T), .groups = "drop")
 
@@ -276,6 +277,47 @@ curves <- results |>
   geom_hline(yintercept = 2)+
   theme_bw()+
   scale_y_log10()+
+  labs(x = "Relative Biomass", y = "Forage ratio")
+
+results |> 
+
+  right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
+  cross_join(tibble(rel_biomass = rel_biomass_seq)) |> 
+
+  mutate(ForageRatio = ifelse(!is.na(a)&!is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass, ForageRatio)) |>
+  ggplot()+
+  geom_point(data = ForageRatios |> filter(!is.na(biomass)),
+             mapping = aes(x = rel_biomass, y = ForageRatio, fill = node_prey), color = "black", shape = 21, alpha = .5, size = 1)+
+
+  facet_wrap(.~node_predator, scales = "free") +
+  theme_bw()+
+  #scale_y_log10()+
+  labs(x = "Relative Biomass", y = "Forage ratio")
+
+
+results |> 
+
+  right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
+  cross_join(tibble(rel_biomass = rel_biomass_seq)) |> 
+  
+  mutate(ForageRatio = ifelse(!is.na(a)&!is.na(h), (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass, ForageRatio)) |>
+  filter(node_predator %in% c("Clupea", "Sprattus", "Gasterosteus")) |> 
+  ggplot()+
+  geom_ribbon(data = boot_prediction |>    filter(node_predator %in% c("Clupea", "Sprattus", "Gasterosteus")),
+              mapping = aes(ymin = fr_lower, ymax = fr_upper, x = rel_biomass), alpha = .2, col = "black", linetype = 2)+
+  
+  geom_point(data = ForageRatios |> filter(!is.na(biomass)) |>  filter(node_predator %in% c("Clupea", "Sprattus", "Gasterosteus")),
+             mapping = aes(x = rel_biomass, y = ForageRatio), color = "black", shape = 21, alpha = .5, size = 1)+
+  geom_line(linewidth = 1, col = "red",
+            mapping = aes(x = rel_biomass, y = ForageRatio))+
+  geom_line(data =  average_forage_ratios |>   filter(node_predator %in% c("Clupea", "Sprattus", "Gasterosteus")) |> 
+              cross_join(tibble(rel_biomass = rel_biomass_seq)),
+            mapping = aes(x = rel_biomass, y = ForageRatio), col = "blue", linewidth = 2) +
+  
+  facet_wrap(node_predator~node_prey, scales = "free", ncol = 7) +
+ # scale_x_continuous(limits = c(0,1))+
+  theme_bw()+
+  #scale_y_log10()+
   labs(x = "Relative Biomass", y = "Forage ratio")
         
 ggsave(filename = file.path("output", "ModelForageResponse", "curves.pdf"), plot = curves, width = 10, height = 15)
