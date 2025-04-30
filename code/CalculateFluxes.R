@@ -93,46 +93,58 @@ getNodeData <- function(node_data, weekly_biomasses, weekly_bodymass, temperatur
            losses = ifelse(is.infinite(losses), 0, losses))
 }
 
-#' Compute Trophic Fluxes Using `fluxweb::fluxing`
+#' Compute Trophic Fluxes Using `fluxweb::fluxing` from a `tbl_graph` Object
 #'
-#' This function computes energy fluxes in a food web using the `fluxweb::fluxing()` function. It extracts network structure and node attributes from a `tbl_graph` object, and returns the result as a flux matrix.
+#' This function calculates energy fluxes in a food web using `fluxweb::fluxing()`. It extracts the adjacency matrix and node attributes from a `tbl_graph` object and ensures that node-level vectors (e.g. biomass, losses) are correctly aligned with the matrix node order.
 #'
 #' @param graph A `tbl_graph` object (from the `tidygraph` package), where:
-#'   - Edge weights represent interaction strength (Wij).
-#'   - Node attributes must include `biomass`, `losses`, and `efficiencies`.
+#'   - Edge weights represent interaction strengths (Wij) from prey to predators.
+#'   - Node attributes must include `biomass`, `losses`, and `efficiencies`, with names matching the nodes in the graph.
 #'
-#' @return A numeric matrix of estimated trophic fluxes.
+#' @return A numeric matrix of estimated trophic fluxes (predators in rows, prey in columns).
 #'
 #' @details
-#' This function is a tidy wrapper around `fluxweb::fluxing()` that:
-#'   - Extracts the interaction matrix using `tidygraph::as_adjacency_matrix()`.
-#'   - Pulls node-level biomass, metabolic loss, and efficiency data.
-#'   - Computes the flux matrix using `fluxweb::fluxing()` with:
-#'     - No biomass preference (`bioms.prefs = FALSE`)
-#'     - Efficiency at the predator level (`ef.level = "pred"`)
-#'     - Biomass-based losses enabled (`bioms.losses = TRUE`)
-#'   - Transposes the resulting flux matrix so predators are rows.
+#' This function acts as a tidy wrapper around `fluxweb::fluxing()`, and:
+#' - Extracts the weighted adjacency matrix with `tidygraph::as_adjacency_matrix()`, then transposes it so predators are in rows.
+#' - Extracts node attributes and orders them to match the matrix's node order (`igraph::V(graph)$name`).
+#' - Calls `fluxweb::fluxing()` with the following options:
+#'   - `bioms.prefs = FALSE`: no biomass preference in foraging.
+#'   - `ef.level = "pred"`: efficiencies apply to predators.
+#'   - `bioms.losses = TRUE`: metabolic losses scale with biomass.
+#' - The resulting flux matrix is transposed again so that the output has predators in rows and prey in columns.
 #'
 #' @importFrom fluxweb fluxing
 #' @importFrom tidygraph as_adjacency_matrix
-#' @importFrom dplyr pull
+#' @importFrom igraph V
+#' @importFrom dplyr pull filter arrange match
 #'
-#' @seealso [fluxweb::fluxing()], [tidygraph::as_adjacency_matrix()]
+#' @seealso [fluxweb::fluxing()], [tidygraph::as_adjacency_matrix()], [igraph::V()]
 #'
 #' @examples
 #' \dontrun{
 #'   tidyFluxing(graph)
 #' }
-#'
-
 tidyFluxing <- function(graph) {
+  # Extract the node names from the graph in their internal order
+  node_names <- V(graph)$name
+  # Convert the graph's vertex (node) data to a tibble
+  node_data <- as_tibble(graph, what = "vertices")
+  # Ensure that node attributes (biomass, losses, efficiencies) are ordered to match the adjacency matrix (which follows V(graph)$name)
+  node_data_ordered <- node_data |> 
+    filter(name %in% node_names) |> 
+    arrange(match(name, node_names))
+  
+  # Compute the flux matrix using fluxweb::fluxing
+  # - Transpose adjacency matrix so predators are rows
+  # - Match attribute vectors to matrix node order
+  # - Transpose result again so output matrix is in predator x prey format
   fluxing(mat = t(as_adjacency_matrix(graph, attr = "weight", sparse = FALSE)),
-          biomasses = pull(graph, biomass),
-          losses = pull(graph, losses),
-          efficiencies = pull(graph, efficiencies),
+          biomasses = node_data_ordered$biomass,
+          losses = node_data_ordered$losses,
+          efficiencies = node_data_ordered$efficiencies,
           bioms.prefs = FALSE,
           ef.level = "pred",
-          bioms.losses = TRUE) |> t() 
+          bioms.losses = TRUE) |> t()
 }
 
 #' Calculate Trophic Fluxes from Forage Ratios
