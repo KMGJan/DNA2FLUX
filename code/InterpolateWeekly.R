@@ -73,18 +73,17 @@ zooplankton <-
   # Interpolating zooplankton data and performing necessary transformations
   # Reshape to wide format
   pivot_wider(names_from = taxon_genus, values_from = c(abundance_ind.m2, biomass_g.m2), values_fill = 0) |>
-  
+  group_by(station_name) |> 
   # Generate a complete sequence of weekly sample dates and join
   complete(sample_week = seq.Date(min(sample_week), max(sample_week), by = "week")) |>
   
   # Arrange by date and interpolate missing values
-  arrange(sample_week) |> 
-  mutate(across(-c(sample_week, station_name), ~ zoo::na.approx(.x, na.rm = FALSE)), 
-         station_name = "BY31 LANDSORTSDJ") |>
-  
+  arrange(sample_week, .by_group = TRUE) |> 
+  mutate(across(-c(sample_week), ~ na.approx(.x, na.rm = FALSE))) |>
+  ungroup() |> 
   # Reshape back to long format
   pivot_longer(cols = -c(sample_week, station_name), names_to = "parameter", values_to = "value") |>
-  
+
   # Split "parameter" into "Parameter" and "Taxa"
   separate(parameter, into = c("parameter", "unit", "Taxa"), sep = "_") |>
   select(- unit) |> 
@@ -95,9 +94,12 @@ zooplankton <-
   # Reshape back to wide format using 'Parameter' to create columns
   pivot_wider(names_from = parameter, values_from = value) |>
   
-  # Calculate Bodymass per individual by dividing Biomass by Abundance
+  # Calculate Bodymass per individual by dividing Biomass by Abundance, when biomass = 0, bodymass will be NA, so linearly interpolation is needed
+  group_by(station_name, Taxa) |>
+  arrange(sample_week, .by_group = TRUE) |>
   mutate(bodymass = biomass / abundance,
-         bodymass = replace_na(bodymass, 0)) |>
+         bodymass = na.approx(bodymass, na.rm = FALSE)) |>
+  ungroup() |> 
  # na.omit() |> # <- remove rows with NA 
   rename("node_name" = Taxa,
          "year" = Year)
@@ -195,8 +197,8 @@ bind_rows(genus_pp, order_pp) |>
   complete(sample_week = seq.Date(min(sample_week), max(sample_week), by = "week")) |> 
   
   # Arrange by date and interpolate missing values
-  arrange(sample_week) |> 
-  mutate(across(-c(sample_week), ~ zoo::na.approx(.x, na.rm = FALSE))) |> 
+  arrange(sample_week, .by_group = TRUE) |> 
+  mutate(across(-c(sample_week), ~ na.approx(.x, na.rm = FALSE))) |> 
   
   # Reshape to wide format and merge with picoplankton by week
   mutate(week_number = isoweek(sample_week)) |> 
