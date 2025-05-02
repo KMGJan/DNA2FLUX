@@ -222,23 +222,24 @@ temperature <-
   mutate(sample_week = floor_date(sample_date, unit = "week", week_start = 1)) |>   # Change date to the first day of the week
   # Some checks and filters
   filter(
-    station_name == "BY31 LANDSORTSDJ",
     sample_min_depth_m == sample_max_depth_m, # First check that the the depth is fixed while taking the temperature
     sample_min_depth_m %in% seq(from = 0, to = 60, by = 10) # And only select depth strata from 0 to 60m with 10m interval
     ) |>
   # Arrange the data
-  group_by(sample_week, station_name, sample_min_depth_m) |> 
+  group_by(station_name, sample_week,  sample_min_depth_m) |> 
   summarise(value = mean(value, na.rm = T), .groups = "drop_last") |> # If there is 2 temperature record the same week, take the average value
-  filter(n_distinct(sample_min_depth_m) == length(seq(from = 0, to = 60, by = 10))) |> # Make sure that all samples included in the analyses have all the temperature from 0 to 60m depth
-  summarise(temperature = mean(value, na.rm = T), .groups = "drop") |> # and then take the average value of temperature from 0 to 60m depth
+  # Make sure that all samples included in the analyses have all the temperature from 0 to 60m depth for all stations and between 0 and 40 for BY2
+  filter((station_name != "BY2 ARKONA" & n_distinct(sample_min_depth_m) == length(seq(from = 0, to = 60, by = 10))) |
+           (station_name == "BY2 ARKONA" & n_distinct(sample_min_depth_m) == length(seq(from = 0, to = 40, by = 10)))) |>
+  summarise(temperature = mean(value, na.rm = T), .groups = "drop_last") |> # and then take the average value of temperature from 0 to 60m depth
 
   # interpolation
   complete(sample_week = seq.Date(min(sample_week), max(sample_week), by = "week")) |> 
   # Arrange the data by sample_date to ensure proper chronological order
-  arrange(sample_week) |>
+  arrange(sample_week, .by_group = TRUE) |>
   # Apply linear interpolation to all columns except 'sample_date'
-  mutate(temperature = zoo::na.approx(temperature, na.rm = FALSE), 
-         station_name = "BY31 LANDSORTSDJ")
+  mutate(temperature = na.approx(temperature, na.rm = FALSE))
+
 temperature |>
   write_csv(file.path("data","processed", "interpolation","temperature.csv"))
 
