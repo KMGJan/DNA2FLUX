@@ -183,30 +183,36 @@ tidyFluxing <- function(graph) {
 #'                          as_graph = TRUE)
 #' }
 #' 
-dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE) {
+dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
   
-  node_values <- getNodeData(node_data = node_data,
-                             weekly_biomasses = weekly_biomasses,
-                             weekly_bodymass = weekly_bodymass,
-                             temperature = temperature,
-                             date = date,
-                             station = station)
-  
-  if (population_growth){
+  if(population_growth == TRUE){
+    date_next_week = date + 7
     node_values_next_week <- getNodeData(node_data = node_data,
                                          weekly_biomasses = weekly_biomasses,
                                          weekly_bodymass = weekly_bodymass,
                                          temperature = temperature,
-                                         date = date + 7,
+                                         date = date_next_week,
                                          station = station) |> 
       select(node_name, "biomass_next_week" = biomass)
     
 
     node_values <-
-      node_values |> 
+      getNodeData(node_data = node_data,
+                  weekly_biomasses = weekly_biomasses,
+                  weekly_bodymass = weekly_bodymass,
+                  temperature = temperature,
+                  date = date,
+                  station = station) |> 
       left_join(node_values_next_week, by = join_by(node_name)) |> 
       mutate(biomass = biomass_next_week) |> 
       select(-biomass_next_week)
+  } else {
+    node_values <- getNodeData(node_data = node_data,
+                               weekly_biomasses = weekly_biomasses,
+                               weekly_bodymass = weekly_bodymass,
+                               temperature = temperature,
+                               date = date,
+                               station = station)
   }
   
   tbl <- 
@@ -296,7 +302,7 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
 #' boot_array <- bootstrapFluxes(bootstrap_forage_ratio, node_data, biomasses, bodymass, temperature, date = "2012-06-01", station = "BY31 LANDSORTSDJ")
 #' }
 #'
-bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE) {
+bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
   
   safe_dna2flux <- possibly(dna2flux, otherwise = matrix(nrow = 24, ncol = 24))
   
@@ -313,7 +319,7 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
                     station = station,
                     as_graph = FALSE,
                     presence_absence = FALSE,
-                    population_growth = FALSE)
+                    population_growth = TRUE)
     }) |> 
     keep(~ !is.null(.)) |> 
     abind::abind(along = 3)
@@ -335,7 +341,7 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
 #'
 #' @return No return value. This function is called for its side effect of writing a `.rds` file to `cache.dir` if the file does not already exist.
 #'
-cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE) {
+cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
   
   cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
   if (!dir.exists(cache.dir)) dir.create(cache.dir)
@@ -350,7 +356,7 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
                     station = station,
                     as_graph = FALSE,
                     presence_absence = FALSE,
-                    population_growth = FALSE) |> 
+                    population_growth = TRUE) |> 
       write_rds(cache_file)
   }
 }
@@ -377,11 +383,11 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
 #' - Resulting graph is ready for further analysis or visualization using the `tidygraph` and `ggraph` ecosystems.
 #'
 #'
-fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, presence_absence = FALSE, population_growth = FALSE, ...) {
+fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, presence_absence = FALSE, population_growth = TRUE, ...) {
   
   # read boostrap_list from cache if it exists
   if (cache.dir != FALSE) {
-    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE)
+    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE)
     cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
     bootstrap_array <- read_rds(cache_file)
   } else {
@@ -394,7 +400,7 @@ fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biom
                                       station = station,
                                       as_graph = FALSE,
                                       presence_absence = FALSE,
-                                      population_growth = FALSE)
+                                      population_growth = TRUE)
   }
   
   
