@@ -183,8 +183,33 @@ tidyFluxing <- function(graph) {
 #'                          as_graph = TRUE)
 #' }
 #' 
-dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE) {
-   tbl <- 
+dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE) {
+  
+  node_values <- getNodeData(node_data = node_data,
+                             weekly_biomasses = weekly_biomasses,
+                             weekly_bodymass = weekly_bodymass,
+                             temperature = temperature,
+                             date = date,
+                             station = station)
+  
+  if (population_growth){
+    node_values_next_week <- getNodeData(node_data = node_data,
+                                         weekly_biomasses = weekly_biomasses,
+                                         weekly_bodymass = weekly_bodymass,
+                                         temperature = temperature,
+                                         date = date + 7,
+                                         station = station) |> 
+      select(node_name, "biomass_next_week" = biomass)
+    
+
+    node_values <-
+      node_values |> 
+      left_join(node_values_next_week, by = join_by(node_name)) |> 
+      mutate(biomass = biomass_next_week) |> 
+      select(-biomass_next_week)
+  }
+  
+  tbl <- 
      forage_ratio |> 
      filter(!is.na(node_predator)) |> 
      left_join(
@@ -219,12 +244,7 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
      # Add node data  
      activate(nodes) |> 
      left_join(
-       getNodeData(node_data = node_data,
-                   weekly_biomasses = weekly_biomasses,
-                   weekly_bodymass = weekly_bodymass,
-                   temperature = temperature,
-                   date = date,
-                   station = station),
+       node_values,
        by = join_by(name == node_name))
    
    mat <- tbl |> 
@@ -276,7 +296,7 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
 #' boot_array <- bootstrapFluxes(bootstrap_forage_ratio, node_data, biomasses, bodymass, temperature, date = "2012-06-01", station = "BY31 LANDSORTSDJ")
 #' }
 #'
-bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE) {
+bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE) {
   
   safe_dna2flux <- possibly(dna2flux, otherwise = matrix(nrow = 24, ncol = 24))
   
@@ -292,7 +312,8 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
                     date = date,
                     station = station,
                     as_graph = FALSE,
-                    presence_absence = FALSE)
+                    presence_absence = FALSE,
+                    population_growth = FALSE)
     }) |> 
     keep(~ !is.null(.)) |> 
     abind::abind(along = 3)
@@ -314,7 +335,7 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
 #'
 #' @return No return value. This function is called for its side effect of writing a `.rds` file to `cache.dir` if the file does not already exist.
 #'
-cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE) {
+cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE) {
   
   cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
   if (!dir.exists(cache.dir)) dir.create(cache.dir)
@@ -328,7 +349,8 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
                     date = date,
                     station = station,
                     as_graph = FALSE,
-                    presence_absence = FALSE) |> 
+                    presence_absence = FALSE,
+                    population_growth = FALSE) |> 
       write_rds(cache_file)
   }
 }
@@ -355,11 +377,11 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
 #' - Resulting graph is ready for further analysis or visualization using the `tidygraph` and `ggraph` ecosystems.
 #'
 #'
-fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, presence_absence = FALSE, ...) {
+fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, presence_absence = FALSE, population_growth = FALSE, ...) {
   
   # read boostrap_list from cache if it exists
   if (cache.dir != FALSE) {
-    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE)
+    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = FALSE)
     cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
     bootstrap_array <- read_rds(cache_file)
   } else {
@@ -371,7 +393,8 @@ fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biom
                                       date = date,
                                       station = station,
                                       as_graph = FALSE,
-                                      presence_absence = FALSE)
+                                      presence_absence = FALSE,
+                                      population_growth = FALSE)
   }
   
   
