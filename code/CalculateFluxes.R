@@ -63,8 +63,9 @@ getTempKonstant <- function(data, date, station) {
 #' getNodeData(node_data, weekly_biomasses, weekly_bodymass, temperature, date = as.Date("2022-06-01"), station = "BY31 LANDSORTSDJ")
 #'
 getNodeData <- function(node_data, weekly_biomasses, weekly_bodymass, temperature, date, station) {
-  node_data |> 
-    select(node_name, efficiencies, intercept, slope, trophic_level, horizontal_position, color) |> 
+
+  node_data |>
+    select(node_name, efficiencies, intercept, slope, energy_density_ww, trophic_level, horizontal_position, color) |> 
     
     # Using getStationDate, join the organisms biomass at a given time and location
     left_join(select(getStationDate(data = weekly_biomasses,
@@ -124,27 +125,38 @@ getNodeData <- function(node_data, weekly_biomasses, weekly_bodymass, temperatur
 #' \dontrun{
 #'   tidyFluxing(graph)
 #' }
-tidyFluxing <- function(graph) {
-  # Extract the node names from the graph in their internal order
+#' 
+tidyFluxing <- function(graph, population_growth = TRUE) {
   node_names <- V(graph)$name
-  # Convert the graph's vertex (node) data to a tibble
   node_data <- as_tibble(graph, what = "vertices")
-  # Ensure that node attributes (biomass, losses, efficiencies) are ordered to match the adjacency matrix (which follows V(graph)$name)
+  
+  # Ensure correct order of attributes
   node_data_ordered <- node_data |> 
     filter(name %in% node_names) |> 
     arrange(match(name, node_names))
   
-  # Compute the flux matrix using fluxweb::fluxing
-  # - Transpose adjacency matrix so predators are rows
-  # - Match attribute vectors to matrix node order
-  # - Transpose result again so output matrix is in predator x prey format
-  fluxing(mat = t(as_adjacency_matrix(graph, attr = "weight", sparse = FALSE)),
-          biomasses = node_data_ordered$biomass,
-          losses = node_data_ordered$losses,
-          efficiencies = node_data_ordered$efficiencies,
-          bioms.prefs = FALSE,
-          ef.level = "pred",
-          bioms.losses = TRUE) |> t()
+  # Build adjacency matrix (prey x predator)
+  adj_mat <- t(as_adjacency_matrix(graph, attr = "weight", sparse = FALSE))
+  
+  # Choose the loss vector depending on population growth
+  losses <- if (population_growth) {
+    node_data_ordered$population_losses
+  } else {
+    node_data_ordered$losses
+  }
+  
+  # Compute fluxes and transpose to predator x prey
+  flux_mat <- fluxing(
+    mat = adj_mat,
+    biomasses = node_data_ordered$biomass,
+    losses = losses,
+    efficiencies = node_data_ordered$efficiencies,
+    bioms.prefs = FALSE,
+    ef.level = "pred",
+    bioms.losses = !population_growth
+  )
+  
+  return(t(flux_mat))
 }
 
 #' Calculate Trophic Fluxes from Forage Ratios
@@ -185,28 +197,40 @@ tidyFluxing <- function(graph) {
 #' 
 dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
   
-  if(population_growth == TRUE){
-    date_next_week = date + 7
-    node_values_next_week <- getNodeData(node_data = node_data,
-                                         weekly_biomasses = weekly_biomasses,
-                                         weekly_bodymass = weekly_bodymass,
-                                         temperature = temperature,
-                                         date = date_next_week,
-                                         station = station) |> 
-      select(node_name, "biomass_next_week" = biomass)
-    
-
-    node_values <-
-      getNodeData(node_data = node_data,
-                  weekly_biomasses = weekly_biomasses,
-                  weekly_bodymass = weekly_bodymass,
-                  temperature = temperature,
-                  date = date,
-                  station = station) |> 
-      left_join(node_values_next_week, by = join_by(node_name)) |> 
-      mutate(biomass = biomass_next_week) |> 
-      select(-biomass_next_week)
-  } else {
+    # Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
+    if(population_growth == TRUE){
+      # Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
+      #Delta_B = Biomass week n+1 - Biomass week
+      date_next_week = date + 7
+      
+      node_values_next_week <- getNodeData(node_data = node_data,
+                                           weekly_biomasses = weekly_biomasses,
+                                           weekly_bodymass = weekly_bodymass,
+                                           temperature = temperature,
+                                           date = date_next_week,
+                                           station = station) |>
+        select(node_name, "biomass_next_week" = biomass)
+      
+      node_values_this_week <- getNodeData(node_data = node_data,
+                                           weekly_biomasses = weekly_biomasses,
+                                           weekly_bodymass = weekly_bodymass,
+                                           temperature = temperature,
+                                           date = date,
+                                           station = station)
+        
+      node_values <-  node_values_this_week |>
+        left_join(node_values_next_week, by = join_by(node_name)) |> 
+        mutate(
+          individual_rate = losses,
+          dP = biomass_next_week - biomass,  
+          dt = 604800, # 7 days in seconds
+          basal_metabolism = biomass * individual_rate,
+          recruitment = pmax(0, dP/dt * energy_density_ww), # This results in positive values or zero
+          mortality = pmin(0, dP * individual_rate), # This results in negative values or zero
+          population_losses = basal_metabolism + recruitment + mortality
+        )
+        
+    } else {
     node_values <- getNodeData(node_data = node_data,
                                weekly_biomasses = weekly_biomasses,
                                weekly_bodymass = weekly_bodymass,
@@ -254,7 +278,7 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
        by = join_by(name == node_name))
    
    mat <- tbl |> 
-     tidyFluxing() * 86.4 # From J/second/m2 to kJ/day/m2 
+     tidyFluxing(population_growth = population_growth) * 86.4 # From J/second/m2 to kJ/day/m2 
 
   graph <- 
     mat |>
@@ -319,7 +343,7 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
                     station = station,
                     as_graph = FALSE,
                     presence_absence = FALSE,
-                    population_growth = TRUE)
+                    population_growth = population_growth)
     }) |> 
     keep(~ !is.null(.)) |> 
     abind::abind(along = 3)
@@ -354,9 +378,9 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
                     temperature = temperature,
                     date = date,
                     station = station,
-                    as_graph = FALSE,
-                    presence_absence = FALSE,
-                    population_growth = TRUE) |> 
+                    as_graph = as_graph,
+                    presence_absence = presence_absence,
+                    population_growth = population_growth) |> 
       write_rds(cache_file)
   }
 }
@@ -398,9 +422,9 @@ fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biom
                                       temperature = temperature,
                                       date = date,
                                       station = station,
-                                      as_graph = FALSE,
-                                      presence_absence = FALSE,
-                                      population_growth = TRUE)
+                                      as_graph = as_graph,
+                                      presence_absence = presence_absence,
+                                      population_growth = population_growth)
   }
   
   
