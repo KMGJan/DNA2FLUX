@@ -8,7 +8,12 @@ The **code/** folder contains all the code needed to reproduce this study.
 -   *GetMonitoringData.R* calls the two bash scripts, merge the data and save them to data/processed/shark/
 -   *InterpolateWeekly.R* interpolates the processed shark data and the fish raw data (data/raw/fish_parameters.csv) and save them to data/processed/interpolation
 -   *CombineMetabarcodingData.R* combines all metabarcoding data into data/processed/predator_selectivity.csv
--   *CalculateFluxes.R* calculates the energy fluxes between each predator-prey interactions
+-   *CalculateFluxes.R* contains helper functions to calculate the energy fluxes between each predator-prey interactions
+-   *ProcessFluxes.R* calculates the energy fluxes throughout the timeseries for all bootstrap iterations and summarise the fluxes with 95% confidence intervals
+-   *CalculateFluxes.R* contains helper functions to calculate the energy fluxes between each predator-prey interactions
+-   *SomeAnalyses.R* contains the data analyses and visualisation
+
+
 
 The **data/raw/** folder contains:
 
