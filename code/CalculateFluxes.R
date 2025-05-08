@@ -197,19 +197,23 @@ tidyFluxing <- function(graph, population_growth = TRUE) {
 #' 
 dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
   
-    # Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
-    if(population_growth == TRUE){
-      # Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
-      #Delta_B = Biomass week n+1 - Biomass week
-      date_next_week = date + 7
+    if(population_growth == TRUE){ 
+      # This is not supported yet... so the results will be the same as population_growth == FALSE
+     
+      #  Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
+      #  Delta_B = Biomass week n+1 - Biomass week
+     
       
-      node_values_next_week <- getNodeData(node_data = node_data,
-                                           weekly_biomasses = weekly_biomasses,
-                                           weekly_bodymass = weekly_bodymass,
-                                           temperature = temperature,
-                                           date = date_next_week,
-                                           station = station) |>
-        select(node_name, "biomass_next_week" = biomass)
+      # date_next_week = date + 7
+      #  
+      #  node_values_next_week <- getNodeData(node_data = node_data,
+      #                                       weekly_biomasses = weekly_biomasses,
+      #                                       weekly_bodymass = weekly_bodymass,
+      #                                       temperature = temperature,
+      #                                       date = date_next_week,
+      #                                       station = station) |>
+      #    select(node_name, "biomass_next_week" = biomass)
+     
       
       node_values_this_week <- getNodeData(node_data = node_data,
                                            weekly_biomasses = weekly_biomasses,
@@ -219,15 +223,21 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
                                            station = station)
         
       node_values <-  node_values_this_week |>
-        left_join(node_values_next_week, by = join_by(node_name)) |> 
+        
+        # left_join(node_values_next_week, by = join_by(node_name)) |> 
+        
         mutate(
-          individual_rate = losses,
-          dP = biomass_next_week - biomass,  
-          dt = 604800, # 7 days in seconds
-          basal_metabolism = biomass * individual_rate,
-          recruitment = pmax(0, dP/dt * energy_density_ww), # This results in positive values or zero
-          mortality = pmin(0, dP * individual_rate), # This results in negative values or zero
-          population_losses = basal_metabolism + recruitment + mortality
+          P = biomass,
+          R = losses,
+          X = P * R,
+          # dP = biomass_next_week - biomass,  
+          # dt = 604800, # 7 days in seconds
+          
+          # population_losses = case_when(
+          #   type == "fish" ~ basal_metabolism,
+          #   TRUE ~ (dP / dt) * energy_density_ww + basal_metabolism
+          # )
+          population_losses = X
         )
         
     } else {
