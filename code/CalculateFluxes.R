@@ -39,7 +39,7 @@ getTempKonstant <- function(data, date, station) {
     pull(temperature)
   
   # Boltzmann constant
-  boltz <- 0.00008617343
+  boltz <- 8.617333262e-5 # in eV/K
   
   #Temperature metabolic constant
   tkonst <- 0.69 / (boltz * (273.15 + temp)) 

@@ -20,7 +20,8 @@ cat("\nRunning ModelForageResponse.R\n")
 count_spras <-
   read_csv(file.path("data", "raw", "count_spras2022.csv"), show_col_types = FALSE) |> 
   left_join(read_csv(file.path("data", "processed", "interpolation", "weekly_bodymass.csv"), show_col_types = FALSE),
-            by = c("node_name", "sample_week")) |> 
+            by = c("node_name", "sample_week"),
+            relationship = "many-to-many") |> 
   na.omit() |> 
   mutate(biomass = abundance * bodymass) |> 
   select(node_prey = node_name, trawl_id, sample_week, station_name, biomass)
