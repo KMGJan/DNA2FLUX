@@ -1,54 +1,53 @@
 #' Filter data by sample week and station
-#' 
+#'
 #' This function filters the given data for a specific station and sample week. It ensures that the date provided is within the same week (start of the week) for the calculation of fluxes.
 #'
 #' @param data A data frame containing the data with columns `sample_week` and `station_name`.
 #' @param date A Date object representing the specific date within the week to calculate fluxes.
 #' @param station A character string representing the station name for which to filter the data.
-#' 
+#'
 #' @return A data frame filtered by the specified date (adjusted to the start of the week) and station name.
 #' temperature <- data.frame(temperature = c(20, 10), sample_week = c(as.Date("2022-06-01"), as.Date("2022-06-08")), station_name = rep("BY31 LANDSORTSDJ", 2))
 #' getStationDate(data = temperature, date = as.Date("2022-06-01"), station = "BY31 LANDSORTSDJ")
-#' 
+#'
 getStationDate <- function(data, date, station) {
   # Step to ensure that any date can be used within a week to calculate fluxes from the week
   sample_date <- floor_date(date(date), unit = "week", week_start = 1)
-  
-  data |> 
-    filter(sample_week == date(date),
-           station_name == station)
+
+  data |>
+    filter(sample_week == date(date), station_name == station)
 }
 
 #' Calculate the temperature metabolic constant
-#' 
+#'
 #' This function calculates the temperature metabolic constant for a specific date and station based on temperature data. The constant is calculated using the Boltzmann constant and the temperature in Celsius.
-#' 
+#'
 #' @param data A data frame containing temperature data with columns `sample_week`, `station_name`, and `temperature`.
 #' @param date A Date object representing the specific date to extract temperature data.
 #' @param station A character string representing the station name for which to extract temperature data.
-#' 
+#'
 #' @return A numeric value representing the temperature metabolic constant (K_T) for the given date and station.
 #' @examples
 #' temperature <- data.frame(temperature = c(20, 10), sample_week = c(as.Date("2022-06-01"), as.Date("2022-06-08")), station_name = rep("BY31 LANDSORTSDJ", 2))
 #' getTempKonstant(data = temperature, date = as.Date("2022-06-01"), station = "BY31 LANDSORTSDJ")
-#' 
+#'
 getTempKonstant <- function(data, date, station) {
   # Using the function getStationDate, get the temperature at a certain date and station
-  temp <- temperature |> 
-    getStationDate(date, station) |> 
+  temp <- temperature |>
+    getStationDate(date, station) |>
     pull(temperature)
-  
+
   # Boltzmann constant
   boltz <- 8.617333262e-5 # in eV/K
-  
+
   #Temperature metabolic constant
-  tkonst <- 0.69 / (boltz * (273.15 + temp)) 
+  tkonst <- 0.69 / (boltz * (273.15 + temp))
   return(tkonst)
 }
 
 #' Get Node Metadata with Dynamic Biomass, Bodymass, and Metabolic Losses
 #'
-#' This function returns a complete node data table with dynamic biomass, bodymass, and estimated metabolic losses based on temperature for a given sampling date and station. 
+#' This function returns a complete node data table with dynamic biomass, bodymass, and estimated metabolic losses based on temperature for a given sampling date and station.
 #'
 #' @param node_data A data frame with node metadata. Must include columns: `node_name`, `efficiencies`, `intercept`, `slope`, `trophic_level`, `horizontal_position`, and `color`.
 #' @param weekly_biomasses A data frame containing biomass values per node per week and station.
@@ -62,36 +61,62 @@ getTempKonstant <- function(data, date, station) {
 #' @examples
 #' getNodeData(node_data, weekly_biomasses, weekly_bodymass, temperature, date = as.Date("2022-06-01"), station = "BY31 LANDSORTSDJ")
 #'
-getNodeData <- function(node_data, weekly_biomasses, weekly_bodymass, temperature, date, station) {
-
+getNodeData <- function(
+  node_data,
+  weekly_biomasses,
+  weekly_bodymass,
+  temperature,
+  date,
+  station
+) {
   node_data |>
-    select(node_name, efficiencies, intercept, slope, energy_density_ww, trophic_level, horizontal_position, color) |> 
-    
+    select(
+      node_name,
+      efficiencies,
+      intercept,
+      slope,
+      energy_density_ww,
+      trophic_level,
+      horizontal_position,
+      color
+    ) |>
+
     # Using getStationDate, join the organisms biomass at a given time and location
-    left_join(select(getStationDate(data = weekly_biomasses,
-                                    date = date,
-                                    station = station),
-                     node_name, biomass),
-              by = join_by(node_name)) |>
-    
+    left_join(
+      select(
+        getStationDate(data = weekly_biomasses, date = date, station = station),
+        node_name,
+        biomass
+      ),
+      by = join_by(node_name)
+    ) |>
+
     # If the biomass is missing, it means that it equals to 0
     mutate(biomass = replace_na(biomass, 0)) |>
-    
+
     # Using getStationDate, join the organisms bodymass at a given time and location
-    left_join(select(getStationDate(data = weekly_bodymass,
-                                    date = date,
-                                    station = station),
-                     node_name, bodymass),
-              by = join_by(node_name)) |>
-    
+    left_join(
+      select(
+        getStationDate(data = weekly_bodymass, date = date, station = station),
+        node_name,
+        bodymass
+      ),
+      by = join_by(node_name)
+    ) |>
+
     # This avoids to have NA, but won't impact caclulations later on
-    mutate(bodymass = replace_na(bodymass, 1)) |> 
+    mutate(bodymass = replace_na(bodymass, 1)) |>
 
     # Calculate temperature-corrected metabolic losses
-    mutate(losses = exp(slope * log(bodymass) + intercept - getTempKonstant(data = temperature,
-                                                                            date = date,
-                                                                            station = station)),
-           losses = ifelse(is.infinite(losses), 0, losses))
+    mutate(
+      losses = exp(
+        slope *
+          log(bodymass) +
+          intercept -
+          getTempKonstant(data = temperature, date = date, station = station)
+      ),
+      losses = ifelse(is.infinite(losses), 0, losses)
+    )
 }
 
 #' Compute Trophic Fluxes Using `fluxweb::fluxing` from a `tbl_graph` Object
@@ -125,26 +150,26 @@ getNodeData <- function(node_data, weekly_biomasses, weekly_bodymass, temperatur
 #' \dontrun{
 #'   tidyFluxing(graph)
 #' }
-#' 
+#'
 tidyFluxing <- function(graph, population_growth = TRUE) {
   node_names <- V(graph)$name
   node_data <- as_tibble(graph, what = "vertices")
-  
+
   # Ensure correct order of attributes
-  node_data_ordered <- node_data |> 
-    filter(name %in% node_names) |> 
+  node_data_ordered <- node_data |>
+    filter(name %in% node_names) |>
     arrange(match(name, node_names))
-  
+
   # Build adjacency matrix (prey x predator)
   adj_mat <- t(as_adjacency_matrix(graph, attr = "weight", sparse = FALSE))
-  
+
   # Choose the loss vector depending on population growth
   losses <- if (population_growth) {
     node_data_ordered$population_losses
   } else {
     node_data_ordered$losses
   }
-  
+
   # Compute fluxes and transpose to predator x prey
   flux_mat <- fluxing(
     mat = adj_mat,
@@ -155,7 +180,7 @@ tidyFluxing <- function(graph, population_growth = TRUE) {
     ef.level = "pred",
     bioms.losses = !population_growth
   )
-  
+
   return(t(flux_mat))
 }
 
@@ -194,115 +219,136 @@ tidyFluxing <- function(graph, population_growth = TRUE) {
 #'                          temperature, date = "2010-06-08", station = "BY31 LANDSORTSDJ",
 #'                          as_graph = TRUE)
 #' }
-#' 
-dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station,  as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
-  
-    if(population_growth == TRUE){ 
-      # This is not supported yet... so the results will be the same as population_growth == FALSE
-     
-      #  Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
-      #  Delta_B = Biomass week n+1 - Biomass week
-     
-      
-      # date_next_week = date + 7
-      #  
-      #  node_values_next_week <- getNodeData(node_data = node_data,
-      #                                       weekly_biomasses = weekly_biomasses,
-      #                                       weekly_bodymass = weekly_bodymass,
-      #                                       temperature = temperature,
-      #                                       date = date_next_week,
-      #                                       station = station) |>
-      #    select(node_name, "biomass_next_week" = biomass)
-     
-      
-      node_values_this_week <- getNodeData(node_data = node_data,
-                                           weekly_biomasses = weekly_biomasses,
-                                           weekly_bodymass = weekly_bodymass,
-                                           temperature = temperature,
-                                           date = date,
-                                           station = station)
-        
-      node_values <-  node_values_this_week |>
-        
-        # left_join(node_values_next_week, by = join_by(node_name)) |> 
-        
-        mutate(
-          P = biomass,
-          R = losses,
-          X = P * R,
-          # dP = biomass_next_week - biomass,  
-          # dt = 604800, # 7 days in seconds
-          
-          # population_losses = case_when(
-          #   type == "fish" ~ basal_metabolism,
-          #   TRUE ~ (dP / dt) * energy_density_ww + basal_metabolism
-          # )
-          population_losses = X
-        )
-        
-    } else {
-    node_values <- getNodeData(node_data = node_data,
-                               weekly_biomasses = weekly_biomasses,
-                               weekly_bodymass = weekly_bodymass,
-                               temperature = temperature,
-                               date = date,
-                               station = station)
-  }
-  
-  tbl <- 
-     forage_ratio |> 
-     filter(!is.na(node_predator)) |> 
-     left_join(
-       select(getStationDate(data = weekly_biomasses,
-                             date = date,
-                             station = station),
-              node_name, biomass),
-       by = join_by(node_prey == node_name)
-     ) |> 
-     group_by(node_predator) |> 
-     mutate(rel_biomass = biomass / sum(biomass, na.rm = TRUE),
-     # Calculate weight depending on presence_absence
-       weight = if (presence_absence) {
-         presence <- if_else(average_forage_ratio > 0, 1, 0)
-         (rel_biomass * presence) / sum(rel_biomass * presence, na.rm = TRUE)
-       } else {
-         forage_ratio <- case_when(
-           !is.na(a) & !is.na(h) ~ (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass,
-           TRUE ~ average_forage_ratio
-         )
-         forage_ratio <- replace_na(forage_ratio, 0)
-         (rel_biomass * forage_ratio) / sum(rel_biomass * forage_ratio, na.rm = TRUE)
-       }
-     ) |> ungroup() |> 
-   
-     # Make Table Graph
-     select(node_predator, node_prey, weight) |> 
-     as_tbl_graph() |>
-     activate(edges) |> 
-     mutate(weight = replace_na(weight, 0)) |> 
-     
-     # Add node data  
-     activate(nodes) |> 
-     left_join(
-       node_values,
-       by = join_by(name == node_name))
-   
-   mat <- tbl |> 
-     tidyFluxing(population_growth = population_growth) * 86.4 # From J/second/m2 to kJ/day/m2 
+#'
+dna2flux <- function(
+  forage_ratio,
+  node_data,
+  weekly_biomasses,
+  weekly_bodymass,
+  temperature,
+  date,
+  station,
+  as_graph = FALSE,
+  presence_absence = FALSE,
+  population_growth = TRUE
+) {
+  if (population_growth == TRUE) {
+    # This is not supported yet... so the results will be the same as population_growth == FALSE
 
-  graph <- 
-    mat |>
-    as_tbl_graph() |> 
+    #  Change this to: Xi = Pi*Ri + ((Delta_B/Delta_t)*ED)
+    #  Delta_B = Biomass week n+1 - Biomass week
+
+    # date_next_week = date + 7
+    #
+    #  node_values_next_week <- getNodeData(node_data = node_data,
+    #                                       weekly_biomasses = weekly_biomasses,
+    #                                       weekly_bodymass = weekly_bodymass,
+    #                                       temperature = temperature,
+    #                                       date = date_next_week,
+    #                                       station = station) |>
+    #    select(node_name, "biomass_next_week" = biomass)
+
+    node_values_this_week <- getNodeData(
+      node_data = node_data,
+      weekly_biomasses = weekly_biomasses,
+      weekly_bodymass = weekly_bodymass,
+      temperature = temperature,
+      date = date,
+      station = station
+    )
+
+    node_values <- node_values_this_week |>
+
+      # left_join(node_values_next_week, by = join_by(node_name)) |>
+
+      mutate(
+        P = biomass,
+        R = losses,
+        X = P * R,
+        # dP = biomass_next_week - biomass,
+        # dt = 604800, # 7 days in seconds
+
+        # population_losses = case_when(
+        #   type == "fish" ~ basal_metabolism,
+        #   TRUE ~ (dP / dt) * energy_density_ww + basal_metabolism
+        # )
+        population_losses = X
+      )
+  } else {
+    node_values <- getNodeData(
+      node_data = node_data,
+      weekly_biomasses = weekly_biomasses,
+      weekly_bodymass = weekly_bodymass,
+      temperature = temperature,
+      date = date,
+      station = station
+    )
+  }
+
+  tbl <-
+    forage_ratio |>
+    filter(!is.na(node_predator)) |>
+    left_join(
+      select(
+        getStationDate(data = weekly_biomasses, date = date, station = station),
+        node_name,
+        biomass
+      ),
+      by = join_by(node_prey == node_name)
+    ) |>
+    group_by(node_predator) |>
+    mutate(
+      rel_biomass = biomass / sum(biomass, na.rm = TRUE),
+      # Calculate weight depending on presence_absence
+      weight = if (presence_absence) {
+        presence <- if_else(average_forage_ratio > 0, 1, 0)
+        (rel_biomass * presence) / sum(rel_biomass * presence, na.rm = TRUE)
+      } else {
+        forage_ratio <- case_when(
+          !is.na(a) & !is.na(h) ~
+            (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass,
+          TRUE ~ average_forage_ratio
+        )
+        forage_ratio <- replace_na(forage_ratio, 0)
+        (rel_biomass * forage_ratio) /
+          sum(rel_biomass * forage_ratio, na.rm = TRUE)
+      }
+    ) |>
+    ungroup() |>
+
+    # Make Table Graph
+    select(node_predator, node_prey, weight) |>
+    as_tbl_graph() |>
+    activate(edges) |>
+    mutate(weight = replace_na(weight, 0)) |>
+
+    # Add node data
     activate(nodes) |>
     left_join(
-      getNodeData(node_data = node_data,
-                  weekly_biomasses = weekly_biomasses,
-                  weekly_bodymass = weekly_bodymass,
-                  temperature = temperature,
-                  date = date,
-                  station = station),
-              by = join_by(name == node_name))
-    
+      node_values,
+      by = join_by(name == node_name)
+    )
+
+  mat <- tbl |>
+    tidyFluxing(population_growth = population_growth) *
+    86.4 # From J/second/m2 to kJ/day/m2
+
+  graph <-
+    mat |>
+    as_tbl_graph() |>
+    activate(nodes) |>
+    left_join(
+      getNodeData(
+        node_data = node_data,
+        weekly_biomasses = weekly_biomasses,
+        weekly_bodymass = weekly_bodymass,
+        temperature = temperature,
+        date = date,
+        station = station
+      ),
+      by = join_by(name == node_name)
+    )
+
   if (as_graph == TRUE) {
     return(graph)
   } else {
@@ -336,26 +382,38 @@ dna2flux <- function(forage_ratio, node_data, weekly_biomasses, weekly_bodymass,
 #' boot_array <- bootstrapFluxes(bootstrap_forage_ratio, node_data, biomasses, bodymass, temperature, date = "2012-06-01", station = "BY31 LANDSORTSDJ")
 #' }
 #'
-bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
-  
+bootstrapFluxes <- function(
+  bootstrap_forage_ratio,
+  node_data,
+  weekly_biomasses,
+  weekly_bodymass,
+  temperature,
+  date,
+  station,
+  as_graph = FALSE,
+  presence_absence = FALSE,
+  population_growth = TRUE
+) {
   safe_dna2flux <- possibly(dna2flux, otherwise = matrix(nrow = 24, ncol = 24))
-  
+
   bootstrap_forage_ratio |>
-    group_by(Iteration) |> 
-    group_split() |> 
+    group_by(Iteration) |>
+    group_split() |>
     map(function(group) {
-      safe_dna2flux(forage_ratio = group,
-                    node_data = node_data,
-                    weekly_biomasses = weekly_biomasses,
-                    weekly_bodymass = weekly_bodymass,
-                    temperature = temperature,
-                    date = date,
-                    station = station,
-                    as_graph = FALSE,
-                    presence_absence = FALSE,
-                    population_growth = population_growth)
-    }) |> 
-    keep(~ !is.null(.)) |> 
+      safe_dna2flux(
+        forage_ratio = group,
+        node_data = node_data,
+        weekly_biomasses = weekly_biomasses,
+        weekly_bodymass = weekly_bodymass,
+        temperature = temperature,
+        date = date,
+        station = station,
+        as_graph = FALSE,
+        presence_absence = FALSE,
+        population_growth = population_growth
+      )
+    }) |>
+    keep(~ !is.null(.)) |>
     abind::abind(along = 3)
 }
 
@@ -375,22 +433,38 @@ bootstrapFluxes <- function(bootstrap_forage_ratio, node_data, weekly_biomasses,
 #'
 #' @return No return value. This function is called for its side effect of writing a `.rds` file to `cache.dir` if the file does not already exist.
 #'
-cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE) {
-  
-  cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
+cacheMyFluxes <- function(
+  cache.dir,
+  bootstrap_forage_ratio,
+  node_data,
+  weekly_biomasses,
+  weekly_bodymass,
+  temperature,
+  date,
+  station,
+  as_graph = FALSE,
+  presence_absence = FALSE,
+  population_growth = TRUE
+) {
+  cache_file <- file.path(
+    cache.dir,
+    paste0("flux_", station, "_", date, ".rds")
+  )
   if (!dir.exists(cache.dir)) dir.create(cache.dir)
 
   if (!file.exists(cache_file)) {
-    bootstrapFluxes(bootstrap_forage_ratio = bootstrap_forage_ratio,
-                    node_data = node_data,
-                    weekly_biomasses = weekly_biomasses,
-                    weekly_bodymass = weekly_bodymass,
-                    temperature = temperature,
-                    date = date,
-                    station = station,
-                    as_graph = as_graph,
-                    presence_absence = presence_absence,
-                    population_growth = population_growth) |> 
+    bootstrapFluxes(
+      bootstrap_forage_ratio = bootstrap_forage_ratio,
+      node_data = node_data,
+      weekly_biomasses = weekly_biomasses,
+      weekly_bodymass = weekly_bodymass,
+      temperature = temperature,
+      date = date,
+      station = station,
+      as_graph = as_graph,
+      presence_absence = presence_absence,
+      population_growth = population_growth
+    ) |>
       write_rds(cache_file)
   }
 }
@@ -417,33 +491,59 @@ cacheMyFluxes <- function(cache.dir, bootstrap_forage_ratio, node_data, weekly_b
 #' - Resulting graph is ready for further analysis or visualization using the `tidygraph` and `ggraph` ecosystems.
 #'
 #'
-fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, cache.dir = F, presence_absence = FALSE, population_growth = TRUE, ...) {
-  
+fluxingWithConfidence <- function(
+  bootstrap_forage_ratio,
+  node_data,
+  weekly_biomasses,
+  weekly_bodymass,
+  temperature,
+  date,
+  station,
+  cache.dir = F,
+  presence_absence = FALSE,
+  population_growth = TRUE,
+  ...
+) {
   # read boostrap_list from cache if it exists
   if (cache.dir != FALSE) {
-    cacheMyFluxes(cache.dir, bootstrap_forage_ratio, node_data, weekly_biomasses, weekly_bodymass, temperature, date, station, as_graph = FALSE, presence_absence = FALSE, population_growth = TRUE)
-    cache_file <- file.path(cache.dir, paste0("flux_", station, "_", date, ".rds"))
+    cacheMyFluxes(
+      cache.dir,
+      bootstrap_forage_ratio,
+      node_data,
+      weekly_biomasses,
+      weekly_bodymass,
+      temperature,
+      date,
+      station,
+      as_graph = FALSE,
+      presence_absence = FALSE,
+      population_growth = TRUE
+    )
+    cache_file <- file.path(
+      cache.dir,
+      paste0("flux_", station, "_", date, ".rds")
+    )
     bootstrap_array <- read_rds(cache_file)
   } else {
-    bootstrap_array <- bootstrapFluxes(bootstrap_forage_ratio = bootstrap_forage_ratio,
-                                      node_data = node_data,
-                                      weekly_biomasses = weekly_biomasses,
-                                      weekly_bodymass = weekly_bodymass,
-                                      temperature = temperature,
-                                      date = date,
-                                      station = station,
-                                      as_graph = as_graph,
-                                      presence_absence = presence_absence,
-                                      population_growth = population_growth)
+    bootstrap_array <- bootstrapFluxes(
+      bootstrap_forage_ratio = bootstrap_forage_ratio,
+      node_data = node_data,
+      weekly_biomasses = weekly_biomasses,
+      weekly_bodymass = weekly_bodymass,
+      temperature = temperature,
+      date = date,
+      station = station,
+      as_graph = as_graph,
+      presence_absence = presence_absence,
+      population_growth = population_growth
+    )
   }
-  
-  
+
   summaries <- list(
-    flux_mean = as_function(~mean(.x, na.rm = TRUE)),
-    flux_lower = as_function(~quantile(.x, probs = 0.025, na.rm = TRUE)),
-    flux_upper = as_function(~quantile(.x, probs = 0.975, na.rm = TRUE))
+    flux_mean = as_function(~ mean(.x, na.rm = TRUE)),
+    flux_lower = as_function(~ quantile(.x, probs = 0.025, na.rm = TRUE)),
+    flux_upper = as_function(~ quantile(.x, probs = 0.975, na.rm = TRUE))
   )
-  
 
   flux_long <- imap(summaries, function(f, name) {
     apply(bootstrap_array, c(1, 2), f) |>
@@ -452,14 +552,19 @@ fluxingWithConfidence <- function(bootstrap_forage_ratio, node_data, weekly_biom
       pivot_longer(-predator, names_to = "prey", values_to = name)
   }) |>
     reduce(left_join, by = c("predator", "prey"))
-  
+
   flux_long |>
-    as_tbl_graph() |> 
-    activate(nodes) |> 
+    as_tbl_graph() |>
+    activate(nodes) |>
     left_join(
-      getNodeData(node_data, weekly_biomasses,
-                  weekly_bodymass, temperature,
-                  date, station),
+      getNodeData(
+        node_data,
+        weekly_biomasses,
+        weekly_bodymass,
+        temperature,
+        date,
+        station
+      ),
       by = join_by(name == node_name)
     )
 }
@@ -492,14 +597,14 @@ extract_flux_long <- function(graph) {
   adj_long_mean <- adj_to_long(graph, "flux_mean", "flux_mean")
   adj_long_upper <- adj_to_long(graph, "flux_upper", "flux_upper")
   adj_long_lower <- adj_to_long(graph, "flux_lower", "flux_lower")
-  
+
   # Join and annotate
   flux_long <- adj_long_mean |>
     filter(!is.na(flux_mean)) |>
     left_join(adj_long_upper, by = c("predator", "prey")) |>
     left_join(adj_long_lower, by = c("predator", "prey")) |>
     mutate(sample_week = week)
-  
+
   return(flux_long)
 }
 
@@ -517,14 +622,13 @@ extract_flux_long <- function(graph) {
 #' - The function internally uses `abind::abind()` for stacking and `purrr::map()` for reading files.
 #'
 aggregateFluxes <- function(cache.dir) {
-  
   # Read the RDS files into a list of 3D arrays and combine into one 4D array (predator x prey x iteration x time)
-  flux_array <- map(cache.dir, read_rds) |> 
+  flux_array <- map(cache.dir, read_rds) |>
     abind(along = 4)
 
   # Average over time (dimension 4)
   flux_mean_aggregate <- apply(flux_array, c(1, 2, 3), mean, na.rm = TRUE)
-  
+
   # Turn the 3D array into a tidy dataframe
   flux_df <- as.data.frame.table(flux_mean_aggregate, responseName = "flux") |>
     rename(predator = Var1, prey = Var2, iteration = Var3) |>
@@ -532,7 +636,7 @@ aggregateFluxes <- function(cache.dir) {
       flux = as.numeric(flux),
       iteration = as.integer(iteration)
     )
-  
+
   # Summarize across iterations (confidence intervals)
   aggregated_fluxes <-
     flux_df |>
@@ -543,8 +647,6 @@ aggregateFluxes <- function(cache.dir) {
       upper = quantile(flux, 0.975, na.rm = TRUE),
       .groups = "drop"
     )
-  
+
   return(aggregated_fluxes)
 }
-
-
