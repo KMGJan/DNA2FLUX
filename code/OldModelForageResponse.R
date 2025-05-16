@@ -1,9 +1,8 @@
 #!/usr/bin/env Rscript
 suppressPackageStartupMessages(library(tidyverse))
-suppressPackageStartupMessages(library(minpack.lm))
-suppressPackageStartupMessages(library(furrr))
-suppressPackageStartupMessages(library(progressr))
 
+
+#Prepare data ----
 # Check if biomass data exists, otherwise generate it
 if (
   !file.exists(file.path(
@@ -99,6 +98,7 @@ ForageRatios |>
   unique() |>
   write_csv(file.path("data", "processed", "trawl_summary.csv"))
 
+
 # Calculate the average forage ratio for each predator-prey pairs
 average_forage_ratios <-
   ForageRatios |>
@@ -106,20 +106,18 @@ average_forage_ratios <-
   group_by(node_predator, node_prey) |>
   summarise(ForageRatio = mean(ForageRatio, na.rm = T), .groups = "drop")
 
-# Helper functions ----
-
-# Estimate the forage ratio as a density dependant response
-# 1: Define a bootstrap function
+# Estimate the forage ratio based on a type II response:
+# Step 1: Define a bootstrap function
 bootstrap_fit <- function(df, model, coef, prey, predator) {
   df_boot <- df[sample(nrow(df), replace = TRUE), ] # Resample with replacement
 
   boot_fit <- tryCatch(
     nlsLM(
       model,
-      start = list(c = coef[1, 1]),
+      start = list(a = coef[1, 1], h = coef[2, 1]),
       data = df_boot,
-      lower = c(c_min),
-      upper = c(c_max),
+      lower = c(a_min, h_min),
+      upper = c(a_max, h_max),
       control = nls.lm.control(maxiter = 500)
     ),
     error = function(e) NULL
@@ -130,14 +128,15 @@ bootstrap_fit <- function(df, model, coef, prey, predator) {
     return(tibble(
       node_predator = predator,
       node_prey = prey,
-      c = boot_coef[1, 1]
+      a = boot_coef[1, 1],
+      h = boot_coef[2, 1]
     ))
   } else {
     return(NULL)
   }
 }
 
-# 2: Ensure 1000 Valid Bootstrap fits
+# Step 2: Ensure 1000 Valid Bootstrap fits
 run_bootstraps <- function(df, model, coef, prey, predator, n_boot = 1000) {
   successful_results <- list()
   attempts <- 0
@@ -159,167 +158,171 @@ run_bootstraps <- function(df, model, coef, prey, predator, n_boot = 1000) {
     }
   }
 
-  bind_rows(successful_results) |>
+  bind_rows(successful_results) %>%
     mutate(Iteration = row_number())
 }
 
-# 3:Define function to fit model for a single group
-fit_group <- function(df) {
-  if (nrow(df) <= 3) return(NULL)
+# Step 3: set up Model inputs and Parallelization
+# Libraries and start a multisession so it paralellise
+suppressPackageStartupMessages(library(furrr))
+plan(multisession)
+suppressPackageStartupMessages(library(minpack.lm))
+
+# Define parameter ranges
+a_values = c(0, 1, 10, 100, 1000)
+a_min = 0
+a_max = 1000
+h_values = c(1, 60, 60 * 24)
+h_min = 1
+h_max = 60 * 60 * 24
+
+# Type II functional response model
+model <- ForageRatio ~
+  (a * rel_biomass) / (1 + a * h * rel_biomass) / (rel_biomass)
+# empty tibble and list for storing output
+results <- tibble() # Stores best-fit parameters
+boot_results <- list() # Stores bootstrapping results
+
+# Step 4: Fit the Model for each predator-prey pair
+# Split data by Barcode, and Species_English
+df_list <-
+  ForageRatios |>
+  filter(rel_biomass != 0) |>
+  group_split(node_predator, node_prey, .keep = TRUE)
+
+
+# Fit models and perform bootstrapping in parallel
+if (!dir.exists(file.path("output", "ModelForageResponse")))
+  dir.create(file.path("output", "ModelForageResponse"), recursive = TRUE)
+pdf(
+  file.path("output", "ModelForageResponse", "residual_plot.pdf"),
+  width = 6,
+  height = 6
+)
+#Iterates over each predator-prey group:
+for (df in df_list) {
+  # Skip if there are 5 or fewer observations
+  if (nrow(df) <= 5) next
 
   prey <- unique(df$node_prey)
   predator <- unique(df$node_predator)
 
-  # Try all c_values and keep the best fit
-  fits <- map_dfr(c_values, function(c_start) {
-    fit <- tryCatch(
-      nlsLM(
-        ForageRatio ~ (1 + c) / (1 + c * rel_biomass),
-        start = list(c = c_start),
-        data = df,
-        lower = c(c_min),
-        upper = c(c_max),
-        control = nls.lm.control(maxiter = 500)
-      ),
-      error = function(e) NULL
-    )
+  best_fit <- NULL
+  best_residual_dispersion <- Inf
 
-    if (!is.null(fit)) {
-      tibble(
-        start = c_start,
-        residual_dispersion = sum(residuals(fit)^2),
-        fit = list(fit)
+  # Fits model multiple times using different starting values.
+  for (a_start in a_values) {
+    for (h_start in h_values) {
+      fit_attempt <- tryCatch(
+        nlsLM(
+          model,
+          start = list(a = a_start, h = h_start),
+          data = df,
+          lower = c(a_min, h_min),
+          upper = c(a_max, h_max),
+          control = nls.lm.control(maxiter = 500)
+        ),
+        error = function(e) NULL
       )
-    } else {
-      NULL
+
+      #Selects the best fit based on residual dispersion.
+      if (!is.null(fit_attempt)) {
+        residual_dispersion <- sum(residuals(fit_attempt)^2)
+
+        if (
+          !is.null(fit_attempt) &&
+            residual_dispersion < best_residual_dispersion
+        ) {
+          best_residual_dispersion <- residual_dispersion
+          best_fit <- fit_attempt
+        }
+      }
     }
-  })
+  }
 
-  if (nrow(fits) == 0) return(NULL)
+  # Stores fit results and bootstrapped estimates.
+  if (!is.null(best_fit)) {
+    # Residual visualisation
+    plot(
+      fitted(best_fit),
+      resid(best_fit),
+      main = paste(predator, prey, sep = "-")
+    )
+    abline(h = 0)
 
-  # Select the best fit based on the starting c
-  best_fit <- fits |>
-    slice_min(residual_dispersion, n = 1) |>
-    pull(fit)
+    coef <- summary(best_fit)$coefficients
 
-  best_fit <- best_fit[[1]]
-  coef <- summary(best_fit)$coefficients
-
-  # Plot the residual fit and save as a png
-  residuals_df <- tibble(
-    fitted = fitted(best_fit),
-    residuals = resid(best_fit)
-  )
-
-  plot_title <- paste(predator, prey, sep = " - ")
-  file_name <- file.path(
-    "output",
-    "ModelForageResponse",
-    "residuals",
-    paste0(predator, "_", prey, ".png")
-  )
-
-  p <- ggplot(residuals_df, aes(x = fitted, y = residuals)) +
-    geom_hline(yintercept = 0, color = "red") +
-    geom_point(shape = 21) +
-    labs(
-      title = plot_title,
-      x = "Fitted values",
-      y = "Residuals"
-    ) +
-    theme_bw()
-
-  ggsave(filename = file_name, plot = p, width = 6, height = 4, dpi = 300)
-
-  # Return a tibble, with predator, prey, c and the bootstrapped c
-  tibble(
-    node_predator = predator,
-    node_prey = prey,
-    c = coef[1, 1],
-    boot = list(run_bootstraps(df, model, coef, prey, predator, n_boot = 1000))
-  )
+    results <-
+      results |>
+      bind_rows(
+        tibble(
+          node_predator = predator,
+          node_prey = prey,
+          a = coef[1, 1],
+          h = coef[2, 1]
+        )
+      )
+    boot_results[[paste(prey, predator)]] <- run_bootstraps(
+      df,
+      model,
+      coef,
+      prey,
+      predator,
+      n_boot = 1000
+    )
+  }
 }
-
-# Prepare the output directory
-dir.create(
-  file.path("output", "ModelForageResponse", "residuals"),
-  recursive = T,
-  showWarnings = F
-)
-
-# Define the model
-model <- ForageRatio ~ (1 + c) / (1 + c * rel_biomass)
-
-# Define parameter c ranges and starting values
-c_values = seq(-.9, 10, .1)
-c_min = -0.99
-c_max = 50
-
-# Fit the Model for each predator-prey pair
-# Split data by Barcode, and Species_English
-df_list <-
-  ForageRatios |>
-  group_split(node_predator, node_prey, .keep = TRUE)
-
-# Run in parallel with progress bar
-plan(multisession)
-
-model_results <-
-  future_map(
-    df_list,
-    fit_group,
-    .options = furrr_options(seed = TRUE),
-    .progress = TRUE
-  ) |>
-  compact() |>
-  bind_rows()
-
-# Save the results ----
-model_results |>
-  select(-boot) |>
+dev.off()
+# Save the results -----------------------------------
+results |>
   right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
   mutate(average_forage_ratio = ForageRatio) |>
-  select(node_predator, node_prey, average_forage_ratio, c) |>
+  select(node_predator, node_prey, average_forage_ratio, a, h) |>
   arrange(node_predator, node_prey) |>
   write_csv(file = file.path("data", "processed", "forage_ratio.csv"))
-model_results |>
-  select(boot) |>
-  unnest(boot) |>
+
+bind_rows(boot_results) |>
   right_join(
-    average_forage_ratios |>
-      cross_join(tibble(Iteration = 1:1000)),
+    average_forage_ratios |> cross_join(tibble(Iteration = 1:1000)),
     by = c("node_predator", "node_prey", "Iteration")
   ) |>
   filter(!is.na(Iteration)) |>
   mutate(average_forage_ratio = ForageRatio) |>
-  select(node_predator, node_prey, average_forage_ratio, c, Iteration) |>
+  select(node_predator, node_prey, average_forage_ratio, a, h, Iteration) |>
   arrange(node_predator, node_prey) |>
-  write_csv(
-    file = file.path("data", "processed", "bootstrap_forage_ratio.csv")
-  )
+  write_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 # Summarise the confidence intervals from bootstraps
 bootstrapped_values <-
-  model_results |>
-  select(boot) |>
-  unnest(boot) |>
+  bind_rows(boot_results) |>
   group_by(node_prey, node_predator) |>
   summarise(
-    AVG_c = mean(c),
-    LOW_c = quantile(c, 0.025),
-    HIGH_c = quantile(c, 0.975),
+    AVG_a = median(a),
+    AVG_h = median(h),
+    LOW_a = quantile(a, 0.025),
+    LOW_h = quantile(h, 0.025),
+    HIGH_a = quantile(a, 0.975),
+    HIGH_h = quantile(h, 0.975),
     .groups = "drop"
   ) |>
   mutate(
-    c = paste0(
-      round(AVG_c, 2),
+    a = paste0(
+      round(AVG_a, 2),
       " [",
-      round(LOW_c, 2),
+      round(LOW_a, 2),
       ";",
-      round(HIGH_c, 2),
+      round(HIGH_a, 2),
       "]"
     ),
+    h = paste0(
+      round(AVG_h, 2),
+      " [",
+      round(LOW_h, 2),
+      ";",
+      round(HIGH_h, 2),
+      "]"
+    )
   ) |>
-  select(node_predator, node_prey, c) |> #, h) |>
+  select(node_predator, node_prey, a, h) |>
   arrange(node_predator, node_prey)
 if (!dir.exists(file.path("output", "table")))
   dir.create(file.path("output", "table"), recursive = TRUE)
@@ -328,14 +331,12 @@ write_csv(
   file.path("output", "table", "forage_ratio_parameters.csv")
 )
 # Quick visualisation -------
-rel_biomass_seq <- seq(0, 1, length.out = 100)
+rel_biomass_seq <- seq(0.001, 1, length.out = 100)
 boot_prediction <-
-  model_results |>
-  select(boot) |>
-  unnest(boot) |>
+  bind_rows(boot_results) |>
   cross_join(tibble(rel_biomass = rel_biomass_seq)) |>
   mutate(
-    ForageRatio = (1 + c) / (1 + c * rel_biomass),
+    ForageRatio = (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass,
     Bgut = ForageRatio * rel_biomass
   ) |>
   group_by(node_predator, node_prey, rel_biomass) |>
@@ -346,67 +347,51 @@ boot_prediction <-
     Bgut_upper = quantile(Bgut, 0.975, na.rm = TRUE),
     .groups = "drop"
   )
+curves <- results |>
+  right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
+  cross_join(tibble(rel_biomass = rel_biomass_seq)) |>
+  mutate(
+    ForageRatio = ifelse(
+      !is.na(a) & !is.na(h),
+      (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass,
+      ForageRatio
+    )
+  ) |>
+  ggplot() +
+  geom_ribbon(
+    data = boot_prediction,
+    mapping = aes(ymin = fr_lower + 1, ymax = fr_upper + 1, x = rel_biomass),
+    alpha = .2,
+    col = "black",
+    linetype = 2
+  ) +
 
-plot_and_save_curves <- function(p) {
-  model_results |>
-    select(-boot) |>
-    right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
-    cross_join(tibble(rel_biomass = rel_biomass_seq)) |>
-    mutate(
-      ForageRatio = ifelse(
-        !is.na(c),
-        (1 + c) / (1 + c * rel_biomass),
-        ForageRatio
-      )
-    ) |>
-    filter(
-      node_predator == p
-    ) |>
-    ggplot() +
-    geom_ribbon(
-      data = boot_prediction |>
-        filter(
-          node_predator == p
-        ),
-      mapping = aes(ymin = fr_lower, ymax = fr_upper, x = rel_biomass),
-      alpha = .2,
-      col = "black",
-      linetype = 2
-    ) +
+  geom_point(
+    data = ForageRatios |> filter(!is.na(biomass)),
+    mapping = aes(x = rel_biomass, y = ForageRatio + 1),
+    color = "black",
+    shape = 21,
+    alpha = .5,
+    size = 1
+  ) +
+  geom_line(
+    linewidth = .5,
+    col = "red",
+    mapping = aes(x = rel_biomass, y = ForageRatio + 1)
+  ) +
 
-    geom_point(
-      data = ForageRatios |>
-        filter(
-          node_predator == p
-        ) |>
-        filter(!is.na(biomass)),
-      mapping = aes(x = rel_biomass, y = ForageRatio),
-      color = "black",
-      shape = 21,
-      alpha = .5,
-      size = 1
-    ) +
-    geom_line(
-      linewidth = .5,
-      col = "red",
-      mapping = aes(x = rel_biomass, y = ForageRatio)
-    ) +
+  facet_grid(node_prey ~ node_predator, scales = "free") +
 
-    facet_wrap(. ~ node_prey, scales = "free") +
+  geom_hline(yintercept = 2) +
+  theme_bw() +
+  scale_y_log10() +
+  labs(x = "Relative Biomass", y = "Forage ratio")
 
-    geom_hline(yintercept = 1) +
-    theme_bw() +
-
-    scale_x_continuous(breaks = c(0, .5, 1)) +
-    labs(x = "Relative Biomass", y = "Forage ratio", title = p)
-  name <- paste0("fitted_", p, ".pdf")
-  ggsave(
-    filename = file.path("output", "ModelForageResponse", name),
-    width = 8,
-    height = 10
-  )
-}
-
-predator <- unique(average_forage_ratios$node_predator)
-
-walk(predator, ~ plot_and_save_curves(.x))
+ggsave(
+  filename = file.path("output", "ModelForageResponse", "curves.pdf"),
+  plot = curves,
+  width = 10,
+  height = 15
+)
+# Clean the environment
+rm(list = ls())
