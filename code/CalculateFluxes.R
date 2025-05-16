@@ -305,8 +305,7 @@ dna2flux <- function(
         (rel_biomass * presence) / sum(rel_biomass * presence, na.rm = TRUE)
       } else {
         forage_ratio <- case_when(
-          !is.na(a) & !is.na(h) ~
-            (a * rel_biomass) / (1 + a * h * rel_biomass) / rel_biomass,
+          !is.na(c) ~ (1 + c) / (1 + c * rel_biomass),
           TRUE ~ average_forage_ratio
         )
         forage_ratio <- replace_na(forage_ratio, 0)
