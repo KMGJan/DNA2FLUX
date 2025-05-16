@@ -13,7 +13,7 @@ suppressPackageStartupMessages(library(rlang))
 suppressPackageStartupMessages(library(fluxweb))
 suppressPackageStartupMessages(library(furrr))
 suppressPackageStartupMessages(library(abind))
-
+suppressPackageStartupMessages(library(progressr))
 # Check if bootstrap_forage_ratio exist, otherwise generate it.
 if (
   !file.exists(file.path("data", "processed", "bootstrap_forage_ratio.csv"))
@@ -114,21 +114,26 @@ cache.dir = file.path("data", "analyses", "fluxes_array")
 # Parallelize for faster computations
 plan(multisession)
 
-future_walk(dates, function(date) {
-  cacheMyFluxes(
-    cache.dir = cache.dir,
-    bootstrap_forage_ratio = bootstrap_forage_ratio,
-    node_data = node_data,
-    weekly_biomasses = weekly_biomasses,
-    weekly_bodymass = weekly_bodymass,
-    temperature = temperature,
-    date = date,
-    station = station,
-    as_graph = FALSE,
-    presence_absence = FALSE,
-    population_growth = FALSE
-  )
-})
+future_walk(
+  dates,
+  function(date) {
+    cacheMyFluxes(
+      cache.dir = cache.dir,
+      bootstrap_forage_ratio = bootstrap_forage_ratio,
+      node_data = node_data,
+      weekly_biomasses = weekly_biomasses,
+      weekly_bodymass = weekly_bodymass,
+      temperature = temperature,
+      date = date,
+      station = station,
+      as_graph = FALSE,
+      presence_absence = FALSE,
+      population_growth = FALSE
+    )
+  },
+  .options = furrr_options(seed = TRUE),
+  .progress = TRUE
+)
 cat(paste("\n All fluxes arrays are saved in", cache.dir))
 # Create a tibble containing all dates and graph object with confidence interval and save it for later
 # NOT SURE THAT IT IS USEFUL BUT LET'S SAVE IT ANYWAY FOR NOW
