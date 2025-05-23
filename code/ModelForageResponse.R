@@ -1,8 +1,11 @@
 #!/usr/bin/env Rscript
-suppressPackageStartupMessages(library(tidyverse))
-suppressPackageStartupMessages(library(minpack.lm))
-suppressPackageStartupMessages(library(furrr))
-suppressPackageStartupMessages(library(progressr))
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(minpack.lm)
+  library(furrr)
+  library(progressr)
+  library(patchwork)
+})
 
 # Check if biomass data exists, otherwise generate it
 if (
@@ -100,12 +103,30 @@ ForageRatios |>
   write_csv(file.path("data", "processed", "trawl_summary.csv"))
 
 # Calculate the average forage ratio for each predator-prey pairs
-average_forage_ratios <-
-  ForageRatios |>
-  filter(!is.na(biomass)) |>
-  group_by(node_predator, node_prey) |>
-  summarise(ForageRatio = mean(ForageRatio, na.rm = T), .groups = "drop")
-
+#average_forage_ratios <-
+#  ForageRatios |>
+#  filter(!is.na(biomass)) |>
+#  group_by(node_predator, node_prey) |>
+#  summarise(ForageRatio = mean(ForageRatio, na.rm = T), .groups = "drop")
+node_data <- read_csv(
+  file.path("data", "raw", "node_data.csv"),
+  show_col_types = FALSE
+)
+fish <- node_data |> filter(type == "fish") |> select(node_name)
+zooplankton <- node_data |> filter(type == "zooplankton") |> select(node_name)
+phytoplankton <- node_data |>
+  filter(type == "phytoplankton") |>
+  select(node_name)
+neutral_forage_ratios <-
+  fish |>
+  rename(node_predator = node_name) |>
+  cross_join(zooplankton |> rename(node_prey = node_name)) |>
+  bind_rows(
+    zooplankton |>
+      rename(node_predator = node_name) |>
+      cross_join(phytoplankton |> rename(node_prey = node_name))
+  ) |>
+  mutate(ForageRatio = 1)
 # Helper functions ----
 
 # Estimate the forage ratio as a density dependant response
@@ -277,22 +298,22 @@ model_results <-
 # Save the results ----
 model_results |>
   select(-boot) |>
-  right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
-  mutate(average_forage_ratio = ForageRatio) |>
-  select(node_predator, node_prey, average_forage_ratio, c) |>
+  right_join(neutral_forage_ratios, by = c("node_predator", "node_prey")) |>
+  mutate(neutral_forage_ratio = ForageRatio) |>
+  select(node_predator, node_prey, neutral_forage_ratio, c) |>
   arrange(node_predator, node_prey) |>
   write_csv(file = file.path("data", "processed", "forage_ratio.csv"))
 model_results |>
   select(boot) |>
   unnest(boot) |>
   right_join(
-    average_forage_ratios |>
+    neutral_forage_ratios |>
       cross_join(tibble(Iteration = 1:1000)),
     by = c("node_predator", "node_prey", "Iteration")
   ) |>
   filter(!is.na(Iteration)) |>
-  mutate(average_forage_ratio = ForageRatio) |>
-  select(node_predator, node_prey, average_forage_ratio, c, Iteration) |>
+  mutate(neutral_forage_ratio = ForageRatio) |>
+  select(node_predator, node_prey, neutral_forage_ratio, c, Iteration) |>
   arrange(node_predator, node_prey) |>
   write_csv(
     file = file.path("data", "processed", "bootstrap_forage_ratio.csv")
@@ -350,7 +371,7 @@ boot_prediction <-
 plot_and_save_curves <- function(p) {
   model_results |>
     select(-boot) |>
-    right_join(average_forage_ratios, by = c("node_predator", "node_prey")) |>
+    right_join(neutral_forage_ratios, by = c("node_predator", "node_prey")) |>
     cross_join(tibble(rel_biomass = rel_biomass_seq)) |>
     mutate(
       ForageRatio = ifelse(
@@ -407,7 +428,7 @@ plot_and_save_curves <- function(p) {
   )
 }
 
-predator <- unique(average_forage_ratios$node_predator)
+predator <- unique(neutral_forage_ratios$node_predator)
 
 walk(predator, ~ plot_and_save_curves(.x))
 

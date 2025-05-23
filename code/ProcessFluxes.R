@@ -5,15 +5,17 @@ if (!dir.exists(file.path("data", "analyses")))
   dir.create(file.path("data", "analyses"))
 
 ## Load libraries
-suppressPackageStartupMessages(library(tidyverse))
-suppressPackageStartupMessages(library(ggraph))
-suppressPackageStartupMessages(library(tidygraph))
-suppressPackageStartupMessages(library(igraph))
-suppressPackageStartupMessages(library(rlang))
-suppressPackageStartupMessages(library(fluxweb))
-suppressPackageStartupMessages(library(furrr))
-suppressPackageStartupMessages(library(abind))
-suppressPackageStartupMessages(library(progressr))
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggraph)
+  library(tidygraph)
+  library(igraph)
+  library(rlang)
+  library(fluxweb)
+  library(furrr)
+  library(abind)
+  library(progressr)
+})
 # Check if bootstrap_forage_ratio exist, otherwise generate it.
 if (
   !file.exists(file.path("data", "processed", "bootstrap_forage_ratio.csv"))
@@ -66,6 +68,7 @@ dates <- weekly_biomasses |>
   pull(sample_week) |>
   unique()
 # Null model ----
+cat("\n Running the model with neutral selection \n")
 plan(multisession)
 presence_absence_model <- tibble(sample_week = dates) |>
   mutate(
@@ -113,7 +116,9 @@ write_csv(
 cache.dir = file.path("data", "analyses", "fluxes_array")
 # Parallelize for faster computations
 plan(multisession)
-
+cat(
+  "\n Running the model with selectivity \n this takes a while so let's grab a coffee\n"
+)
 future_walk(
   dates,
   function(date) {

@@ -301,12 +301,12 @@ dna2flux <- function(
       rel_biomass = biomass / sum(biomass, na.rm = TRUE),
       # Calculate weight depending on presence_absence
       weight = if (presence_absence) {
-        presence <- if_else(average_forage_ratio > 0, 1, 0)
+        presence <- if_else(neutral_forage_ratio > 0, 1, 0)
         (rel_biomass * presence) / sum(rel_biomass * presence, na.rm = TRUE)
       } else {
         forage_ratio <- case_when(
           !is.na(c) ~ (1 + c) / (1 + c * rel_biomass),
-          TRUE ~ average_forage_ratio
+          TRUE ~ neutral_forage_ratio
         )
         forage_ratio <- replace_na(forage_ratio, 0)
         (rel_biomass * forage_ratio) /
