@@ -311,11 +311,11 @@ bootstrapped_values <-
   ) |>
   mutate(
     c = paste0(
-      round(AVG_c, 2),
-      " [",
-      round(LOW_c, 2),
+      round(AVG_c, 1),
+      "\n[",
+      round(LOW_c, 1),
       ";",
-      round(HIGH_c, 2),
+      round(HIGH_c, 1),
       "]"
     ),
   ) |>
@@ -410,3 +410,39 @@ plot_and_save_curves <- function(p) {
 predator <- unique(average_forage_ratios$node_predator)
 
 walk(predator, ~ plot_and_save_curves(.x))
+
+# Simulation ----
+forage_ratio <- function(biomass, c) {
+  (1 + c) / (1 + c * biomass)
+}
+df <- tibble(c = c(-.99, -0.85, -0.7, -0.5, 1, 5, 10, 25)) |>
+  cross_join(tibble(rBe = seq(0, 1, length.out = 200))) |>
+  mutate(
+    S = forage_ratio(rBe, c),
+    rBg = S * rBe
+  )
+p1 <- df |>
+  ggplot(aes(x = rBe, y = S, col = c, group = factor(c))) +
+  geom_hline(yintercept = 1) +
+  geom_line(linewidth = 1.5) +
+  theme_bw() +
+  scale_color_gradientn(
+    colors = c("#fc8d59", "#ffffbf", "#91bfdb"),
+    values = scales::rescale(c(-0.9, 0, 50))
+  )
+p2 <- df |>
+  ggplot(aes(x = rBe, y = rBg, col = c, group = factor(c))) +
+  geom_abline() +
+  geom_line(linewidth = 1.5) +
+  theme_bw() +
+  scale_color_gradientn(
+    colors = c("#fc8d59", "#ffffbf", "#91bfdb"),
+    values = scales::rescale(c(-0.9, 0, 50))
+  )
+plot <- p2 + p1 + plot_layout(guides = "collect", axes = "collect")
+ggsave(
+  plot = plot,
+  filename = file.path("output", "ModelForageResponse", "model.pdf"),
+  width = 8,
+  height = 4
+)
