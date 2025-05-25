@@ -62,8 +62,11 @@ data/processed/
 output/
 /output
 
-/output/figure
-output/figure/map.pdf
-
 # Analyses directory
 data/analyses/
+
+# test directory
+data/test/
+
+# Sandboxes
+code/sandbox*
