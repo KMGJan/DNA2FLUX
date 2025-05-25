@@ -1,0 +1,421 @@
+---
+title: "R Notebook"
+---
+
+Plot Biomasses
+
+
+
+
+```{r}
+library(tidyverse)
+library(ggraph)
+
+color_mapping = setNames(node_data$color, node_data$node_name)
+
+temperature <- read_csv(file = file.path("data", "Processed", "interpolation", "temperature.csv"))
+weekly_biomasses <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv")) 
+weekly_bodymass <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"))
+node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"))
+forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"))
+bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"))
+```
+
+
+```{r}
+source("./code/CalculateFluxes.R")
+## Load data
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggraph))
+suppressPackageStartupMessages(library(fluxweb))
+suppressPackageStartupMessages(library(furrr))
+suppressPackageStartupMessages(library(tidygraph))
+suppressPackageStartupMessages(library(igraph))
+
+temperature <- read_csv(file = file.path("data", "processed", "interpolation", "temperature.csv"), show_col_types = FALSE)
+weekly_biomasses <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv"), show_col_types = FALSE)
+weekly_bodymass <- read_csv(file = file.path("data", "processed", "interpolation", "weekly_bodymass.csv"), show_col_types = FALSE)
+node_data <- read_csv(file = file.path("data", "raw", "node_data.csv"), show_col_types = FALSE)
+forage_ratio <- read_csv(file = file.path("data", "processed", "forage_ratio.csv"), show_col_types = FALSE)
+bootstrap_forage_ratio <- read_csv(file = file.path("data", "processed", "bootstrap_forage_ratio.csv"), show_col_types = FALSE) |> #For 200 bootstraps it takes approx. 20 min to run all weeks
+  filter(Iteration <= 1000)
+
+weekly_model <- read_rds(file = file.path("data", "processed", "weekly_model.rds"))
+
+df <- weekly_model |> 
+  #filter(sample_week == "2007-03-19") |> 
+  pull(conf_graph) |> 
+  map(~ .x |> activate(edges) |> mutate(mean = ifelse(mean == 0, NA, mean),
+                                        lower_ci = ifelse(lower_ci == 0, NA, lower_ci),
+                                        upper_ci = ifelse(upper_ci == 0, NA, upper_ci)))
+
+
+
+# Helper function to convert matrix to long format
+adj_to_long <- function(graph, attr, value_name) {
+  as.matrix(as_adj(graph, attr = attr, sparse = FALSE)) |>
+    as.data.frame() |>
+    rownames_to_column("predator") |>
+    pivot_longer(-predator, names_to = "prey", values_to = value_name)
+}
+
+# Wrapper to extract week + long-form fluxes from a tbl_graph
+extract_flux_long <- function(graph) {
+  week <- graph |>
+    activate(nodes) |>
+    as_tibble() |>
+    pull(sample_week) |>
+    unique()
+  
+  # Get all three matrices as long-form data frames
+  adj_long_mean <- adj_to_long(graph, "mean", "flux_mean")
+  adj_long_upper <- adj_to_long(graph, "upper_ci", "flux_upper")
+  adj_long_lower <- adj_to_long(graph, "lower_ci", "flux_lower")
+  
+  # Join and annotate
+  flux_long <- adj_long_mean |>
+    filter(!is.na(flux_mean)) |>
+    left_join(adj_long_upper, by = c("predator", "prey")) |>
+    left_join(adj_long_lower, by = c("predator", "prey")) |>
+    mutate(sample_week = week)
+  
+  return(flux_long)
+}
+flux_df <- extract_flux_long(df[[1]])
+all_fluxes <- map_dfr(df, extract_flux_long)
+```
+
+
+
+```{r}
+biomasses <- weekly_biomasses |> 
+  filter(station_name == "BY31 LANDSORTSDJ") |> 
+  ggplot() +
+  geom_line(aes(sample_week, biomass, colour = node_name)) +
+  scale_colour_manual(values = color_mapping) +
+  theme(aspect.ratio = 0.5)
+  
+  plotly::ggplotly(biomasses)
+  
+biomasses <- weekly_biomasses |> 
+  filter(station_name == "BY5 BORNHOLMSDJ") |> 
+  ggplot() +
+  geom_line(aes(sample_week, biomass, colour = node_name)) +
+  scale_colour_manual(values = color_mapping) +
+  theme(aspect.ratio = 0.5)
+  
+  plotly::ggplotly(biomasses)
+```
+
+# Production and predation pressure
+
+## Phytoplankton
+
+```{r}
+biomasses <- weekly_biomasses |> 
+  filter(station_name == "BY31 LANDSORTSDJ") |> 
+  select(node_name, biomass, sample_week)
+
+node_data
+
+
+phytoplankton <- all_fluxes |> 
+  group_by(node_name = prey, sample_week) |> 
+  summarise(flux_mean = sum(flux_mean)) |>
+  left_join(biomasses, by = join_by(node_name, sample_week)) |> 
+  mutate(predation_pressure = flux_mean / biomass) |>
+  left_join(node_data) |> 
+  filter(type == "phytoplankton") |> 
+  pivot_longer(3:5, names_to = "metric") |> 
+  ggplot() +
+  geom_line(aes(sample_week, value, colour = node_name)) +
+  facet_wrap("metric", scales = "free_y", ncol = 1)
+  
+
+plotly::ggplotly(phytoplankton)
+```
+
+
+```{r}
+#phytoplankton <- 
+  all_fluxes |> 
+  group_by(node_name = prey, sample_week) |> 
+  summarise(flux_mean = sum(flux_mean)) |>
+  left_join(biomasses, by = join_by(node_name, sample_week)) |> 
+  mutate(predation_pressure = flux_mean / biomass) |>
+  left_join(node_data) |> 
+  filter(type == "phytoplankton") |> 
+  ggplot() +
+  geom_area(aes(sample_week, predation_pressure, fill = node_name)) +
+  facet_wrap("node_name", scales = "free_y", ncol = 1)
+  
+
+plotly::ggplotly(phytoplankton)
+```
+
+
+
+
+## Zooplankton
+
+```{r}
+zooplankton <- all_fluxes |> 
+  group_by(node_name = prey, sample_week) |> 
+  summarise(flux_mean = sum(flux_mean)) |>
+  left_join(biomasses, by = join_by(node_name, sample_week)) |> 
+  mutate(predation_pressure = flux_mean / biomass) |>
+  left_join(node_data) |> 
+  filter(type == "zooplankton") |> 
+  pivot_longer(3:5, names_to = "metric") |> 
+  ggplot() +
+  geom_line(aes(sample_week, value, colour = node_name)) +
+  facet_wrap("metric", scales = "free_y", ncol = 1) +
+  scale_color_manual(values = color_mapping)
+
+plotly::ggplotly(zooplankton)
+
+
+```
+
+## Seasonal Predation pressure
+
+```{r}
+phyto_biomass <- biomasses |> 
+  left_join(node_data) |>
+  filter(type == "phytoplankton") |> 
+  group_by(sample_week) |> 
+  summarise(phyto_biomass = sum(biomass))
+
+zoo_biomass <- biomasses |> 
+  left_join(node_data) |>
+  filter(type == "zooplankton") |> 
+  group_by(sample_week) |> 
+  summarise(zoo_biomass = sum(biomass))
+
+
+transf_eff <- 
+  all_fluxes |> 
+  group_by(node_name = predator, sample_week) |> 
+  summarise(in_flux = sum(flux_mean)) |> 
+  left_join(node_data) |> 
+  group_by(type, sample_week) |> 
+  summarise(in_flux = sum(in_flux)) |> 
+  pivot_wider(names_from = "type", values_from = "in_flux") |> 
+  left_join(phyto_biomass) |> 
+  left_join(zoo_biomass) |> 
+  mutate(phyto_pressure = zooplankton / phyto_biomass,
+         zoo_pressure = fish/zoo_biomass) |> 
+  pivot_longer(6:7) |> 
+  mutate(week = isoweek(sample_week),
+         year = factor(year(sample_week))) |> 
+  
+  
+  ggplot() +
+  geom_line(aes(week, value, colour = year), alpha = 0.5) +
+  theme( axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  facet_wrap("name", ncol = 1) +
+    theme_minimal()
+
+plotly::ggplotly(transf_eff)
+  
+```
+
+
+# Seasonal diet composition
+
+## Fish
+
+```{r}
+all_fluxes |> 
+  left_join(node_data, by = c("predator" = "node_name")) |> 
+  filter(type == "fish") |>
+  group_by(predator, sample_week) |> 
+  summarise(flux = flux_mean/sum(flux_mean),
+            prey) |> 
+  ggplot() +
+  geom_area(aes(sample_week, flux, fill = prey), position = "fill", alpha = 0.8) +
+  facet_wrap("predator", ncol = 1)
+
+
+
+all_fluxes
+```
+
+## Zooplankton
+
+```{r}
+all_fluxes |> 
+  left_join(node_data, by = c("predator" = "node_name")) |> 
+  filter(type == "zooplankton") |>
+  group_by(predator, sample_week) |> 
+  summarise(flux = flux_mean/sum(flux_mean),
+            prey) |> 
+  ggplot() +
+  geom_area(aes(sample_week, flux, fill = prey), position = "fill", alpha = 0.8) +
+  facet_wrap("predator", ncol = 1)
+
+
+
+all_fluxes
+```
+
+
+# Diet Overlap
+
+Bray Curtis diet similarity of fish over the seasons.
+
+```{r}
+library(vegan)
+
+all_fluxes |> 
+  left_join(node_data, by = c("predator" = "node_name")) |> 
+  filter(type == "fish") |>
+  group_by(predator, sample_week) |> 
+  summarise(flux = flux_mean/sum(flux_mean, na.rm = TRUE),
+            prey) |> 
+group_by(sample_week) %>%
+  nest() %>%
+  mutate(overlap = map(data, function(week_data) {
+    # Create predator x prey matrix of energy fluxes
+    diet_matrix <- week_data %>%
+      pivot_wider(names_from = prey, values_from = flux, values_fill = 0) %>%
+      column_to_rownames("predator") %>%
+      as.matrix()
+    
+    # Bray-Curtis dissimilarity (lower = more similar)
+    dist <- vegdist(diet_matrix, method = "bray")
+    
+    # Convert to tidy data frame of pairwise similarities (1 - dissimilarity)
+    sim <- as.matrix(1 - dist)
+    combn(rownames(sim), 2, simplify = FALSE) %>%
+      map_df(~ tibble(
+        predator1 = .x[1],
+        predator2 = .x[2],
+        overlap = sim[.x[1], .x[2]]
+      ))
+  })) |> 
+  select(sample_week, overlap) %>%
+  unnest(overlap) |> 
+  mutate(pair = paste(predator1, predator2)) |> 
+  mutate(week = isoweek(sample_week),
+         year = factor(year(sample_week))) |> 
+  ggplot(aes(x = week, y = overlap,
+             color = year)) +
+  geom_line(alpha = 0.5) +
+  facet_wrap("pair", ncol = 1) +
+  labs(x = "Week", y = "Diet Overlap", color = "Predator Pair") +
+  theme_minimal()
+```
+
+# Plot phytoplankton fluxes
+
+```{r}
+all_fluxes |> 
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "phytoplankton") |>
+  mutate(month = factor(isoweek(sample_week)),
+         year = year(sample_week)) |> 
+  group_by(prey, year) |> 
+  summarise(flux = sum(flux_mean)) |> 
+  ggplot(aes(year, flux, color = prey)) +
+  geom_line() +
+  geom_smooth() +
+  
+  facet_wrap("prey", scales = "free")
+  
+
+
+```
+```{r}
+all_fluxes |> 
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "phytoplankton") |>
+  mutate(month = isoweek(sample_week),
+         year = factor(year(sample_week))) |> 
+  group_by(prey, year, month) |> 
+  summarise(flux = sum(flux_mean)) |> 
+  ggplot() +
+  geom_line(aes(month, flux, colour = year)) +
+  
+  facet_wrap("prey")
+```
+
+```{r}
+all_fluxes |> 
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "phytoplankton") |>
+
+  group_by(prey, sample_week) |> 
+  summarise(flux = sum(flux_mean)) |> 
+  ggplot() +
+  geom_area(aes(sample_week, flux)) +
+  
+  facet_wrap("prey", scales = "free")
+```
+
+```{r}
+all_fluxes |>
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "phytoplankton") |> 
+  group_by(prey, sample_week) |> 
+  summarise(flux = sum(flux_mean)) |>
+  ggplot() +
+  geom_area(aes(sample_week, flux, fill = prey), position = "fill")
+```
+
+```{r}
+all_fluxes |>
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "phytoplankton") |> 
+  group_by(prey, sample_week) |> 
+  summarise(flux = sum(flux_mean)) |>
+  ggplot() +
+  geom_area(aes(sample_week, flux, fill = prey))
+  
+```
+
+
+```{r}
+
+all_fluxes |>
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "zooplankton") |> 
+  group_by(prey, sample_week) |> 
+  summarise(flux = sum(flux_mean)) |>
+  ggplot() +
+  geom_area(aes(sample_week, flux, fill = prey))
+  
+```
+
+```{r}
+
+all_fluxes |>
+  left_join(node_data, by = c("prey" = "node_name")) |> 
+  filter(type == "zooplankton") |> 
+  group_by(predator, prey, sample_week) |> 
+  summarise(flux = sum(flux_mean)) |>
+  ggplot() +
+  geom_area(aes(sample_week, flux, fill = prey)) +
+  facet_wrap("predator", ncol = 1)
+  
+```
+
+
+
+# Eficiency
+
+
+```{r}
+all_fluxes |>
+  left_join(node_data, by = c("predator" = "node_name")) |> 
+  group_by(sample_week, type) |> 
+  summarise(flux = sum(flux_mean)) |> 
+  pivot_wider(names_from = type, values_from = flux) |>
+  mutate(efficiency = fish / zooplankton) |> 
+  ggplot(aes(sample_week, efficiency)) +
+  geom_line() +
+  geom_smooth()
+
+```
+
+
