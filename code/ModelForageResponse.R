@@ -16,11 +16,11 @@ if (
     "weekly_biomasses.csv"
   ))
 ) {
-  system(paste("nohup Rscript", file.path("code", "InterpolateWeekly.R")))
+  system(paste("Rscript", file.path("code", "InterpolateWeekly.R")))
 }
 # Check if predator selectivity data exists, otherwise generate it.
 if (!file.exists(file.path("data", "processed", "predator_selectivity.csv"))) {
-  system(paste("nohup Rscript", file.path("code", "CombineMetabarcoding.R")))
+  system(paste("Rscript", file.path("code", "CombineMetabarcoding.R")))
 }
 
 cat("\nRunning ModelForageResponse.R\n")

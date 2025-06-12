@@ -13,7 +13,7 @@ if (
 ) {
   getmonitoring <- file.path("code", "GetMonitoringData.R")
   # Get the monitoring data
-  system(paste("nohup Rscript", getmonitoring))
+  system(paste("Rscript", getmonitoring))
 }
 
 message("Running InterpolateWeekly.R")

@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 if (
   !file.exists(file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 ) {
-  system(paste("nohup Rscript", file.path("code", "ModelForageResponse.R")))
+  system(paste("Rscript", file.path("code", "ModelForageResponse.R")))
 }
 cat("\nRunning ProcessFluxes.R\n")
 # Source all needed functions for the analyses
