@@ -23,7 +23,7 @@ required_packages <- c(
   "igraph",
   "fluxweb",
   "abind",
-  "renv"
+  "devtools"
 )
 
 
@@ -37,3 +37,7 @@ install_if_missing <- function(pkg) {
 
 # Apply the function to each package
 invisible(lapply(required_packages, install_if_missing))
+
+suppressMessages(invisible(devtools::install_github(
+  "yutannihilation/ggsflabel"
+)))

@@ -288,6 +288,7 @@ cat(paste("\n Yearly aggregated fluxes for", station, "completed"))
 ## Aggregate per station over the entire timeseries ----
 plan(multisession)
 station_fluxes <- files |>
+  filter(year > 2007) |> # As 2007 starts with values in March and misses January and February
   group_nest(station) |>
   mutate(
     flux = future_map(
