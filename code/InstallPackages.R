@@ -38,6 +38,8 @@ install_if_missing <- function(pkg) {
 # Apply the function to each package
 invisible(lapply(required_packages, install_if_missing))
 
-suppressMessages(invisible(devtools::install_github(
-  "yutannihilation/ggsflabel"
-)))
+if (!requireNamespace("ggsflabel", quietly = TRUE)) {
+  suppressMessages(invisible(devtools::install_github(
+    "yutannihilation/ggsflabel"
+  )))
+}
