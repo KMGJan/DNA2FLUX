@@ -126,7 +126,7 @@ This dataset contains taxonomy and parameters for estimating metabolic rates in 
 | `horizontal_position` | Helper numeric variable to plot the trophic network. |
 | `color` | Node color used throughout the analyses. |
 
-[^1]: Jan KMG, Hentati-Sundberg J, Larson N, Winder M. 2025. *Limited resource use overlaps among small pelagic fish species in the central Baltic Sea*. ICES Journal of Marine Science. https://doi.org/10.1093/icesjms/fsaf12
+[^1]: Jan KMG, Hentati-Sundberg J, Larson N, Winder M. 2025. *Limited resource use overlaps among small pelagic fish species in the central Baltic Sea*. ICES Journal of Marine Science. https://doi.org/10.1093/icesjms/fsaf122
 [^2]: Zamora-Terol S, Novotny A, Winder M. 2020. *Reconstructing marine plankton food web interactions using DNA metabarcoding*. Molecular Ecology. https://doi.org/10.1111/mec.15555
 [^3]: Novotny A, Zamora-Terol S, Winder M. 2021. *DNA metabarcoding reveals trophic niche diversity of micro and mesozooplankton species*. Proceedings of the Royal Society B. https://doi.org/10.1098/rspb.2021.0908
 [^4]: Serandour B, Jan KMG, Novotny A, Winder M. 2023. *Opportunistic vs selective feeding strategies of zooplankton under changing environmental conditions*. Journal of Plankton Research. https://doi.org/10.1093/plankt/fbad007
