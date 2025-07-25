@@ -132,7 +132,8 @@ rectangle_shp <- # Shapefile file with ices rectangle
     pattern = "\\.shp$",
     full.names = TRUE
   )) |>
-  filter(ICESNAME %in% c("45G8", "46G8", "43G9", "43H0", "39G5", "39G6"))
+  filter(ICESNAME %in% c("45G8", "46G8")) #,
+#"43G9", "43H0", "39G5", "39G6"))
 
 #helcom_subbasin_shp <- # Shapefile with the helcom subbasin
 #  read_sf(list.files(file.path("data", "imported", "HELCOM_subbasins"), pattern = "\\.shp$", full.names = TRUE)) |>
