@@ -132,7 +132,8 @@ rectangle_shp <- # Shapefile file with ices rectangle
     pattern = "\\.shp$",
     full.names = TRUE
   )) |>
-  filter(ICESNAME %in% c("45G8", "46G8", "43G9", "43H0", "39G5", "39G6"))
+  filter(ICESNAME %in% c("45G8", "46G8")) #,
+#"43G9", "43H0", "39G5", "39G6"))
 
 #helcom_subbasin_shp <- # Shapefile with the helcom subbasin
 #  read_sf(list.files(file.path("data", "imported", "HELCOM_subbasins"), pattern = "\\.shp$", full.names = TRUE)) |>
@@ -142,8 +143,10 @@ rectangle_shp <- # Shapefile file with ices rectangle
 if (st_crs(baltic_sea_shp) != st_crs(rectangle_shp)) {
   rectangle_shp <- st_transform(rectangle_shp, st_crs(baltic_sea_shp))
 }
-fish_shp <- # Combined dataset
-  st_intersection(baltic_sea_shp, rectangle_shp)
+suppressWarnings(
+  fish_shp <- # Combined dataset
+    st_intersection(baltic_sea_shp, rectangle_shp)
+)
 
 # Transform the SMHI stations coordinates in a shapefile format
 smhi_shp <-

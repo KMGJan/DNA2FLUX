@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 if (
   !file.exists(file.path("data", "processed", "bootstrap_forage_ratio.csv"))
 ) {
-  system(paste("nohup Rscript", file.path("code", "ModelForageResponse.R")))
+  system(paste("Rscript", file.path("code", "ModelForageResponse.R")))
 }
 cat("\nRunning ProcessFluxes.R\n")
 # Source all needed functions for the analyses
@@ -289,6 +289,7 @@ cat(paste("\n Yearly aggregated fluxes for", station, "completed"))
 ## Aggregate per station over the entire timeseries ----
 plan(multisession)
 station_fluxes <- files |>
+  filter(year > 2007) |> # As 2007 starts with values in March and misses January and February
   group_nest(station) |>
   mutate(
     flux = future_map(

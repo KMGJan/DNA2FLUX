@@ -13,10 +13,10 @@ if (
 ) {
   getmonitoring <- file.path("code", "GetMonitoringData.R")
   # Get the monitoring data
-  system(paste("nohup Rscript", getmonitoring))
+  system(paste("Rscript", getmonitoring))
 }
 
-cat("\nRunning InterpolateWeekly.R\n")
+message("Running InterpolateWeekly.R")
 
 ## Add output directory data/processed/interpolation  ----
 
@@ -151,7 +151,7 @@ zooplankton |>
     "interpolation",
     "zooplankton_biomass.csv"
   ))
-cat("\nZooplankton weekly interpolated\n")
+message("Zooplankton weekly interpolated")
 
 
 # Picophytoplankton ------------------------------------------------------------------
@@ -167,7 +167,12 @@ picoplankton <-
   ) |>
   filter(scientific_name == "Synechococcus") |>
   group_by(sample_id, station_name, sample_date) |>
-  summarise(value = sum(value), .groups = "drop") |>
+  summarise(
+    # Convert ugC to biomass g/m2
+    # * 10 for sampling depth;  * 4 for carbon to biomass; * 0.001 ug to g
+    biomass = sum(value) * 10 * 4 * 0.001,
+    .groups = "drop"
+  ) |>
   filter(sample_date < date("2021-01-01"), sample_date > date("2018-10-30")) |>
   arrange(sample_date) |>
   group_by(station_name) |>
@@ -175,12 +180,12 @@ picoplankton <-
     sample_date = seq.Date(min(sample_date), max(sample_date), by = "week")
   ) |> # Fill in missing weekly dates
   arrange(sample_date) |>
-  mutate(value = na.approx(value, sample_date, na.rm = FALSE)) |> # Linear interpolation
+  mutate(biomass = na.approx(biomass, sample_date, na.rm = FALSE)) |> # Linear interpolation
   ungroup() |>
-  filter(is.na(value) == F) |>
+  filter(is.na(biomass) == F) |>
   mutate(week_number = isoweek(sample_date)) |> # Extract week of the year
   group_by(week_number) %>%
-  summarize(Cyanobiaceae = mean(value, na.rm = TRUE), .groups = "drop") # Average across years
+  summarize(Cyanobiaceae = mean(biomass, na.rm = TRUE), .groups = "drop") # Average across years
 
 
 # Phytoplankton ------------------------------------------------------------------
@@ -222,28 +227,28 @@ genus_pp <- node_names |>
     by = "taxon_genus"
   ) |>
   filter(is.na(node_name) == F)
-
-
 ## Interpolation ----
 bind_rows(genus_pp, order_pp) |>
   mutate(
     sample_week = floor_date(sample_date, unit = "week", week_start = 1),
-    #         Month = month(sample_week),
-    #         # Assign seasons based on the month
-    #         season = case_when(
-    #           Month %in% 1:3 ~ "winter",
-    #           Month %in% 4:6 ~ "spring",
-    #           Month %in% 7:9 ~ "summer",
-    #           Month %in% 10:12 ~ "fall"
-    #         )
-  ) |> # Change date to the first day of the week
-  group_by(station_name, sample_week, node_name, shark_sample_id_md5) |>
-  summarise(carbon = sum(value), .groups = "drop_last") |>
+    # Convert ugC to biomass g/m2
+    # * sampling depth;  * 4 for carbon to biomass; * 0.001 ug to g
+    value = value * (sample_max_depth_m - sample_min_depth_m) * 4 * 0.001
+  ) |>
+  group_by(
+    station_name,
+    sample_week,
+    node_name,
+    shark_sample_id_md5,
+    sample_max_depth_m
+  ) |>
+  summarise(biomass = sum(value), .groups = "drop_last") |>
+  summarise(biomass = mean(biomass), .groups = "drop_last") |>
   # Average value for each sample_week, station
-  summarise(carbon = mean(carbon, na.rm = T), .groups = "drop") |>
+  summarise(biomass = mean(biomass, na.rm = T), .groups = "drop") |>
 
   # Reshape to wide format and merge with picoplankton by week
-  pivot_wider(names_from = node_name, values_from = carbon, values_fill = 0) |>
+  pivot_wider(names_from = node_name, values_from = biomass, values_fill = 0) |>
 
   # Interpolating zooplankton data and performing necessary transformations
   group_by(station_name) |>
@@ -267,11 +272,9 @@ bind_rows(genus_pp, order_pp) |>
   pivot_longer(
     cols = -c(sample_week, station_name),
     names_to = "node_name",
-    values_to = "value"
+    values_to = "biomass"
   ) |>
-  # Convert ugC to biomass g/m2
-  # * 20 for sampling depth;  * 4 for carbon to biomass; * 0.001 ug to g
-  mutate(biomass = value * 20 * 4 * 0.001) |>
+
   select(node_name, sample_week, station_name, biomass) |>
 
   write_csv(file.path(
@@ -322,7 +325,7 @@ temperature <-
 temperature |>
   write_csv(file.path("data", "processed", "interpolation", "temperature.csv"))
 
-cat("\nTemperature weekly interpolated\n")
+message("Temperature weekly interpolated")
 
 
 # Fish ----

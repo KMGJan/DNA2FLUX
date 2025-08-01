@@ -16,14 +16,14 @@ if (
     "weekly_biomasses.csv"
   ))
 ) {
-  system(paste("nohup Rscript", file.path("code", "InterpolateWeekly.R")))
+  system(paste("Rscript", file.path("code", "InterpolateWeekly.R")))
 }
 # Check if predator selectivity data exists, otherwise generate it.
 if (!file.exists(file.path("data", "processed", "predator_selectivity.csv"))) {
-  system(paste("nohup Rscript", file.path("code", "CombineMetabarcoding.R")))
+  system(paste("Rscript", file.path("code", "CombineMetabarcoding.R")))
 }
 
-cat("\nRunning ModelForageResponse.R\n")
+message("Running ModelForageResponse.R")
 # Merge selectivity and biomass ----
 # Load and process biomass data
 
@@ -436,29 +436,51 @@ walk(predator, ~ plot_and_save_curves(.x))
 forage_ratio <- function(biomass, c) {
   (1 + c) / (1 + c * biomass)
 }
-df <- tibble(c = c(-.99, -0.85, -0.7, -0.5, 1, 5, 10, 25)) |>
+df <- tibble(
+  #c = seq(-0.9,10, .01)
+  c = c(-.9, -0.7, -0.4, 1, 3, 10)
+) |>
   cross_join(tibble(rBe = seq(0, 1, length.out = 200))) |>
   mutate(
     S = forage_ratio(rBe, c),
     rBg = S * rBe
   )
+
 p1 <- df |>
-  ggplot(aes(x = rBe, y = S, col = c, group = factor(c))) +
+  ggplot(aes(x = rBe, y = S, col = c + 1, group = factor(c))) +
   geom_hline(yintercept = 1) +
   geom_line(linewidth = 1.5) +
   theme_bw() +
+  scale_y_log10(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0)) +
   scale_color_gradientn(
     colors = c("#fc8d59", "#ffffbf", "#91bfdb"),
-    values = scales::rescale(c(-0.9, 0, 50))
+    trans = "log10"
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_text(color = "black"),
+    axis.ticks = element_line(color = "black"),
+    axis.line = element_blank(),
+    strip.background = element_blank()
   )
 p2 <- df |>
-  ggplot(aes(x = rBe, y = rBg, col = c, group = factor(c))) +
+  ggplot(aes(x = rBe, y = rBg, col = c + 1, group = factor(c))) +
   geom_abline() +
   geom_line(linewidth = 1.5) +
   theme_bw() +
   scale_color_gradientn(
     colors = c("#fc8d59", "#ffffbf", "#91bfdb"),
-    values = scales::rescale(c(-0.9, 0, 50))
+    trans = "log10"
+  ) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_text(color = "black"),
+    axis.ticks = element_line(color = "black"),
+    axis.line = element_blank(),
+    strip.background = element_blank()
   )
 plot <- p2 + p1 + plot_layout(guides = "collect", axes = "collect")
 ggsave(
