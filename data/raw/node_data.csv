@@ -3,12 +3,12 @@ Bacillariales,phytoplankton,Bacillariales,NA,Bacillariales,order,1,1,-0.29,2580,
 Chaetocerotales,phytoplankton,Chaetocerotales,NA,Chaetocerotales,order,1,1,-0.29,2580,1,2,#A19419
 Thalassiosirales,phytoplankton,Thalassiosirales,NA,Thalassiosirales,order,1,1,-0.29,2580,1,3,#7D7105
 Peridiniales,phytoplankton,Peridiniales,NA,Peridiniales,order,1,1,-0.29,2580,1,4,#BD4A46
-Cryptomonadales,phytoplankton,Cryptomonadales,NA,Cryptomonadales,order,1,1,-0.29,2580,1,5,#902121
-Pyrenomonadales,phytoplankton,Pyrenomonadales,NA,Pyrenomonadales,order,1,1,-0.29,2580,1,6,#550404
-Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,NA,Aphanizomenon; Dolichospermum,genus,1,1,-0.29,2580,1,7,#7280DC
-Nodularia,phytoplankton,Nodularia_PCC-9350,NA,Nodularia,genus,1,1,-0.29,2580,1,8,#4654AF
-Pseudanabaena,phytoplankton,Pseudanabaena_PCC-7429,NA,Pseudanabaena,genus,1,1,-0.29,2580,1,9,#111C65
-Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,NA,Synechococcus,genus,1,1,-0.29,2580,1,10,#020A40
+Aphanizomenonaceae,phytoplankton,Aphanizomenon_MDT14a; Aphanizomenon_NIES81; Nostocaceaex,NA,Aphanizomenon; Dolichospermum,genus,1,1,-0.29,2580,1,5,#7280DC
+Nodularia,phytoplankton,Nodularia_PCC-9350,NA,Nodularia,genus,1,1,-0.29,2580,1,6,#4654AF
+Pseudanabaena,phytoplankton,Pseudanabaena_PCC-7429,NA,Pseudanabaena,genus,1,1,-0.29,2580,1,7,#111C65
+Cyanobiaceae,phytoplankton,Cyanobium_PCC-6307; Synechococcus_CC9902,NA,Synechococcus,genus,1,1,-0.29,2580,1,8,#020A40
+Cryptomonadales,phytoplankton,Cryptomonadales,NA,Cryptomonadales,order,1,1,-0.29,2580,1,9,#bfd188
+Pyrenomonadales,phytoplankton,Pyrenomonadales,NA,Pyrenomonadales,order,1,1,-0.29,2580,1,10,#a8c454
 Eutreptiales,phytoplankton,Eutreptiales,NA,Eutreptiales,order,1,1,-0.29,2580,1,11,#6C8620
 Prymnesiales,phytoplankton,Prymnesiales,NA,Prymnesiales,order,1,1,-0.29,2580,1,12,#4F650F
 Pyramimonadales,phytoplankton,Pyramimonadales,NA,Pyramimonadales,order,1,1,-0.29,2580,1,13,#354503
@@ -19,7 +19,7 @@ Pseudocalanus,zooplankton,NA,NA,Pseudocalanus,genus,0.77,17.17,-0.29,2580,2,6.28
 Temora,zooplankton,NA,NA,Temora,genus,0.77,17.17,-0.29,2580,2,7.714286,#E08678
 Bosmina,zooplankton,NA,NA,Bosmina,genus,0.77,17.17,-0.29,2580,2,9.142857,#979593
 Evadne,zooplankton,NA,NA,Evadne,genus,0.77,17.17,-0.29,2580,2,10.571429,#4E4D4B
-Synchaeta,zooplankton,NA,NA,Synchaeta,genus,0.77,17.17,-0.29,2580,2,12,#090908
-Sprattus,fish,NA,NA,Sprattus sprattus,species,0.906,18.47,-0.29,4500,3,4,#8BC7D0
-Clupea,fish,NA,NA,Clupea harengus,species,0.906,18.47,-0.29,4500,3,7,#445AA3
-Gasterosteus,fish,NA,NA,Gasterosteus aculeatus,species,0.906,18.47,-0.29,4500,3,10,#1E0563
+Synchaeta,zooplankton,NA,NA,Synchaeta,genus,0.77,17.17,-0.29,2580,2,12,#8E518D
+Sprattus,fish,NA,NA,Sprattus sprattus,species,0.906,18.47,-0.29,4500,3,4,#9ecae1
+Clupea,fish,NA,NA,Clupea harengus,species,0.906,18.47,-0.29,4500,3,7,#807dba
+Gasterosteus,fish,NA,NA,Gasterosteus aculeatus,species,0.906,18.47,-0.29,4500,3,10,#99000d
