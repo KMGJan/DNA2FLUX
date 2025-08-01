@@ -55,7 +55,8 @@ forage_ratio <- read_csv(
 bootstrap_forage_ratio <- read_csv(
   file = file.path("data", "processed", "bootstrap_forage_ratio.csv"),
   show_col_types = FALSE
-)
+) |> 
+  filter(Iteration < 100)
 
 # Define the stations and the dates we want to compute the fluxes
 station = "BY31 LANDSORTSDJ"
@@ -105,7 +106,7 @@ write_csv(
   presence_absence_model,
   file.path("data", "analyses", "timeseries_null.csv")
 )
-
+presence_absence_model
 
 # Timeseries model ----
 #
