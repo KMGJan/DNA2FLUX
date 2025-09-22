@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Thu Jul  3 15:51:22 2025 ------------------------------
+# Fri Aug 15 08:57:18 2025 ------------------------------
 
 # First ensure that all needed packages are installed, or install them
 source(file.path("code", "InstallPackages.R"))
@@ -202,6 +202,107 @@ ggsave(
   width = 7,
   dpi = 500
 )
+# Average foodweb over the productive season ----
+foodweb_avg <- timeseries_fluxes |>
+  filter(
+    station == "BY31 LANDSORTSDJ",
+    isoweek(sample_week) %in% 2:51,
+    year(sample_week) %in% 2008:2023
+  ) |>
+  add_season() |>
+  filter(season != "Winter") |>
+  group_by(predator, prey, station, season, year) |>
+  summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
+  summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop") |>
+  group_by(
+    TL = ifelse(
+      predator %in% c("Clupea", "Sprattus", "Gasterosteus"),
+      "fish",
+      "zooplankton"
+    ),
+    season
+  ) |>
+  mutate(
+    rel_flux = (flux_avg / sum(flux_avg)) * 100,
+    season = factor(season, levels = c("Spring", "Summer", "Fall"))
+  ) |>
+  ungroup() |>
+  as_tbl_graph() |>
+  activate(nodes) |>
+  left_join(rename(node_data, name = node_name), by = join_by(name)) |>
+  activate(edges)
+node_names <- foodweb_avg |> activate(nodes) |> pull(name)
+
+# Extract edges and map names
+edges_with_names <- foodweb_avg |>
+  activate(edges) |>
+  as_tibble() |>
+  mutate(
+    from_name = node_names[from],
+    to_name = node_names[to]
+  )
+
+foodweb_graph_avg <- foodweb_avg |>
+  activate(edges) |>
+  left_join(
+    edges_with_names,
+    by = join_by(from, to, station, season, flux_avg, rel_flux, TL)
+  )
+
+Fig3a <- ggraph(
+  graph = foodweb_graph_avg,
+  layout = "manual",
+  x = horizontal_position,
+  y = trophic_level
+) +
+  # Add the link between all species relative to their contribution to the total fluxes between TL
+  geom_edge_link(mapping = aes(edge_width = rel_flux, col = to_name)) + #, alpha = flux)) +
+  scale_edge_color_manual(values = color_mapping) +
+  scale_edge_width(
+    range = c(.2, 3),
+    limits = c(0, 25),
+    name = "Contribution fluxes [%]"
+  ) +
+  geom_point(
+    data = node_data |> mutate(label = 1:24),
+    mapping = aes(
+      x = horizontal_position,
+      y = trophic_level
+    ),
+    fill = "white",
+    shape = 21,
+    size = 6.5
+  ) +
+  geom_text(
+    data = node_data |> mutate(label = 1:24),
+    mapping = aes(
+      x = horizontal_position,
+      y = trophic_level,
+      label = label
+    )
+  ) +
+  scale_size_continuous(guide = "none") +
+  coord_cartesian(xlim = c(0.8, 13.2), ylim = c(0.8, 3.2)) +
+  scale_y_continuous(
+    breaks = 1:3,
+    labels = c("Phytoplankton", "Zooplankton", "Fish")
+  ) +
+  facet_grid(season ~ .) +
+  # Fix the theme
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "none"
+  ) +
+  labs(x = NULL, y = NULL)
+ggsave(
+  plot = Fig3a,
+  filename = file.path("output", "figure", "fig3a.pdf"),
+  height = 7.5,
+  width = 4,
+  dpi = 500
+)
+
 # Fig 2 ----
 message("Generating Fig. 2")
 
@@ -384,7 +485,8 @@ Fig2.3 <-
   summarise(biomass = sum(biomass), .groups = "drop_last") |>
   summarise(biomass = mean(biomass, na.rm = TRUE), .groups = "drop_last") |>
   mutate(
-    z = (biomass - mean(biomass)) / sd(biomass)
+    z = (biomass - mean(biomass)) / sd(biomass),
+    avg = mean(biomass)
   ) |>
   ungroup() |>
   # Manually compute dodge positions per year and type
@@ -399,7 +501,7 @@ Fig2.3 <-
   #  ungroup() |>
 
   # Plot
-  ggplot(aes(x = year, y = z)) +
+  ggplot(aes(x = year, y = biomass)) +
   # Background rectangles
   geom_rect(
     data = bg_df,
@@ -407,16 +509,16 @@ Fig2.3 <-
     fill = "gray80",
     inherit.aes = FALSE
   ) +
-  geom_hline(yintercept = 0, color = "black") +
+  geom_hline(mapping = aes(yintercept = avg), color = "black") +
   # Lollipop segments (manually dodged)
   geom_segment(
-    aes(x = year, xend = year, y = 0, yend = z),
+    aes(x = year, xend = year, y = avg, yend = biomass),
     linewidth = 0.4
   ) +
   # Lollipop heads
   geom_point(
     shape = 21,
-    size = 3,
+    size = 3.5,
     color = "black",
     fill = "white"
   ) +
@@ -425,19 +527,9 @@ Fig2.3 <-
     expand = c(0, 0),
     limits = c(2007.5, 2023.5)
   ) +
-  scale_y_continuous(
-    breaks = seq(-4, 4, 2),
-    expand = c(0, 0),
-    limits = c(-3.9, 3.9)
-  ) +
-  facet_grid(type ~ ., scales = "fixed") +
-  labs(x = NULL, y = "Biomass anomalies") # +
-# scale_fill_manual(
-#   values = fig2_colors
-# ) +
-# scale_color_manual(
-#   values = fig2_colors
-# )
+  facet_grid(type ~ ., scales = "free_y") +
+  labs(x = NULL, y = "Biomass") # +
+
 
 Fig2.4 <- temperature |>
   filter(
@@ -453,9 +545,10 @@ Fig2.4 <- temperature |>
   mutate(
     type = "temperature",
     z = (temp_avg - mean(temp_avg)) / sd(temp_avg),
+    avg = mean(temp_avg),
     col = ifelse(z < 0, "neg", "pos")
   ) |>
-  ggplot(aes(x = year, y = z)) +
+  ggplot(aes(x = year, y = temp_avg)) +
 
   geom_rect(
     data = bg_df,
@@ -468,9 +561,9 @@ Fig2.4 <- temperature |>
     fill = "gray80",
     inherit.aes = FALSE
   ) +
-  geom_hline(yintercept = 0, color = "black") +
+  geom_hline(mapping = aes(yintercept = avg), color = "black") +
   geom_segment(
-    aes(x = year, xend = year, y = 0, yend = z),
+    aes(x = year, xend = year, y = avg, yend = temp_avg),
     linewidth = 0.4
   ) +
 
@@ -487,12 +580,8 @@ Fig2.4 <- temperature |>
     expand = c(0, 0),
     limits = c(2007.5, 2023.5)
   ) +
-  scale_y_continuous(
-    breaks = seq(-4, 4, 2),
-    expand = c(0, 0),
-    limits = c(-3.9, 3.9)
-  ) +
-  labs(x = NULL, y = "Temperature anomalies (standardized)") +
+
+  labs(x = NULL, y = "Temperature") +
   facet_grid(type ~ .)
 Fig2.b <- Fig2.4 /
   Fig2.3 +
@@ -523,7 +612,8 @@ df_test_temperature <- temperature |>
   #  group_by(season) |>
   mutate(
     type = "temperature",
-    z = (temp_avg - mean(temp_avg)) / sd(temp_avg)
+    z = (temp_avg - mean(temp_avg)) / sd(temp_avg),
+    param = temp_avg
   )
 df_test_biomass <- weekly_biomasses |>
   left_join(node_data, by = join_by(node_name)) |>
@@ -543,14 +633,15 @@ df_test_biomass <- weekly_biomasses |>
   mutate(
     z = (biomass - mean(biomass)) / sd(biomass)
   ) |>
-  ungroup()
+  ungroup() |>
+  mutate(param = biomass)
 
 run_model_workflow(
   df = bind_rows(df_test_biomass, df_test_temperature),
   group_var = type,
-  formula_expr = "z ~ year",
-  filename_suffix = "_anomalie_vs_year.pdf",
-  plot_title = "anomalie vs year",
+  formula_expr = "param ~ year",
+  filename_suffix = "_vs_year.pdf",
+  plot_title = "vs year",
   slope = "year"
 ) |>
   select(type, term, estimate, r.squared, p.value) |>
@@ -1413,9 +1504,12 @@ inter_overlap_pp <- mat_pp |>
   mutate(facet = "interspecific") |>
   filter(x != y)
 
-SupFigS16 <- inter_overlap_zp |>
+SupFigS16.a <- inter_overlap_zp |>
   bind_rows(inter_overlap_pp |> mutate(type = "pp")) |>
-  mutate(interaction = paste(x, y, sep = "_")) |>
+  mutate(
+    interaction = paste(x, y, sep = "_"),
+    type = factor(type, levels = c("zp", "pp"))
+  ) |>
   group_by(iso_week = isoweek(sample_week.x), interaction, facet, type) |>
   summarise(
     y = mean(value),
@@ -1443,26 +1537,67 @@ SupFigS16 <- inter_overlap_zp |>
   scale_y_continuous(limits = c(0, 1)) +
   scale_color_manual(
     values = c(
-      "Clupea_Gasterosteus" = "#49392C",
-      "Clupea_Sprattus" = "#98D2EB",
-      "Gasterosteus_Sprattus" = "#592E83"
+      "Clupea_Gasterosteus" = "#74a9cf",
+      "Clupea_Sprattus" = "#ffffd4",
+      "Gasterosteus_Sprattus" = "#b30000"
     )
   ) +
   scale_fill_manual(
     values = c(
-      "Clupea_Gasterosteus" = "#49392C",
-      "Clupea_Sprattus" = "#98D2EB",
-      "Gasterosteus_Sprattus" = "#592E83"
+      "Clupea_Gasterosteus" = "#74a9cf",
+      "Clupea_Sprattus" = "black",
+      "Gasterosteus_Sprattus" = "#b30000"
+    )
+  ) +
+
+  facet_grid(type ~ ., scales = "fixed")
+
+SupFig16.b <- inter_overlap_zp |>
+  bind_rows(inter_overlap_pp |> mutate(type = "pp")) |>
+  mutate(
+    interaction = paste(x, y, sep = "_"),
+    type = factor(type, levels = c("zp", "pp"))
+  ) |>
+  mutate(year = year(sample_week.x), iso_week = isoweek(sample_week.x)) |>
+  filter(iso_week %in% 11:48) |>
+  group_by(year, interaction, type) |>
+  summarise(
+    y = mean(value),
+    .groups = "drop"
+  ) |>
+  ggplot(aes(
+    x = year,
+    y = y,
+    col = interaction,
+    fill = interaction,
+    group = interaction
+  )) +
+  geom_line(linewidth = 1) +
+  geom_point(shape = 21, color = "black", size = 3) +
+  labs(x = NULL, y = "Schoener's D") +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_color_manual(
+    values = c(
+      "Clupea_Gasterosteus" = "#74a9cf",
+      "Clupea_Sprattus" = "black",
+      "Gasterosteus_Sprattus" = "#b30000"
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Clupea_Gasterosteus" = "#74a9cf",
+      "Clupea_Sprattus" = "#ffffd4",
+      "Gasterosteus_Sprattus" = "#b30000"
     )
   ) +
   facet_grid(type ~ ., scales = "fixed")
+SupFigS16 <- SupFig16.b + SupFigS16.a + plot_layout(guides = "collect")
 ggsave(
   plot = SupFigS16,
   filename = file.path("output", "figure", "SupFigS16.pdf"),
-  width = 6,
+  width = 9,
   height = 4
 )
-
 # Fig S17-18 ----
 message("Generating Sup. Fig. S17 and S18")
 # Impact of forage ratios
