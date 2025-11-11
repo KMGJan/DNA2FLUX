@@ -54,7 +54,7 @@ The **row name** matches the **column names** in the respective ASV table, ensur
 | `samp_size` | Size or volume of the sample collected (e.g., 1 L, 1 individual). |
 | `size_frac` | Size fraction (length for fish species, mesh size for WP2 samples, filter size for water samples) |
 | `lat_lon` | Latitude and longitude in decimal degrees. |
-| `design description` | Short description of the sampling design or context. |
+| `design_description` | Short description of the sampling design or context. |
 | `env_broad_scale` | Broad environmental context (e.g., "Pelagic Baltic Sea"). |
 | `env_local_scale` | More specific local context (e.g., "ICES statistical rectangle 44G7"). |
 | `env_medium` | Type of environmental material sampled (e.g., "Seawater"). |
