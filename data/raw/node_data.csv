@@ -12,14 +12,14 @@ Pyrenomonadales,phytoplankton,Pyrenomonadales,NA,Pyrenomonadales,order,1,1,-0.29
 Eutreptiales,phytoplankton,Eutreptiales,NA,Eutreptiales,order,1,1,-0.29,2580,1,11,#6C8620
 Prymnesiales,phytoplankton,Prymnesiales,NA,Prymnesiales,order,1,1,-0.29,2580,1,12,#4F650F
 Pyramimonadales,phytoplankton,Pyramimonadales,NA,Pyramimonadales,order,1,1,-0.29,2580,1,13,#354503
-Acartia,zooplankton,NA,NA,Acartia,genus,0.77,17.17,-0.29,2580,2,2,#502B26
-Centropages,zooplankton,NA,NA,Centropages,genus,0.77,17.17,-0.29,2580,2,3.428571,#78453E
+Acartia,zooplankton,NA,NA,Acartia,genus,0.77,17.17,-0.29,500,2,2,#502B26
+Centropages,zooplankton,NA,NA,Centropages,genus,0.77,17.17,-0.29,2200,2,3.428571,#78453E
 Eurytemora,zooplankton,NA,NA,Eurytemora,genus,0.77,17.17,-0.29,2580,2,4.857143,#9A6158
-Pseudocalanus,zooplankton,NA,NA,Pseudocalanus,genus,0.77,17.17,-0.29,2580,2,6.285714,#BD8077
-Temora,zooplankton,NA,NA,Temora,genus,0.77,17.17,-0.29,2580,2,7.714286,#E08678
+Pseudocalanus,zooplankton,NA,NA,Pseudocalanus,genus,0.77,17.17,-0.29,3000,2,6.285714,#BD8077
+Temora,zooplankton,NA,NA,Temora,genus,0.77,17.17,-0.29,1100,2,7.714286,#E08678
 Bosmina,zooplankton,NA,NA,Bosmina,genus,0.77,17.17,-0.29,2580,2,9.142857,#979593
 Evadne,zooplankton,NA,NA,Evadne,genus,0.77,17.17,-0.29,2580,2,10.571429,#4E4D4B
 Synchaeta,zooplankton,NA,NA,Synchaeta,genus,0.77,17.17,-0.29,2580,2,12,#8E518D
-Sprattus,fish,NA,NA,Sprattus sprattus,species,0.906,18.47,-0.29,4500,3,4,#9ecae1
-Clupea,fish,NA,NA,Clupea harengus,species,0.906,18.47,-0.29,4500,3,7,#807dba
-Gasterosteus,fish,NA,NA,Gasterosteus aculeatus,species,0.906,18.47,-0.29,4500,3,10,#99000d
+Sprattus,fish,NA,NA,Sprattus sprattus,species,0.906,18.47,-0.29,7178,3,4,#9ecae1
+Clupea,fish,NA,NA,Clupea harengus,species,0.906,18.47,-0.29,6000,3,7,#807dba
+Gasterosteus,fish,NA,NA,Gasterosteus aculeatus,species,0.906,18.47,-0.29,4880,3,10,#99000d

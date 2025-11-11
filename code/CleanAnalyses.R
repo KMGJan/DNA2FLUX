@@ -1392,29 +1392,55 @@ Fig4.1 <- bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
   labs(x = "PCOA1", y = "PCOA2")
 
 
-# Fig 4.2 ----
-Fig4.2 <- bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
-  group_by(year = year(sample_week), predator, season, type) |>
+# -------
+bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
+  filter(season != "Winter") |>
+  group_by(year = year(sample_week), predator, type) |>
   summarise(
-    avg1 = mean(Axis1, na.rm = TRUE),
-    avg2 = mean(Axis2, na.rm = TRUE),
+    pcoa1 = mean(Axis1, na.rm = TRUE),
+    pcoa2 = mean(Axis2, na.rm = TRUE),
     .groups = "drop"
   ) |>
-  filter(season != "Winter") |>
-  mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn"))) |>
-  ggplot(aes(x = avg1, y = avg2, shape = predator, fill = predator)) +
+  pivot_longer(4:5, names_to = "axis", values_to = "pcoa") |>
+  ggplot(aes(x = year, y = pcoa, fill = predator, shape = predator)) +
   geom_point(size = 3) +
-  facet_grid(season ~ type) +
-  coord_fixed() +
+  facet_grid(type ~ axis) +
+  scale_shape_manual(values = shape_vals)
+#scale_fill_manual(values = color_mapping)
+temp_data_standard <- temperature |>
+  filter(
+    station_name == "BY31 LANDSORTSDJ",
+    isoweek(sample_week) %in% 2:51,
+    year(sample_week) %in% 2008:2023
+  ) |>
+  add_season() |>
+  filter(season != "Winter") |>
+  group_by(year = year(sample_week)) |>
+  summarise(temp_avg = mean(temperature, na.rm = T), .groups = "drop") |>
+  #  group_by(season) |>
+  mutate(
+    z = (temp_avg - mean(temp_avg)) / sd(temp_avg),
+    col = ifelse(z < 0, "neg", "pos")
+  )
+bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
+  filter(season != "Winter", type == "zooplankton") |>
+  group_by(year = year(sample_week), predator, type) |>
+  summarise(
+    pcoa1 = mean(Axis1, na.rm = TRUE),
+    pcoa2 = mean(Axis2, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_longer(4:5, names_to = "axis", values_to = "pcoa") |>
+  left_join(temp_data_standard, by = join_by(year)) |>
+  ggplot(aes(x = z, y = pcoa, fill = predator, shape = predator)) +
+  geom_point(size = 3) +
+  facet_grid(type ~ axis) +
   scale_shape_manual(values = shape_vals) +
-  scale_fill_manual(values = color_mapping) +
-  scale_x_continuous(limits = c(-0.9, 0.9), breaks = seq(-1, 1, 0.5)) +
-  scale_y_continuous(limits = c(-0.28, 0.28), breaks = seq(-1, 1, 0.2)) +
-  labs(x = "PCOA1", y = "PCOA2")
-
-Fig4 <- Fig4.1 /
-  Fig4.2 +
-  plot_layout(axis_titles = "collect", axes = "collect")
+  geom_smooth(method = "lm", aes(col = predator), se = F) +
+  labs(x = "temperature anomalies", y = NULL)
+#Fig4 <- Fig4.1 /
+#  Fig4.2 +
+#  plot_layout(axis_titles = "collect", axes = "collect")
 ggsave(
   plot = Fig4.1,
   filename = file.path("output", "figure", "fig4.pdf"),
