@@ -1,4 +1,168 @@
 node_name,taxon_genus,taxon_species,dev_stage_code,sex_code,station_name,season,bodymass,bodymass_unit
+Acartia,Acartia,Acartia bifilosa,AD,F,BY15 GOTLANDSDJ,fall,2.5e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY15 GOTLANDSDJ,spring,2.9999999999999997e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY15 GOTLANDSDJ,summer,2.5e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY15 GOTLANDSDJ,winter,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY15 GOTLANDSDJ,fall,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY15 GOTLANDSDJ,spring,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY15 GOTLANDSDJ,summer,2e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY15 GOTLANDSDJ,winter,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY15 GOTLANDSDJ,fall,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY15 GOTLANDSDJ,spring,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY15 GOTLANDSDJ,summer,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY15 GOTLANDSDJ,winter,2e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY15 GOTLANDSDJ,fall,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY15 GOTLANDSDJ,spring,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY15 GOTLANDSDJ,summer,1.5e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY15 GOTLANDSDJ,winter,1.8e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY15 GOTLANDSDJ,fall,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY15 GOTLANDSDJ,spring,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY15 GOTLANDSDJ,summer,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY15 GOTLANDSDJ,winter,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY15 GOTLANDSDJ,fall,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY15 GOTLANDSDJ,spring,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY15 GOTLANDSDJ,summer,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY15 GOTLANDSDJ,winter,3.2e-5,g
+Acartia,Acartia,NA,AD,F,BY15 GOTLANDSDJ,fall,2.25e-5,g
+Acartia,Acartia,NA,AD,F,BY15 GOTLANDSDJ,spring,2.5e-5,g
+Acartia,Acartia,NA,AD,F,BY15 GOTLANDSDJ,summer,2.25e-5,g
+Acartia,Acartia,NA,AD,F,BY15 GOTLANDSDJ,winter,2e-5,g
+Acartia,Acartia,NA,C1,I,BY15 GOTLANDSDJ,fall,4.5e-6,g
+Acartia,Acartia,NA,C1,I,BY15 GOTLANDSDJ,spring,7e-6,g
+Acartia,Acartia,NA,C1,I,BY15 GOTLANDSDJ,summer,4.5e-6,g
+Acartia,Acartia,NA,C1,I,BY15 GOTLANDSDJ,winter,4.5e-6,g
+Acartia,Acartia,NA,C4,I,BY15 GOTLANDSDJ,fall,1.05e-5,g
+Acartia,Acartia,NA,C4,I,BY15 GOTLANDSDJ,spring,1.6e-5,g
+Acartia,Acartia,NA,C4,I,BY15 GOTLANDSDJ,summer,1.2e-5,g
+Acartia,Acartia,NA,C4,I,BY15 GOTLANDSDJ,winter,1.2e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY15 GOTLANDSDJ,fall,4.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY15 GOTLANDSDJ,spring,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY15 GOTLANDSDJ,summer,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY15 GOTLANDSDJ,winter,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY15 GOTLANDSDJ,fall,1.5e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY15 GOTLANDSDJ,spring,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY15 GOTLANDSDJ,summer,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY15 GOTLANDSDJ,winter,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY15 GOTLANDSDJ,fall,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY15 GOTLANDSDJ,spring,2.5e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY15 GOTLANDSDJ,summer,2.5e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY15 GOTLANDSDJ,winter,2.5e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY15 GOTLANDSDJ,fall,4.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY15 GOTLANDSDJ,spring,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY15 GOTLANDSDJ,summer,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY15 GOTLANDSDJ,winter,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY15 GOTLANDSDJ,fall,1.5e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY15 GOTLANDSDJ,spring,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY15 GOTLANDSDJ,summer,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY15 GOTLANDSDJ,winter,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY15 GOTLANDSDJ,fall,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY15 GOTLANDSDJ,spring,2.5e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY15 GOTLANDSDJ,summer,2.5e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY15 GOTLANDSDJ,winter,2.5e-6,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY15 GOTLANDSDJ,fall,5e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY15 GOTLANDSDJ,spring,5e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY15 GOTLANDSDJ,summer,4.5e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY15 GOTLANDSDJ,winter,5.4999999999999995e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY15 GOTLANDSDJ,fall,4e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY15 GOTLANDSDJ,spring,4e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY15 GOTLANDSDJ,summer,4e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY15 GOTLANDSDJ,winter,4.5e-5,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY15 GOTLANDSDJ,fall,6e-6,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY15 GOTLANDSDJ,spring,6e-6,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY15 GOTLANDSDJ,summer,6e-6,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY15 GOTLANDSDJ,winter,6e-6,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY15 GOTLANDSDJ,fall,1.6e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY15 GOTLANDSDJ,spring,1.5e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY15 GOTLANDSDJ,summer,1.5e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY15 GOTLANDSDJ,winter,1.7e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY15 GOTLANDSDJ,fall,2.5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY15 GOTLANDSDJ,spring,5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY15 GOTLANDSDJ,summer,2.5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY15 GOTLANDSDJ,winter,2.5e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY15 GOTLANDSDJ,fall,2e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY15 GOTLANDSDJ,spring,4e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY15 GOTLANDSDJ,summer,2e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY15 GOTLANDSDJ,winter,2e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY15 GOTLANDSDJ,fall,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY15 GOTLANDSDJ,spring,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY15 GOTLANDSDJ,summer,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY15 GOTLANDSDJ,winter,5e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY15 GOTLANDSDJ,fall,1.3e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY15 GOTLANDSDJ,spring,1.4e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY15 GOTLANDSDJ,summer,1.4e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY15 GOTLANDSDJ,winter,1.3e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY15 GOTLANDSDJ,fall,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY15 GOTLANDSDJ,spring,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY15 GOTLANDSDJ,summer,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY15 GOTLANDSDJ,winter,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY15 GOTLANDSDJ,fall,2e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY15 GOTLANDSDJ,spring,2e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY15 GOTLANDSDJ,summer,2e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY15 GOTLANDSDJ,winter,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY15 GOTLANDSDJ,fall,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY15 GOTLANDSDJ,spring,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY15 GOTLANDSDJ,summer,2e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY15 GOTLANDSDJ,winter,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY15 GOTLANDSDJ,fall,5.4999999999999995e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY15 GOTLANDSDJ,spring,4.5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY15 GOTLANDSDJ,summer,5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY15 GOTLANDSDJ,winter,5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY15 GOTLANDSDJ,fall,5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY15 GOTLANDSDJ,spring,2.9999999999999997e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY15 GOTLANDSDJ,summer,3.5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY15 GOTLANDSDJ,winter,3.5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY15 GOTLANDSDJ,fall,1e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY15 GOTLANDSDJ,spring,8e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY15 GOTLANDSDJ,summer,1e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY15 GOTLANDSDJ,winter,7e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY15 GOTLANDSDJ,fall,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY15 GOTLANDSDJ,spring,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY15 GOTLANDSDJ,summer,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY15 GOTLANDSDJ,winter,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY15 GOTLANDSDJ,fall,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY15 GOTLANDSDJ,spring,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY15 GOTLANDSDJ,summer,2e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY15 GOTLANDSDJ,winter,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY15 GOTLANDSDJ,fall,5.4999999999999995e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY15 GOTLANDSDJ,spring,4.5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY15 GOTLANDSDJ,summer,5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY15 GOTLANDSDJ,winter,5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY15 GOTLANDSDJ,fall,5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY15 GOTLANDSDJ,spring,2.9999999999999997e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY15 GOTLANDSDJ,summer,3.5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY15 GOTLANDSDJ,winter,3.5e-5,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY15 GOTLANDSDJ,fall,1e-5,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY15 GOTLANDSDJ,spring,8e-6,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY15 GOTLANDSDJ,summer,1e-5,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY15 GOTLANDSDJ,winter,7e-6,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY15 GOTLANDSDJ,fall,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY15 GOTLANDSDJ,spring,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY15 GOTLANDSDJ,summer,2e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY15 GOTLANDSDJ,winter,2e-5,g
+Synchaeta,Synchaeta,NA,NS,U,BY15 GOTLANDSDJ,fall,3e-6,g
+Synchaeta,Synchaeta,NA,NS,U,BY15 GOTLANDSDJ,spring,3e-6,g
+Synchaeta,Synchaeta,NA,NS,U,BY15 GOTLANDSDJ,summer,3e-6,g
+Synchaeta,Synchaeta,NA,NS,U,BY15 GOTLANDSDJ,winter,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY15 GOTLANDSDJ,fall,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY15 GOTLANDSDJ,spring,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY15 GOTLANDSDJ,summer,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY15 GOTLANDSDJ,winter,3e-6,g
+Temora,Temora,Temora longicornis,AD,F,BY15 GOTLANDSDJ,fall,5e-5,g
+Temora,Temora,Temora longicornis,AD,F,BY15 GOTLANDSDJ,spring,6.5e-5,g
+Temora,Temora,Temora longicornis,AD,F,BY15 GOTLANDSDJ,summer,5.9999999999999995e-5,g
+Temora,Temora,Temora longicornis,AD,F,BY15 GOTLANDSDJ,winter,5.9999999999999995e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY15 GOTLANDSDJ,fall,5e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY15 GOTLANDSDJ,spring,4e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY15 GOTLANDSDJ,summer,4.5e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY15 GOTLANDSDJ,winter,5.4999999999999995e-5,g
+Temora,Temora,Temora longicornis,C1,I,BY15 GOTLANDSDJ,fall,4e-6,g
+Temora,Temora,Temora longicornis,C1,I,BY15 GOTLANDSDJ,spring,6e-6,g
+Temora,Temora,Temora longicornis,C1,I,BY15 GOTLANDSDJ,summer,6e-6,g
+Temora,Temora,Temora longicornis,C1,I,BY15 GOTLANDSDJ,winter,9e-6,g
+Temora,Temora,Temora longicornis,C4,I,BY15 GOTLANDSDJ,fall,1.4e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY15 GOTLANDSDJ,spring,1.5e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY15 GOTLANDSDJ,summer,1.5e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY15 GOTLANDSDJ,winter,1.8e-5,g
 Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,fall,2.5e-5,g
 Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,spring,2.9999999999999997e-5,g
 Acartia,Acartia,Acartia bifilosa,AD,F,BY31 LANDSORTSDJ,summer,2.5e-5,g
@@ -163,3 +327,255 @@ Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,fall,1.4e-5,g
 Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,spring,1.5e-5,g
 Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,summer,1.5e-5,g
 Temora,Temora,Temora longicornis,C4,I,BY31 LANDSORTSDJ,winter,1.8e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY5 BORNHOLMSDJ,fall,2.4999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY5 BORNHOLMSDJ,summer,2.4999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,F,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,M,BY5 BORNHOLMSDJ,winter,1.4999999999999999e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,NS,BY5 BORNHOLMSDJ,fall,2.2499999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,NS,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,NS,BY5 BORNHOLMSDJ,summer,2.2499999999999998e-5,g
+Acartia,Acartia,Acartia bifilosa,AD,NS,BY5 BORNHOLMSDJ,winter,1.75e-5,g
+Acartia,Acartia,Acartia bifilosa,C1,NS,BY5 BORNHOLMSDJ,fall,4e-6,g
+Acartia,Acartia,Acartia bifilosa,C1,NS,BY5 BORNHOLMSDJ,spring,4e-6,g
+Acartia,Acartia,Acartia bifilosa,C1,NS,BY5 BORNHOLMSDJ,summer,4e-6,g
+Acartia,Acartia,Acartia bifilosa,C1,NS,BY5 BORNHOLMSDJ,winter,4e-6,g
+Acartia,Acartia,Acartia bifilosa,C4,NS,BY5 BORNHOLMSDJ,fall,9.999999999999999e-6,g
+Acartia,Acartia,Acartia bifilosa,C4,NS,BY5 BORNHOLMSDJ,spring,9.999999999999999e-6,g
+Acartia,Acartia,Acartia bifilosa,C4,NS,BY5 BORNHOLMSDJ,summer,9.999999999999999e-6,g
+Acartia,Acartia,Acartia bifilosa,C4,NS,BY5 BORNHOLMSDJ,winter,9.999999999999999e-6,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia longiremis,AD,F,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY5 BORNHOLMSDJ,fall,1.4999999999999999e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Acartia,Acartia,Acartia longiremis,AD,M,BY5 BORNHOLMSDJ,winter,1.8e-5,g
+Acartia,Acartia,Acartia longiremis,AD,NS,BY5 BORNHOLMSDJ,fall,1.75e-5,g
+Acartia,Acartia,Acartia longiremis,AD,NS,BY5 BORNHOLMSDJ,spring,1.75e-5,g
+Acartia,Acartia,Acartia longiremis,AD,NS,BY5 BORNHOLMSDJ,summer,1.75e-5,g
+Acartia,Acartia,Acartia longiremis,AD,NS,BY5 BORNHOLMSDJ,winter,1.8999999999999998e-5,g
+Acartia,Acartia,Acartia longiremis,C1,NS,BY5 BORNHOLMSDJ,fall,4.9999999999999996e-6,g
+Acartia,Acartia,Acartia longiremis,C1,NS,BY5 BORNHOLMSDJ,spring,4.9999999999999996e-6,g
+Acartia,Acartia,Acartia longiremis,C1,NS,BY5 BORNHOLMSDJ,summer,4.9999999999999996e-6,g
+Acartia,Acartia,Acartia longiremis,C1,NS,BY5 BORNHOLMSDJ,winter,4.9999999999999996e-6,g
+Acartia,Acartia,Acartia longiremis,C4,NS,BY5 BORNHOLMSDJ,fall,9e-6,g
+Acartia,Acartia,Acartia longiremis,C4,NS,BY5 BORNHOLMSDJ,spring,1.2e-5,g
+Acartia,Acartia,Acartia longiremis,C4,NS,BY5 BORNHOLMSDJ,summer,1.1e-5,g
+Acartia,Acartia,Acartia longiremis,C4,NS,BY5 BORNHOLMSDJ,winter,1.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY5 BORNHOLMSDJ,fall,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY5 BORNHOLMSDJ,spring,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY5 BORNHOLMSDJ,summer,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,F,BY5 BORNHOLMSDJ,winter,3.5e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY5 BORNHOLMSDJ,fall,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY5 BORNHOLMSDJ,spring,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY5 BORNHOLMSDJ,summer,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,M,BY5 BORNHOLMSDJ,winter,3.2e-5,g
+Acartia,Acartia,Acartia tonsa,AD,NS,BY5 BORNHOLMSDJ,fall,3.35e-5,g
+Acartia,Acartia,Acartia tonsa,AD,NS,BY5 BORNHOLMSDJ,spring,3.35e-5,g
+Acartia,Acartia,Acartia tonsa,AD,NS,BY5 BORNHOLMSDJ,summer,3.35e-5,g
+Acartia,Acartia,Acartia tonsa,AD,NS,BY5 BORNHOLMSDJ,winter,3.35e-5,g
+Acartia,Acartia,Acartia tonsa,C1,NS,BY5 BORNHOLMSDJ,fall,6e-6,g
+Acartia,Acartia,Acartia tonsa,C1,NS,BY5 BORNHOLMSDJ,spring,6e-6,g
+Acartia,Acartia,Acartia tonsa,C1,NS,BY5 BORNHOLMSDJ,summer,6e-6,g
+Acartia,Acartia,Acartia tonsa,C1,NS,BY5 BORNHOLMSDJ,winter,6e-6,g
+Acartia,Acartia,Acartia tonsa,C4,NS,BY5 BORNHOLMSDJ,fall,1.7e-5,g
+Acartia,Acartia,Acartia tonsa,C4,NS,BY5 BORNHOLMSDJ,spring,1.7e-5,g
+Acartia,Acartia,Acartia tonsa,C4,NS,BY5 BORNHOLMSDJ,summer,1.7e-5,g
+Acartia,Acartia,Acartia tonsa,C4,NS,BY5 BORNHOLMSDJ,winter,1.7e-5,g
+Acartia,Acartia,NA,AD,F,BY5 BORNHOLMSDJ,fall,2.2499999999999998e-5,g
+Acartia,Acartia,NA,AD,F,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Acartia,Acartia,NA,AD,F,BY5 BORNHOLMSDJ,summer,2.2499999999999998e-5,g
+Acartia,Acartia,NA,AD,F,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Acartia,Acartia,NA,AD,M,BY5 BORNHOLMSDJ,fall,1.75e-5,g
+Acartia,Acartia,NA,AD,M,BY5 BORNHOLMSDJ,spring,1.75e-5,g
+Acartia,Acartia,NA,AD,M,BY5 BORNHOLMSDJ,summer,1.75e-5,g
+Acartia,Acartia,NA,AD,M,BY5 BORNHOLMSDJ,winter,1.6499999999999998e-5,g
+Acartia,Acartia,NA,AD,NS,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Acartia,Acartia,NA,AD,NS,BY5 BORNHOLMSDJ,spring,1.875e-5,g
+Acartia,Acartia,NA,AD,NS,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Acartia,Acartia,NA,AD,NS,BY5 BORNHOLMSDJ,winter,1.825e-5,g
+Acartia,Acartia,NA,C1,I,BY5 BORNHOLMSDJ,fall,4.5e-6,g
+Acartia,Acartia,NA,C1,I,BY5 BORNHOLMSDJ,spring,4.5e-6,g
+Acartia,Acartia,NA,C1,I,BY5 BORNHOLMSDJ,summer,4.5e-6,g
+Acartia,Acartia,NA,C1,I,BY5 BORNHOLMSDJ,winter,4.5e-6,g
+Acartia,Acartia,NA,C4,I,BY5 BORNHOLMSDJ,fall,9.499999999999999e-6,g
+Acartia,Acartia,NA,C4,I,BY5 BORNHOLMSDJ,spring,1.1e-5,g
+Acartia,Acartia,NA,C4,I,BY5 BORNHOLMSDJ,summer,1.05e-5,g
+Acartia,Acartia,NA,C4,I,BY5 BORNHOLMSDJ,winter,1.1e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY5 BORNHOLMSDJ,fall,4.4999999999999996e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,F,BY5 BORNHOLMSDJ,winter,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY5 BORNHOLMSDJ,fall,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY5 BORNHOLMSDJ,spring,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY5 BORNHOLMSDJ,summer,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,AD,M,BY5 BORNHOLMSDJ,winter,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY5 BORNHOLMSDJ,fall,7e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY5 BORNHOLMSDJ,spring,2.4999999999999998e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY5 BORNHOLMSDJ,summer,2.4999999999999998e-6,g
+Bosmina,Bosmina,Bosmina coregoni,JV,I,BY5 BORNHOLMSDJ,winter,2.4999999999999998e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY5 BORNHOLMSDJ,fall,4.4999999999999996e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,F,BY5 BORNHOLMSDJ,winter,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY5 BORNHOLMSDJ,fall,1.4999999999999999e-5,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY5 BORNHOLMSDJ,spring,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY5 BORNHOLMSDJ,summer,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,AD,M,BY5 BORNHOLMSDJ,winter,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY5 BORNHOLMSDJ,fall,7e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY5 BORNHOLMSDJ,spring,2.4999999999999998e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY5 BORNHOLMSDJ,summer,2.4999999999999998e-6,g
+Bosmina,Bosmina,Bosmina longispina,JV,I,BY5 BORNHOLMSDJ,winter,2.4999999999999998e-6,g
+Bosmina,Bosmina,NA,AD,F,BY5 BORNHOLMSDJ,fall,4.4999999999999996e-5,g
+Bosmina,Bosmina,NA,AD,F,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,AD,F,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,AD,F,BY5 BORNHOLMSDJ,winter,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,AD,M,BY5 BORNHOLMSDJ,fall,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,AD,M,BY5 BORNHOLMSDJ,spring,7e-6,g
+Bosmina,Bosmina,NA,AD,M,BY5 BORNHOLMSDJ,summer,7e-6,g
+Bosmina,Bosmina,NA,AD,M,BY5 BORNHOLMSDJ,winter,7e-6,g
+Bosmina,Bosmina,NA,AD,NS,BY5 BORNHOLMSDJ,fall,2.4999999999999998e-5,g
+Bosmina,Bosmina,NA,AD,NS,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,AD,NS,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,AD,NS,BY5 BORNHOLMSDJ,winter,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,JV,NS,BY5 BORNHOLMSDJ,fall,7e-6,g
+Bosmina,Bosmina,NA,JV,NS,BY5 BORNHOLMSDJ,spring,2.4999999999999998e-6,g
+Bosmina,Bosmina,NA,JV,NS,BY5 BORNHOLMSDJ,summer,2.4999999999999998e-6,g
+Bosmina,Bosmina,NA,JV,NS,BY5 BORNHOLMSDJ,winter,2.4999999999999998e-6,g
+Bosmina,Bosmina,NA,NS,NS,BY5 BORNHOLMSDJ,fall,1.4999999999999999e-5,g
+Bosmina,Bosmina,NA,NS,NS,BY5 BORNHOLMSDJ,spring,7e-6,g
+Bosmina,Bosmina,NA,NS,NS,BY5 BORNHOLMSDJ,summer,7e-6,g
+Bosmina,Bosmina,NA,NS,NS,BY5 BORNHOLMSDJ,winter,7e-6,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY5 BORNHOLMSDJ,fall,4.9999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY5 BORNHOLMSDJ,spring,4.9999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY5 BORNHOLMSDJ,summer,4.4999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,F,BY5 BORNHOLMSDJ,winter,5.4999999999999995e-5,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY5 BORNHOLMSDJ,fall,3.9999999999999996e-05,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY5 BORNHOLMSDJ,spring,3.9999999999999996e-05,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY5 BORNHOLMSDJ,summer,3.9999999999999996e-05,g
+Centropages,Centropages,Centropages hamatus,AD,M,BY5 BORNHOLMSDJ,winter,4.4999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,NS,BY5 BORNHOLMSDJ,fall,4.4999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,NS,BY5 BORNHOLMSDJ,spring,4.4999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,NS,BY5 BORNHOLMSDJ,summer,4.2499999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,AD,NS,BY5 BORNHOLMSDJ,winter,4.9999999999999996e-5,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY5 BORNHOLMSDJ,fall,6e-6,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY5 BORNHOLMSDJ,spring,6e-6,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY5 BORNHOLMSDJ,summer,6e-6,g
+Centropages,Centropages,Centropages hamatus,C1,I,BY5 BORNHOLMSDJ,winter,6e-6,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY5 BORNHOLMSDJ,fall,1.6e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Centropages,Centropages,Centropages hamatus,C4,I,BY5 BORNHOLMSDJ,winter,1.7e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY5 BORNHOLMSDJ,fall,2.4999999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY5 BORNHOLMSDJ,spring,4.9999999999999996e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY5 BORNHOLMSDJ,summer,2.4999999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,F,BY5 BORNHOLMSDJ,winter,2.4999999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY5 BORNHOLMSDJ,spring,3.9999999999999996e-05,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,M,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,NS,BY5 BORNHOLMSDJ,fall,2.2499999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,NS,BY5 BORNHOLMSDJ,spring,4.4999999999999996e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,NS,BY5 BORNHOLMSDJ,summer,2.2499999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,AD,NS,BY5 BORNHOLMSDJ,winter,2.2499999999999998e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY5 BORNHOLMSDJ,fall,4.9999999999999996e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY5 BORNHOLMSDJ,spring,4.9999999999999996e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY5 BORNHOLMSDJ,summer,4.9999999999999996e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C1,I,BY5 BORNHOLMSDJ,winter,4.9999999999999996e-6,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY5 BORNHOLMSDJ,fall,1.3e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY5 BORNHOLMSDJ,spring,1.4e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY5 BORNHOLMSDJ,summer,1.4e-5,g
+Eurytemora,Eurytemora,Eurytemora affinis,C4,I,BY5 BORNHOLMSDJ,winter,1.3e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY5 BORNHOLMSDJ,fall,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY5 BORNHOLMSDJ,spring,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY5 BORNHOLMSDJ,summer,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,F,BY5 BORNHOLMSDJ,winter,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,NS,BY5 BORNHOLMSDJ,fall,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,NS,BY5 BORNHOLMSDJ,spring,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,NS,BY5 BORNHOLMSDJ,summer,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,AD,NS,BY5 BORNHOLMSDJ,winter,2.9999999999999997e-5,g
+Evadne,Evadne,Evadne nordmanni,JV,NS,BY5 BORNHOLMSDJ,fall,9.999999999999999e-6,g
+Evadne,Evadne,Evadne nordmanni,JV,NS,BY5 BORNHOLMSDJ,spring,9.999999999999999e-6,g
+Evadne,Evadne,Evadne nordmanni,JV,NS,BY5 BORNHOLMSDJ,summer,9.999999999999999e-6,g
+Evadne,Evadne,Evadne nordmanni,JV,NS,BY5 BORNHOLMSDJ,winter,9.999999999999999e-6,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,MX,X,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Evadne,Evadne,Evadne nordmanni,NS,X,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY5 BORNHOLMSDJ,fall,5.4999999999999995e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY5 BORNHOLMSDJ,spring,4.4999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY5 BORNHOLMSDJ,summer,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,F,BY5 BORNHOLMSDJ,winter,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY5 BORNHOLMSDJ,fall,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY5 BORNHOLMSDJ,spring,2.9999999999999997e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY5 BORNHOLMSDJ,summer,3.5e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,M,BY5 BORNHOLMSDJ,winter,2.9999999999999997e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,NS,BY5 BORNHOLMSDJ,fall,5.2499999999999995e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,NS,BY5 BORNHOLMSDJ,spring,3.75e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,NS,BY5 BORNHOLMSDJ,summer,4.2499999999999996e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,AD,NS,BY5 BORNHOLMSDJ,winter,3.9999999999999996e-05,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY5 BORNHOLMSDJ,fall,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY5 BORNHOLMSDJ,spring,8e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY5 BORNHOLMSDJ,summer,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C1,I,BY5 BORNHOLMSDJ,winter,7e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY5 BORNHOLMSDJ,fall,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY5 BORNHOLMSDJ,spring,8e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY5 BORNHOLMSDJ,summer,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C3,I,BY5 BORNHOLMSDJ,winter,7e-6,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,Pseudocalanus elongatus,C4,I,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY5 BORNHOLMSDJ,fall,5.4999999999999995e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY5 BORNHOLMSDJ,spring,4.4999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY5 BORNHOLMSDJ,summer,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,F,BY5 BORNHOLMSDJ,winter,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY5 BORNHOLMSDJ,fall,4.9999999999999996e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY5 BORNHOLMSDJ,spring,2.9999999999999997e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY5 BORNHOLMSDJ,summer,3.5e-5,g
+Pseudocalanus,Pseudocalanus,NA,AD,M,BY5 BORNHOLMSDJ,winter,2.9999999999999997e-5,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY5 BORNHOLMSDJ,fall,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY5 BORNHOLMSDJ,spring,8e-6,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY5 BORNHOLMSDJ,summer,9.999999999999999e-6,g
+Pseudocalanus,Pseudocalanus,NA,C1,I,BY5 BORNHOLMSDJ,winter,7e-6,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY5 BORNHOLMSDJ,fall,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY5 BORNHOLMSDJ,spring,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY5 BORNHOLMSDJ,summer,1.9999999999999998e-5,g
+Pseudocalanus,Pseudocalanus,NA,C4,I,BY5 BORNHOLMSDJ,winter,1.9999999999999998e-5,g
+Synchaeta,Synchaeta,NA,NS,U,BY5 BORNHOLMSDJ,fall,3e-6,g
+Synchaeta,Synchaeta,NA,NS,U,BY5 BORNHOLMSDJ,spring,3e-6,g
+Synchaeta,Synchaeta,NA,NS,U,BY5 BORNHOLMSDJ,summer,3e-6,g
+Synchaeta,Synchaeta,NA,NS,U,BY5 BORNHOLMSDJ,winter,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY5 BORNHOLMSDJ,fall,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY5 BORNHOLMSDJ,spring,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY5 BORNHOLMSDJ,summer,3e-6,g
+Synchaeta,Synchaeta,NA,NS,X,BY5 BORNHOLMSDJ,winter,3e-6,g
+Temora,Temora,Temora longicornis,AD,F,BY5 BORNHOLMSDJ,fall,4.9999999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,F,BY5 BORNHOLMSDJ,spring,6.5e-5,g
+Temora,Temora,Temora longicornis,AD,F,BY5 BORNHOLMSDJ,summer,3.9999999999999996e-05,g
+Temora,Temora,Temora longicornis,AD,F,BY5 BORNHOLMSDJ,winter,5.9999999999999995e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY5 BORNHOLMSDJ,fall,4.4999999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY5 BORNHOLMSDJ,spring,5.4999999999999995e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY5 BORNHOLMSDJ,summer,4.4999999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,M,BY5 BORNHOLMSDJ,winter,5.4999999999999995e-5,g
+Temora,Temora,Temora longicornis,AD,NS,BY5 BORNHOLMSDJ,fall,4.7499999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,NS,BY5 BORNHOLMSDJ,spring,5.9999999999999995e-5,g
+Temora,Temora,Temora longicornis,AD,NS,BY5 BORNHOLMSDJ,summer,4.2499999999999996e-5,g
+Temora,Temora,Temora longicornis,AD,NS,BY5 BORNHOLMSDJ,winter,5.7499999999999995e-5,g
+Temora,Temora,Temora longicornis,C1,I,BY5 BORNHOLMSDJ,fall,6e-6,g
+Temora,Temora,Temora longicornis,C1,I,BY5 BORNHOLMSDJ,spring,6e-6,g
+Temora,Temora,Temora longicornis,C1,I,BY5 BORNHOLMSDJ,summer,6e-6,g
+Temora,Temora,Temora longicornis,C1,I,BY5 BORNHOLMSDJ,winter,9e-6,g
+Temora,Temora,Temora longicornis,C4,I,BY5 BORNHOLMSDJ,fall,1.4999999999999999e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY5 BORNHOLMSDJ,spring,1.4999999999999999e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY5 BORNHOLMSDJ,summer,1.4999999999999999e-5,g
+Temora,Temora,Temora longicornis,C4,I,BY5 BORNHOLMSDJ,winter,1.8e-5,g

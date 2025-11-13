@@ -60,3 +60,13 @@ data/processed/
 
 # Outputs
 output/
+/output
+
+# Analyses directory
+data/analyses/
+
+# test directory
+data/test/
+
+# Sandboxes
+code/sandbox*
