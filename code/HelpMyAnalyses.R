@@ -94,6 +94,42 @@ bind_pcoa <- function(pp, zp) {
     zp |> mutate(type = "zooplankton")
   )
 }
+# Function that run the PCOA for parallelisation
+run_pcoa <- function(mat, id_cols = 1:4, permutations = 999) {
+  numeric_mat <- select(mat, where(is.numeric))
+
+  # Distance
+  bray <- vegdist(numeric_mat, method = "bray")
+
+  # PCoA
+  pcoa_scores <- pcoa(bray)
+
+  # Envfit
+  envfit_df <-
+    envfit(pcoa_scores$vectors, numeric_mat, permutations = permutations) |>
+    scores(display = "vectors") |>
+    as.data.frame() |>
+    rownames_to_column("prey") |>
+    rename(Axis1 = Axis.1, Axis2 = Axis.2)
+
+  # Eigenvalues
+  eig <- pcoa_scores$values$Relative_eig
+
+  # Main PCoA df
+  pcoa_df <- process_pcoa(
+    pcoa_scores,
+    metadata = mat,
+    id_cols = id_cols
+  )
+
+  list(
+    bray = bray,
+    pcoa_scores = pcoa_scores,
+    envfit = envfit_df,
+    eig = eig,
+    pcoa_df = pcoa_df
+  )
+}
 
 
 # Diet overlap
@@ -209,6 +245,272 @@ plot_flux_difference <- function(trophic_level_filter) {
       y = "Fluxes \n [kJ/day/m2]",
       x = NULL
     )
+}
+
+# Helper function for figure 2:
+# Compute position on x-axis for the season
+make_seasonal_position <- function(df) {
+  df |>
+    group_by(type, predator, season) |>
+    summarise(position_x = mean(Axis1), .groups = "drop") |>
+    group_by(type) |>
+    mutate(position_x = rescale(position_x, to = c(0, 1))) |>
+    ungroup() |>
+    mutate(season = recode(season, "Autumn" = "Fall"))
+}
+
+#Plot the food web for figure 2
+food_web_fig2 <- function(s = "Spring", selectivity = TRUE) {
+  # Select correct data and type value
+  data_src <- if (selectivity) timeseries_fluxes else timeseries_null
+  t_val <- if (selectivity) "selectivity" else "ambient"
+
+  # Point positions (shared except optional recode)
+  point_position <- position_data |>
+    rename(name = predator) |>
+    filter(season == s, type == t_val)
+
+  if (!selectivity) {
+    point_position <- point_position |>
+      mutate(
+        name = case_when(
+          position_y == 2 ~ "zooplankton",
+          position_y == 3 ~ "fish",
+          TRUE ~ name
+        )
+      )
+  }
+
+  # Base filtering
+  fw <- data_src |>
+    filter(
+      station == "BY31 LANDSORTSDJ",
+      isoweek(sample_week) %in% 2:51,
+      year(sample_week) %in% 2008:2023
+    ) |>
+    add_season() |>
+    filter(season == s)
+
+  # Summaries differ slightly by branch
+  if (selectivity) {
+    fw <- fw |>
+      group_by(predator, prey, station, season, year) |>
+      summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
+  } else {
+    fw <- fw |>
+      group_by(predator, prey, station, season, year = year(sample_week)) |>
+      summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        predator = case_when(
+          predator %in% node_data$node_name[node_data$type == "fish"] ~ "fish",
+          predator %in% node_data$node_name[node_data$type == "zooplankton"] ~
+            "zooplankton",
+          TRUE ~ predator
+        ),
+        prey = case_when(
+          prey %in% node_data$node_name[node_data$type == "zooplankton"] ~
+            "zooplankton",
+          TRUE ~ prey
+        )
+      ) |>
+      group_by(predator, prey, station, season, year) |>
+      summarise(flux = sum(flux, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
+  }
+
+  # Build graph
+  g <- fw |>
+    as_tbl_graph() |>
+    activate(nodes) |>
+    left_join(point_position, by = join_by(name))
+
+  # Plot
+  ggraph(g, layout = "manual", x = position_x, y = position_y) +
+    geom_edge_link(aes(edge_width = sqrt(flux_avg))) +
+    geom_point(
+      data = point_position,
+      aes(x = position_x, y = position_y, fill = name),
+      shape = 21,
+      size = 5
+    ) +
+    scale_fill_manual(
+      values = c(color_mapping, zooplankton = "#fe9929", fish = "#feedde")
+    ) +
+    scale_edge_width(range = c(.1, 3), limits = c(0, sqrt(.5))) +
+    coord_fixed(ratio = 1 / 2) +
+    facet_grid(. ~ season) +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      legend.position = "right"
+    ) +
+    labs(x = NULL, y = NULL)
+}
+
+# Same but for fig: 1
+# select first and last date:
+make_position_fig1 <- function(df) {
+  min_date <- min(df$sample_week)
+  max_date <- max(df$sample_week)
+  df |>
+    mutate(Axis1 = rescale(Axis1, to = c(0, 1))) |>
+    filter(sample_week %in% c(min_date, max_date)) |>
+    group_by(type, predator, sample_week) |>
+    summarise(position_x = mean(Axis1), .groups = "drop")
+}
+#plot 4 food webs (2 dates with and without selectivity)
+food_web_fig1 <- function(first = FALSE, selectivity = TRUE) {
+  all_weeks <- position_data |> pull(sample_week) |> unique()
+  date <- if (first) min(all_weeks) else max(all_weeks)
+  # Select correct data and type value
+  data_src <- if (selectivity) timeseries_fluxes else timeseries_null
+  t_val <- if (selectivity) "selectivity" else "ambient"
+
+  # Point positions (shared except optional recode)
+  point_position <- position_data |>
+    rename(name = predator) |>
+    filter(sample_week == date, type == t_val)
+
+  if (!selectivity) {
+    point_position <- point_position |>
+      mutate(
+        name = case_when(
+          position_y == 2 ~ "zooplankton",
+          position_y == 3 ~ "fish",
+          TRUE ~ name
+        )
+      )
+  }
+
+  # Base filtering
+  fw <- data_src |>
+    filter(
+      station == "BY31 LANDSORTSDJ",
+      isoweek(sample_week) %in% 2:51,
+      year(sample_week) %in% 2008:2023
+    ) |>
+    add_season() |>
+    filter(sample_week == date)
+
+  # Summaries differ slightly by branch
+  if (selectivity) {
+    fw <- fw |>
+      select(predator, prey, station, sample_week, "flux_avg" = mean)
+  } else {
+    fw <- fw |>
+      mutate(
+        predator = case_when(
+          predator %in% node_data$node_name[node_data$type == "fish"] ~ "fish",
+          predator %in% node_data$node_name[node_data$type == "zooplankton"] ~
+            "zooplankton",
+          TRUE ~ predator
+        ),
+        prey = case_when(
+          prey %in% node_data$node_name[node_data$type == "zooplankton"] ~
+            "zooplankton",
+          TRUE ~ prey
+        )
+      ) |>
+      group_by(predator, prey, station, sample_week) |>
+      summarise(flux = sum(flux, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
+  }
+
+  # Build graph
+  g <- fw |>
+    filter(flux_avg > 0) |>
+    as_tbl_graph() |>
+    activate(nodes) |>
+    left_join(point_position, by = join_by(name))
+
+  # Plot
+  ggraph(g, layout = "manual", x = position_x, y = position_y) +
+    geom_edge_link(aes(edge_width = sqrt(flux_avg))) +
+    geom_point(
+      data = point_position,
+      aes(x = position_x, y = position_y, fill = name),
+      shape = 21,
+      size = 5
+    ) +
+    scale_fill_manual(
+      values = c(color_mapping, zooplankton = "#fe9929", fish = "#feedde")
+    ) +
+    scale_edge_width(range = c(.1, 3), limits = c(0, sqrt(.5))) +
+    coord_fixed(ratio = 1 / 2) +
+    facet_grid(. ~ sample_week) +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      legend.position = "none"
+    ) +
+    labs(x = NULL, y = NULL)
+}
+# Network Metrics ----
+# Function from https://doi.org/10.1111/1365-2656.13447
+lw <- function(fluxes, loop = FALSE, parameter = "connectance") {
+  #res <- c()
+  # The flux matrix
+  W.net <- as.matrix(fluxes) #fluxmatrix from fluxweb
+
+  ### Taxon-specific Shannon indices of inflows
+  # sum of k species inflows --> colsums
+  sum.in <- apply(W.net, 2, sum)
+
+  # Diversity of k species inflows
+  # columns divided by the total col sum
+  H.in.mat <- t(t(W.net) / sum.in) * t(log(t(W.net) / sum.in))
+  H.in.mat[!is.finite(H.in.mat)] <- 0 #converts NaN to 0's
+  H.in <- apply(H.in.mat, 2, sum) * -1
+
+  # Effective number of prey or resources = N(R,k)
+  # The reciprocal of H(R,k) --> N (R,k) is the equivalent number of prey for species k
+  N.res <- ifelse(sum.in == 0, H.in, exp(H.in))
+
+  ### Taxon-specific Shannon indices of outflows
+  # sum of k speies outflows --> rowsums
+  sum.out <- apply(W.net, 1, sum)
+
+  # Diversity of k species outflows
+  # rows divided by the total row sum
+  H.out.mat <- (W.net / sum.out) * log(W.net / sum.out)
+  H.out.mat[!is.finite(H.out.mat)] <- 0 #converts NaN to 0's
+  H.out <- apply(H.out.mat, 1, sum) * -1
+
+  # Effective number of predators or consumers = N(C,k)
+  # The reciprocal of H(C,k) --> N (C,k) is the equivalent number of predators for species k
+  N.con <- ifelse(sum.out == 0, H.out, exp(H.out))
+
+  ### Quantitative Weighted connectance
+  no.species <- ncol(W.net)
+
+  # The weighted link density (LDw) is:
+  # In the weighted version the effective number of predators for species i is weighted by i's
+  # contribution to the total outflow the same is the case for the inflows
+  tot.mat <- sum(W.net)
+  # LD.w <- (sum((sum.in/tot.mat)*N.res) + sum((sum.out/tot.mat)*N.con))/2
+  # equivalent to next formula, but next one is closer to manuscript
+  LD <- 1 / (2 * tot.mat) * (sum(sum.in * N.res) + sum(sum.out * N.con))
+
+  #Weighted connectance
+  lwC <- LD / ifelse(loop, no.species, no.species - 1)
+
+  # positional.index
+  #pos.ind<- sum.in*N.res/(sum.in*N.res+sum.out*N.con) #postional index
+  #basal.sp<- pos.ind[pos.ind==0] #basal species = 0
+  #top.sp<- pos.ind[pos.ind==1] #defintion according to Bersier et al. 2002 top species = [0.99, 1]
+
+  #con.sp<-length(pos.ind)-length(basal.sp)# all consumer taxa except basal
+  # weighted quantitative Generality
+  lwG <- sum(sum.in * N.res / sum(W.net))
+
+  #res.sp<- length(pos.ind)-length(top.sp)
+  # weighted quantitative Vulnerability
+  lwV <- sum(sum.out * N.con / sum(W.net))
+
+  if (parameter == "connectance") return(lwC)
+  if (parameter == "generality") return(lwG)
+  if (parameter == "vulnerability") return(lwV)
 }
 # Over the entire timeseries
 # # ==== Plotting function ====

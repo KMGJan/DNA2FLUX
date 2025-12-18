@@ -250,7 +250,7 @@ fit_group <- function(df) {
     ) +
     theme_bw()
 
-  ggsave(filename = file_name, plot = p, width = 6, height = 4, dpi = 300)
+  ggsave(filename = file_name, plot = p, width = 4, height = 4, dpi = 300)
 
   # Return a tibble, with predator, prey, c and the bootstrapped c
   tibble(
@@ -384,6 +384,7 @@ plot_and_save_curves <- function(p) {
       node_predator == p
     ) |>
     ggplot() +
+    geom_hline(yintercept = 1) +
     geom_ribbon(
       data = boot_prediction |>
         filter(
@@ -413,18 +414,24 @@ plot_and_save_curves <- function(p) {
       mapping = aes(x = rel_biomass, y = ForageRatio)
     ) +
 
-    facet_wrap(. ~ node_prey, scales = "free") +
+    facet_wrap(. ~ node_prey, scales = "free", ncol = 5) +
 
-    geom_hline(yintercept = 1) +
     theme_bw() +
+    theme(
+      strip.background = element_blank(),
+      strip.text = element_text(size = 7),
+      panel.grid = element_blank(),
+      axis.text = element_text(color = "black", size = 7),
+      axis.title = element_text(color = "black", size = 8)
+    ) +
 
     scale_x_continuous(breaks = c(0, .5, 1)) +
     labs(x = "Relative Biomass", y = "Forage ratio", title = p)
   name <- paste0("fitted_", p, ".pdf")
   ggsave(
     filename = file.path("output", "ModelForageResponse", name),
-    width = 8,
-    height = 10
+    width = 7,
+    height = 4
   )
 }
 

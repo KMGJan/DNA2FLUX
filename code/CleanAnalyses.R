@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Fri Aug 15 08:57:18 2025 ------------------------------
+# Wed Dec 17 15:08:39 2025 ------------------------------
 
 # First ensure that all needed packages are installed, or install them
 source(file.path("code", "InstallPackages.R"))
@@ -47,10 +47,10 @@ suppressPackageStartupMessages({
   library(ggraph)
   library(gridExtra)
   library(grid)
-  #library(data.table)
   library(spaa)
   library(broom)
   library(ggrepel)
+  library(scales)
 })
 # Set the theme for plots
 theme_set(
@@ -70,24 +70,35 @@ message("importing the datasets")
 timeseries_null <- readAndArrange(
   file = file.path("data", "analyses", "timeseries_null.csv")
 ) |>
-  filter(year(sample_week) > 2007, isoweek(sample_week) %in% 2:51)
+  # Check if all node have outgoing fluxes and remove the ones that never contribute to higher trophic levels
+  group_by(predator, prey) |>
+  filter(
+    sum(flux, na.rm = T) > 0,
+    # only keep year 2008-2023 and weeks 2-51
+    year(sample_week) > 2007,
+    isoweek(sample_week) %in% 2:51
+  ) |>
+  ungroup()
+
 timeseries_fluxes <- readAndArrange(
   file = file.path("data", "analyses", "timeseries_fluxes.csv")
 ) |>
-  filter(year(sample_week) > 2007, isoweek(sample_week) %in% 2:51)
-timeseries_nodes <- readAndArrange(
-  file = file.path("data", "analyses", "timeseries_nodes.csv")
-) |>
-  filter(year(sample_week) > 2007, isoweek(sample_week) %in% 2:51)
+  # Check if all node have outgoing fluxes and remove the ones that never contribute to higher trophic levels
+  group_by(predator, prey) |>
+  filter(
+    sum(mean, na.rm = T) > 0,
+    # only keep year 2008-2023 and weeks 2-51
+    year(sample_week) > 2007,
+    isoweek(sample_week) %in% 2:51
+  ) |>
+  ungroup()
+
 isoweek_fluxes <- readAndArrange(
   file = file.path("data", "analyses", "isoweek_fluxes.csv"),
   arrange = FALSE
 ) |>
   filter(iso_week %in% 2:51)
-annual_fluxes <- readAndArrange(
-  file = file.path("data", "analyses", "annual_fluxes.csv"),
-  arrange = FALSE
-)
+
 station_fluxes <- readAndArrange(
   file = file.path("data", "analyses", "station_fluxes.csv"),
   arrange = FALSE
@@ -99,218 +110,39 @@ node_data <- readAndArrange(
 weekly_biomasses <- readAndArrange(
   file = file.path("data", "processed", "interpolation", "weekly_biomasses.csv")
 ) |>
-  filter(year(sample_week) > 2007, isoweek(sample_week) %in% 2:51)
+  # Check if all node are present and remove the ones that never occur
+  filter(
+    # Ensure that only the
+    node_name %in%
+      unique(timeseries_fluxes$prey) |
+      node_name %in% unique(timeseries_fluxes$predator),
+    # only keep BY31
+    station_name == unique(timeseries_fluxes$station),
+    # only keep year 2008-2023 and weeks 2-51
+    year(sample_week) > 2007,
+    isoweek(sample_week) %in% 2:51
+  )
+
 temperature <- readAndArrange(
   file = file.path("data", "processed", "interpolation", "temperature.csv")
-)
+) |>
+  filter(
+    # only keep year 2008-2023 and weeks 2-51
+    year(sample_week) %in% 2008:2023,
+    isoweek(sample_week) %in% 2:51,
+    # only keep BY31
+    station_name == "BY31 LANDSORTSDJ"
+  )
 # Set the color scheme for plotting
 color_mapping <- setNames(node_data$color, node_data$node_name)
 
-# Fig 1f ----
-message("Generating Fig. 1f")
-# Foodweb at the beggining of the timeseries and at the end
-foodweb_graph <- timeseries_fluxes |>
-  mutate(
-    when = ifelse(
-      sample_week == min(sample_week),
-      "start",
-      ifelse(sample_week == max(sample_week), "end", "none")
-    )
-  ) |>
-  filter(when != "none") |>
-  group_by(predator, prey, station, when) |>
-  summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop") |>
-  group_by(
-    TL = ifelse(
-      predator %in% c("Clupea", "Sprattus", "Gasterosteus"),
-      "fish",
-      "zooplankton"
-    ),
-    when
-  ) |>
-  mutate(flux = (flux / sum(flux)) * 100) |>
-  ungroup() |>
-  as_tbl_graph() |>
-  activate(nodes) |>
-  left_join(rename(node_data, name = node_name), by = join_by(name)) |>
-  activate(edges)
-node_names <- foodweb_graph |> activate(nodes) |> pull(name)
-
-# Extract edges and map names
-edges_with_names <- foodweb_graph |>
-  activate(edges) |>
-  as_tibble() |>
-  mutate(
-    from_name = node_names[from],
-    to_name = node_names[to]
-  )
-
-foodweb_graph <- foodweb_graph |>
-  activate(edges) |>
-  left_join(edges_with_names, by = join_by(from, to, station, when, flux, TL))
-
-Fig1f <- ggraph(
-  graph = foodweb_graph,
-  layout = "manual",
-  x = horizontal_position,
-  y = trophic_level
-) +
-  # Add the link between all species relative to their contribution to the total fluxes between TL
-  geom_edge_link(mapping = aes(edge_width = flux, col = to_name)) + #, alpha = flux)) +
-  scale_edge_color_manual(values = color_mapping) +
-  scale_edge_width(
-    range = c(.5, 5),
-    limits = c(0, 25),
-    name = "Contribution fluxes [%]"
-  ) +
-  geom_point(
-    data = node_data |> mutate(label = 1:24),
-    mapping = aes(
-      x = horizontal_position,
-      y = trophic_level
-    ),
-    fill = "white",
-    shape = 21,
-    size = 6.5
-  ) +
-  geom_text(
-    data = node_data |> mutate(label = 1:24),
-    mapping = aes(
-      x = horizontal_position,
-      y = trophic_level,
-      label = label
-    )
-  ) +
-  scale_size_continuous(guide = "none") +
-  facet_wrap(. ~ when) +
-  coord_cartesian(xlim = c(0.8, 13.2), ylim = c(0.8, 3.2)) +
-  scale_y_continuous(
-    breaks = 1:3,
-    labels = c("Phytoplankton", "Zooplankton", "Fish")
-  ) +
-  # Fix the theme
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "none"
-  ) +
-  labs(x = NULL, y = NULL)
-ggsave(
-  plot = Fig1f,
-  filename = file.path("output", "figure", "fig1f.pdf"),
-  height = 3.5,
-  width = 7,
-  dpi = 500
-)
-# Average foodweb over the productive season ----
-foodweb_avg <- timeseries_fluxes |>
-  filter(
-    station == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(predator, prey, station, season, year) |>
-  summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
-  summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop") |>
-  group_by(
-    TL = ifelse(
-      predator %in% c("Clupea", "Sprattus", "Gasterosteus"),
-      "fish",
-      "zooplankton"
-    ),
-    season
-  ) |>
-  mutate(
-    rel_flux = (flux_avg / sum(flux_avg)) * 100,
-    season = factor(season, levels = c("Spring", "Summer", "Fall"))
-  ) |>
-  ungroup() |>
-  as_tbl_graph() |>
-  activate(nodes) |>
-  left_join(rename(node_data, name = node_name), by = join_by(name)) |>
-  activate(edges)
-node_names <- foodweb_avg |> activate(nodes) |> pull(name)
-
-# Extract edges and map names
-edges_with_names <- foodweb_avg |>
-  activate(edges) |>
-  as_tibble() |>
-  mutate(
-    from_name = node_names[from],
-    to_name = node_names[to]
-  )
-
-foodweb_graph_avg <- foodweb_avg |>
-  activate(edges) |>
-  left_join(
-    edges_with_names,
-    by = join_by(from, to, station, season, flux_avg, rel_flux, TL)
-  )
-
-Fig3a <- ggraph(
-  graph = foodweb_graph_avg,
-  layout = "manual",
-  x = horizontal_position,
-  y = trophic_level
-) +
-  # Add the link between all species relative to their contribution to the total fluxes between TL
-  geom_edge_link(mapping = aes(edge_width = rel_flux, col = to_name)) + #, alpha = flux)) +
-  scale_edge_color_manual(values = color_mapping) +
-  scale_edge_width(
-    range = c(.2, 3),
-    limits = c(0, 25),
-    name = "Contribution fluxes [%]"
-  ) +
-  geom_point(
-    data = node_data |> mutate(label = 1:24),
-    mapping = aes(
-      x = horizontal_position,
-      y = trophic_level
-    ),
-    fill = "white",
-    shape = 21,
-    size = 6.5
-  ) +
-  geom_text(
-    data = node_data |> mutate(label = 1:24),
-    mapping = aes(
-      x = horizontal_position,
-      y = trophic_level,
-      label = label
-    )
-  ) +
-  scale_size_continuous(guide = "none") +
-  coord_cartesian(xlim = c(0.8, 13.2), ylim = c(0.8, 3.2)) +
-  scale_y_continuous(
-    breaks = 1:3,
-    labels = c("Phytoplankton", "Zooplankton", "Fish")
-  ) +
-  facet_grid(season ~ .) +
-  # Fix the theme
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "none"
-  ) +
-  labs(x = NULL, y = NULL)
-ggsave(
-  plot = Fig3a,
-  filename = file.path("output", "figure", "fig3a.pdf"),
-  height = 7.5,
-  width = 4,
-  dpi = 500
-)
-
-# Fig 2 ----
-message("Generating Fig. 2")
-
-
-# Seasonal biomasses
-plot_data <- weekly_biomasses |>
+# Start the analyses ---------
+# Fig. S6: input data ----
+message("Fig. S6 Input data")
+# Create the seasonal input data
+seasonal_input <- weekly_biomasses |>
   left_join(node_data, by = join_by(node_name)) |>
-  filter(station_name == "BY31 LANDSORTSDJ", type != "fish") |>
+  filter(type != "fish") |>
   mutate(
     node_name = factor(node_name, levels = node_data$node_name),
     type = fct_rev(factor(
@@ -318,6 +150,7 @@ plot_data <- weekly_biomasses |>
       levels = c("fish", "zooplankton", "phytoplankton")
     ))
   ) |>
+  # Group by iso week and get the average +- sd of the biomass for each node
   group_by(type, node_name, iso_week = isoweek(sample_week)) |>
   summarise(
     y = mean(biomass, na.rm = T),
@@ -325,9 +158,7 @@ plot_data <- weekly_biomasses |>
     ymax = y + sd(biomass, na.rm = T),
     .groups = "drop"
   )
-
-
-# Add empty rows for 'fish'
+# Add empty rows for fish
 fish_placeholder <- tibble(
   type = factor("fish", levels = c("fish", "zooplankton", "phytoplankton")),
   node_name = "Clupea",
@@ -336,10 +167,11 @@ fish_placeholder <- tibble(
   ymin = 0,
   ymax = 0
 )
-
-fig2.d <- weekly_biomasses |>
+# Fish relative biomass over years
+FigS6h <-
+  weekly_biomasses |>
   left_join(node_data, by = join_by(node_name)) |>
-  filter(station_name == "BY31 LANDSORTSDJ", type == "fish") |>
+  filter(type == "fish") |>
   mutate(
     node_name = factor(node_name, levels = node_data$node_name),
     type = fct_rev(factor(
@@ -359,14 +191,14 @@ fig2.d <- weekly_biomasses |>
     y = rel_biomass,
     fill = node_name
   )) +
-
   geom_bar(stat = "identity", position = "stack") +
   scale_fill_manual(values = color_mapping) +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   labs(y = "relative biomass", x = NULL)
-
-Fig2.1 <- plot_data |>
+# Plankton biomass over seasons
+FigS6fg <-
+  seasonal_input |>
   ggplot(aes(
     x = iso_week,
     y = y,
@@ -390,15 +222,9 @@ Fig2.1 <- plot_data |>
     expand = c(0, 0)
   ) +
   labs(x = NULL, y = "Biomass [g/m2]")
-
-Fig2.2 <- temperature |>
-  filter(
-    station_name == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
-  # add_season() |>
-  #  filter(season != "Winter") |>
+# Temperature over seasons
+FigS6e <-
+  temperature |>
   group_by(iso_week = isoweek(sample_week)) |>
   summarise(
     y = mean(temperature, na.rm = T),
@@ -427,79 +253,42 @@ Fig2.2 <- temperature |>
     limits = c(0, 11)
   ) +
   labs(x = NULL, y = "Temperature")
-
-Fig2.a <- Fig2.2 /
-  Fig2.1 /
-  fig2.d +
+# Combine plots and save
+FigS6efgh <- FigS6e /
+  FigS6fg /
+  FigS6h +
   plot_layout(heights = c(1, 2, 1), guides = "collect", axes = "collect") &
   guides(colour = guide_legend(ncol = 1))
+ggsave(
+  plot = FigS6efgh,
+  filename = file.path("output", "figure", "SupFigS6efgh.pdf"),
+  width = 5,
+  height = 8
+)
+
+# Interannual dynamics
+# Plot background dataset
 bg_df <- tibble(
   year = 2008:2023,
   idx = seq_along(year)
 ) |>
   filter(idx %% 2 == 0)
 
-#dodge_width <- 0.6
-#fig2_colors <- c(
-#  color_mapping,
-#  Cladocerans = "#cfcecc",
-#  Copepods = "#a84332",
-#  Rotifers = "#8E518D",
-#  Cyanobacteria = "#1c203b",
-#  Diatoms = "#ede493",
-#  Dinoflagellates = "#BD4A46",
-#  Other = "#668704"
-#)
-# Prepare data and compute dodge positions
-Fig2.3 <-
+# Aggreagated trophic level average biomass over years
+FigS6bcd <-
   weekly_biomasses |>
   left_join(node_data, by = join_by(node_name)) |>
-  mutate(
-    year = year(sample_week),
-    node_name = factor(node_name, levels = node_data$node_name),
-    type = factor(type, levels = c("phytoplankton", "zooplankton", "fish"))
-  ) |>
   add_season() |>
-  filter(
-    station_name == "BY31 LANDSORTSDJ",
-    season != "Winter"
-  ) |>
-  mutate(
-    taxa = case_when(
-      node_name %in% c("Bacillariales", "Chaetocerotales", "Thalassiosirales") ~
-        "Diatoms",
-      node_name == "Peridiniales" ~ "Dinoflagellates",
-      node_name %in%
-        c("Aphanizomenonaceae", "Nodularia", "Cyanobiaceae", "Pseudanabaena") ~
-        "Cyanobacteria",
-      node_name %in%
-        c("Acartia", "Temora", "Eurytemora", "Centropages", "Pseudocalanus") ~
-        "Copepods",
-      node_name %in% c("Bosmina", "Evadne") ~ "Cladocerans",
-      node_name == "Synchaeta" ~ "Rotifers",
-      node_name %in% c("Sprattus", "Clupea", "Gasterosteus") ~ node_name,
-      TRUE ~ "Other"
-    )
-  ) |>
-  group_by(type, year, sample_week) |>
+  filter(season != "Winter") |>
+  group_by(type, year = year(sample_week), sample_week) |>
   summarise(biomass = sum(biomass), .groups = "drop_last") |>
   summarise(biomass = mean(biomass, na.rm = TRUE), .groups = "drop_last") |>
+  # compute interannual average for each trophic level
   mutate(
-    z = (biomass - mean(biomass)) / sd(biomass),
-    avg = mean(biomass)
+    avg = mean(biomass),
+    type = factor(type, levels = c("phytoplankton", "zooplankton", "fish"))
   ) |>
   ungroup() |>
-  # Manually compute dodge positions per year and type
-
-  # group_by(type, year) |>
-  #  mutate(
-  #    n = n(),
-  #    idx = row_number(),
-  #    offset = ((idx - 1) / (n - 1)) - 0.5, # center around 0
-  #    x_dodge = year + offset * dodge_width
-  #  ) |>
-  #  ungroup() |>
-
   # Plot
   ggplot(aes(x = year, y = biomass)) +
   # Background rectangles
@@ -510,7 +299,7 @@ Fig2.3 <-
     inherit.aes = FALSE
   ) +
   geom_hline(mapping = aes(yintercept = avg), color = "black") +
-  # Lollipop segments (manually dodged)
+  # Lollipop segments
   geom_segment(
     aes(x = year, xend = year, y = avg, yend = biomass),
     linewidth = 0.4
@@ -528,36 +317,23 @@ Fig2.3 <-
     limits = c(2007.5, 2023.5)
   ) +
   facet_grid(type ~ ., scales = "free_y") +
-  labs(x = NULL, y = "Biomass") # +
+  labs(x = NULL, y = "Biomass")
 
-
-Fig2.4 <- temperature |>
-  filter(
-    station_name == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
+# Aggreagated temperature over years
+FigS6a <-
+  temperature |>
   add_season() |>
   filter(season != "Winter") |>
-  group_by(year = year(sample_week)) |>
+  group_by(year = year(sample_week), type = "temperature") |>
   summarise(temp_avg = mean(temperature, na.rm = T), .groups = "drop") |>
-  #  group_by(season) |>
-  mutate(
-    type = "temperature",
-    z = (temp_avg - mean(temp_avg)) / sd(temp_avg),
-    avg = mean(temp_avg),
-    col = ifelse(z < 0, "neg", "pos")
-  ) |>
+  # Compute average temperature overall
+  mutate(avg = mean(temp_avg)) |>
+  # Plot
   ggplot(aes(x = year, y = temp_avg)) +
-
+  # Background rectangles
   geom_rect(
     data = bg_df,
-    aes(
-      xmin = year - 0.5,
-      xmax = year + 0.5,
-      ymin = -Inf,
-      ymax = Inf
-    ),
+    aes(xmin = year - 0.5, xmax = year + 0.5, ymin = -Inf, ymax = Inf),
     fill = "gray80",
     inherit.aes = FALSE
   ) +
@@ -583,23 +359,20 @@ Fig2.4 <- temperature |>
 
   labs(x = NULL, y = "Temperature") +
   facet_grid(type ~ .)
-Fig2.b <- Fig2.4 /
-  Fig2.3 +
+FigS6abcd <- FigS6a /
+  FigS6bcd +
   plot_layout(heights = c(1, 3), guides = "collect", axes = "collect")
 ggsave(
-  plot = Fig2.a,
-  filename = file.path("output", "figure", "fig2a.pdf"),
+  plot = FigS6abcd,
+  filename = file.path("output", "figure", "SupFigS1abcd.pdf"),
   width = 8,
   height = 8
 )
-ggsave(
-  plot = Fig2.b,
-  filename = file.path("output", "figure", "fig2b.pdf"),
-  width = 5,
-  height = 8
-)
+
+message("Fig. S6 plotted")
 # Add the stats ....
-df_test_temperature <- temperature |>
+df_test_temperature <-
+  temperature |>
   filter(
     station_name == "BY31 LANDSORTSDJ",
     isoweek(sample_week) %in% 2:51,
@@ -649,263 +422,12 @@ run_model_workflow(
   ungroup() |>
   mutate(p_adjusted = p.adjust(p.value, method = "fdr")) |>
   write.csv(file = file.path("output", "table", "trends.csv"))
-# Fig 2.5 ----
-message("Generating figure 2.5")
-fluxes <- timeseries_fluxes |>
-  filter(
-    station == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
-  left_join(node_data, by = join_by(predator == node_name)) |>
-  group_by(
-    year = year(sample_week),
-    isoweek = isoweek(sample_week),
-    sample_week,
-    prey,
-    type,
-    predator
-  ) |>
-  summarise(flux = mean(mean, na.rm = T), .groups = "drop_last") |>
-  summarise(flux = sum(flux), .groups = "drop") |>
-  group_by(type, year, isoweek) |>
-  summarise(flux = sum(flux), .groups = "drop") |>
-  mutate(prey = ifelse(type == "fish", "zooplankton", "phytoplankton"))
-biomass <- weekly_biomasses |>
-  filter(
-    station_name == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
-  left_join(node_data, by = join_by(node_name)) |>
-  filter(type != "fish") |>
-  group_by(
-    year = year(sample_week),
-    isoweek = isoweek(sample_week),
-    sample_week,
-    type
-  ) |>
-  summarise(biomass = sum(biomass, na.rm = T), .groups = "drop") |>
-  rename("prey" = type)
-predation_pressure_df <- biomass |>
-  left_join(fluxes, by = join_by(year, isoweek, prey)) |>
-  mutate(
-    predation_pressure = flux / biomass,
-    type = prey,
-    predation_pressure = ifelse(
-      type == "zooplankton",
-      predation_pressure * 5,
-      predation_pressure
-    )
-  ) |>
-  group_by(isoweek, type, parameter = "predation_pressure") |>
-  summarise(
-    y = mean(predation_pressure),
-    ymin = pmax(0, y - sd(predation_pressure)),
-    ymax = y + sd(predation_pressure),
-    .groups = "drop"
-  )
-
-consumption_df <-
-  fluxes |>
-  mutate(
-    type = ifelse(type == "zooplankton", "phytoplankton", "zooplankton"),
-    flux = ifelse(type == "zooplankton", flux * 10, flux)
-  ) |>
-  group_by(isoweek, type, parameter = "consumed") |>
-  summarise(
-    y = mean(flux),
-    ymin = pmax(0, y - sd(flux)),
-    ymax = y + sd(flux),
-    .groups = "drop"
-  )
-ratio_df <- fluxes |>
-  group_by(isoweek, type, year) |>
-  summarise(flux_tot = sum(flux), .groups = "drop_last") |>
-  pivot_wider(names_from = type, values_from = flux_tot) |>
-  mutate(ratio = fish / zooplankton) |>
-  group_by(isoweek, type = "ratio", parameter = "ratio") |>
-  summarise(
-    y = mean(ratio),
-    ymin = y - sd(ratio),
-    ymax = y + sd(ratio),
-    .groups = "drop"
-  )
-
-biomass_df <- biomass |>
-  mutate(type = prey) |>
-  group_by(isoweek, type, parameter = "biomass") |>
-  summarise(
-    y = mean(biomass),
-    ymin = pmax(0, y - sd(biomass)),
-    ymax = y + sd(biomass),
-    .groups = "drop"
-  )
-
-fig2.5 <- bind_rows(
-  consumption_df,
-  ratio_df,
-  predation_pressure_df #,
-  #biomass_df
-) |>
-  ggplot(aes(
-    x = isoweek,
-    y = y,
-    ymin = ymin,
-    ymax = ymax,
-    fill = type,
-    col = type
-  )) +
-  geom_ribbon(alpha = .2, col = NA) +
-  geom_line() +
-  facet_grid(parameter ~ ., scales = "free_y") +
-  scale_fill_manual(
-    values = c(
-      "phytoplankton" = "#006837",
-      "zooplankton" = "#fe9929",
-      "ratio" = "black"
-    )
-  ) +
-  scale_color_manual(
-    values = c(
-      "phytoplankton" = "#006837",
-      "zooplankton" = "#fe9929",
-      "ratio" = "black"
-    )
-  ) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_x_continuous(
-    breaks = seq(1, 52.1775, 4.348125),
-    labels = month.abb, #c("Jan", "Mar", "May", "Jul", "Sep", "Nov"),
-    expand = c(0, 0)
-  ) +
-  labs(x = NULL) +
-  theme(legend.position = "bottom")
-
-
-pred_pressure_ts <- biomass |>
-  left_join(fluxes, by = join_by(year, isoweek, prey)) |>
-  mutate(
-    predation_pressure = flux / biomass,
-    type = prey,
-    predation_pressure = ifelse(
-      type == "zooplankton",
-      predation_pressure * 5,
-      predation_pressure
-    )
-  ) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(year, type, parameter = "predation_pressure") |>
-  summarise(
-    y = mean(predation_pressure),
-    .groups = "drop"
-  )
-
-flux_ts <- timeseries_fluxes |>
-  filter(isoweek(sample_week) %in% 2:51, year %in% 2008:2023) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  select(-c(upper, lower)) |>
-  pivot_wider(names_from = prey, values_from = mean, values_fill = 0) |>
-  pivot_longer(7:26, names_to = "prey", values_to = "flux") |>
-  group_by(predator, prey) |>
-  filter(sum(flux) > 0) |>
-  ungroup() |>
-  group_by(predator, prey, year, iso_week) |>
-  summarise(weekly_flux = mean(flux), .groups = "drop_last") |>
-  summarise(
-    n_week = n_distinct(iso_week),
-    n_days = n_week * 7,
-    flux = sum(weekly_flux, na.rm = T) * 7,
-    .groups = "drop"
-  ) |>
-  left_join(node_data, by = join_by(prey == node_name)) |>
-  group_by(type, parameter = "consumed", year) |>
-  summarise(y = sum(flux), .groups = "drop") |>
-  mutate(
-    y = ifelse(type == "zooplankton", y * 10, y)
-  )
-
-ratio_ts <- timeseries_fluxes |>
-  filter(
-    station == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
-  left_join(node_data, by = join_by(predator == node_name)) |>
-  group_by(
-    year = year(sample_week),
-    isoweek = isoweek(sample_week),
-    sample_week,
-    prey,
-    type,
-    predator
-  ) |>
-  summarise(flux = mean(mean, na.rm = T), .groups = "drop_last") |>
-  summarise(flux = sum(flux), .groups = "drop") |>
-  group_by(type, year, isoweek, sample_week) |>
-  summarise(flux = sum(flux), .groups = "drop") |>
-  mutate(prey = ifelse(type == "fish", "zooplankton", "phytoplankton")) |>
-  group_by(isoweek, sample_week, type, year) |>
-  summarise(flux_tot = sum(flux), .groups = "drop_last") |>
-  pivot_wider(names_from = type, values_from = flux_tot) |>
-  mutate(ratio = fish / zooplankton) |>
-  ungroup() |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(year, type = "ratio", parameter = "ratio") |>
-  summarise(
-    y = mean(ratio),
-    .groups = "drop"
-  )
-fig2.6 <- bind_rows(ratio_ts, pred_pressure_ts, flux_ts) |>
-  ggplot(aes(x = year, y = y, fill = type, col = type)) +
-  geom_line() +
-  geom_point(shape = 21, col = "black", size = 2) +
-  scale_fill_manual(
-    values = c(
-      "phytoplankton" = "#006837",
-      "zooplankton" = "#fe9929",
-      "ratio" = "black"
-    )
-  ) +
-  scale_color_manual(
-    values = c(
-      "phytoplankton" = "#006837",
-      "zooplankton" = "#fe9929",
-      "ratio" = "black"
-    )
-  ) +
-  theme(legend.position = "bottom") +
-  facet_grid(parameter ~ ., scales = "free")
-new_fig2.5 <- fig2.6 + fig2.5
-ggsave(
-  plot = new_fig2.5,
-  filename = file.path("output", "figure", "fig2.5.pdf"),
-  width = 8,
-  height = 6.5
-)
-# Fig 3 ----
-message("Generating Fig. 3")
-## Relative flux by week ----
-tot_fluxes <- timeseries_fluxes |>
-  group_by(
-    sample_week,
-    predator = factor(predator, levels = node_data$node_name),
-    station
-  ) |>
-  summarise(tot_flux = sum(mean, na.rm = T), .groups = "drop") |>
-  filter(isoweek(sample_week) %in% 2:51) |>
-  group_by(iso_week = isoweek(sample_week), predator) |>
-  summarise(
-    consum = mean(tot_flux),
-    .groups = "drop"
-  )
-
-# Average contribution of prey per week:
-rel_contribution_fluxes <-
+# Fig. 3: PCoA --------
+## Produce the dataframes ----
+### Zooplankton --> fish relative flux  ----
+rel_flux_zp <-
   timeseries_fluxes |>
+  filter() |>
   group_by(sample_week, predator) |>
   reframe(
     sample_week = sample_week,
@@ -921,179 +443,8 @@ rel_contribution_fluxes <-
   ) |>
   ungroup()
 
-seasonal_fluxes <- rel_contribution_fluxes |>
-  pivot_wider(names_from = prey, values_from = rel_flux, values_fill = 0) |>
-  pivot_longer(where(is.numeric), names_to = "prey", values_to = "rel_flux") |>
-  filter(isoweek(sample_week) %in% 2:51) |>
-  group_by(iso_week = isoweek(sample_week), predator, prey) |>
-  summarise(
-    y = mean(rel_flux, na.rm = T),
-    .groups = "drop"
-  ) |>
-  mutate(
-    predator = factor(predator, levels = node_data$node_name),
-    prey = factor(prey, levels = node_data$node_name)
-  ) |>
-  left_join(tot_fluxes, by = join_by(iso_week, predator)) |>
-  mutate(
-    contribution = consum * y,
-    type = ifelse(
-      predator %in% c("Clupea", "Sprattus", "Gasterosteus"),
-      "fish",
-      "zooplankton"
-    ),
-    type = factor(type, levels = c("zooplankton", "fish"))
-  )
-# Average consumption over the entire time series during the productive season
-flux_productive_season <- timeseries_fluxes |>
-  filter(isoweek(sample_week) %in% 2:51, year %in% 2008:2023) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  select(-c(upper, lower)) |>
-  pivot_wider(names_from = prey, values_from = mean, values_fill = 0) |>
-  pivot_longer(7:26, names_to = "prey", values_to = "flux") |>
-  group_by(predator, prey) |>
-  filter(sum(flux) > 0) |>
-  ungroup() |>
-  group_by(predator, prey, iso_week) |>
-  summarise(weekly_flux = mean(flux), .groups = "drop_last") |>
-  summarise(
-    n_week = n_distinct(iso_week),
-    n_days = n_week * 7,
-    flux = sum(weekly_flux, na.rm = T) * 7,
-    .groups = "drop"
-  )
-order_predator <- flux_productive_season |>
-  group_by(predator) |>
-  summarise(tot = sum(flux), .groups = "drop") |>
-  arrange(tot) |>
-  pull(predator)
-order_prey <- flux_productive_season |>
-  group_by(prey) |>
-  summarise(tot = sum(flux), .groups = "drop") |>
-  arrange(tot) |>
-  pull(prey)
-
-fig3.2 <-
-  flux_productive_season |>
-  mutate(
-    predator = fct_rev(factor(predator, levels = order_predator)),
-    prey = factor(prey, levels = node_data$node_name),
-    type = ifelse(
-      predator %in% c("Gasterosteus", "Clupea", "Sprattus"),
-      "2_fish",
-      "1_zooplankton"
-    ),
-    flux = ifelse(type == "2_fish", flux * 10, flux)
-  ) |>
-  ggplot(aes(y = flux, x = predator, fill = prey)) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values = color_mapping) +
-  facet_grid(. ~ type, scales = "free", space = "free") +
-  scale_y_continuous(
-    expand = c(0, 0),
-    limits = c(0, 25),
-    breaks = seq(0, 24, 5),
-    sec.axis = sec_axis(transform = ~ . / 10)
-  ) +
-  theme(
-    legend.position = "right",
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
-  ) +
-  labs(x = NULL, y = "Total consumption from spring to fall")
-fig3.3 <- flux_productive_season |>
-  mutate(
-    predator = factor(predator, levels = node_data$node_name),
-    prey = fct_rev(factor(prey, levels = order_prey)),
-    type = ifelse(
-      predator %in% c("Gasterosteus", "Clupea", "Sprattus"),
-      "2_fish",
-      "1_zooplankton"
-    ),
-    flux = ifelse(type == "2_fish", flux * 10, flux)
-  ) |>
-  ggplot(aes(y = flux, fill = predator, x = prey)) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values = color_mapping) +
-  scale_y_continuous(
-    expand = c(0, 0),
-    #limits = c(0, 22),
-    #breaks = seq(0, 22, 5)
-    sec.axis = sec_axis(transform = ~ . / 10)
-  ) +
-  theme(
-    legend.position = "right",
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
-  ) +
-  facet_grid(. ~ type, scales = "free", space = "free") +
-  labs(x = NULL, y = "Total outgoing fluxes from spring to fall")
-
-
-fig3.1 <-
-  seasonal_fluxes |>
-  mutate(predator = fct_rev(factor(predator, levels = order_predator))) |>
-  ggplot(aes(x = iso_week, y = contribution, fill = prey)) +
-
-  geom_area(stat = "identity") +
-  facet_grid(predator ~ ., scales = "free_y") +
-  scale_fill_manual(values = color_mapping) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_x_continuous(
-    breaks = seq(1, 52.1775, 4.348125),
-    labels = month.abb, #c("Jan", "Mar", "May", "Jul", "Sep", "Nov"),
-    expand = c(0, 0)
-  ) +
-  labs(x = NULL, y = "Consumption \n [kJ/day/m2]") +
-  theme(legend.position = "right")
-# Consumption annomalies
-fig3.4 <- timeseries_fluxes |>
-  filter(isoweek(sample_week) %in% 2:51, year %in% 2008:2023) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  select(-c(upper, lower)) |>
-  pivot_wider(names_from = prey, values_from = mean, values_fill = 0) |>
-  pivot_longer(7:26, names_to = "prey", values_to = "flux") |>
-  group_by(predator, prey) |>
-  filter(sum(flux) > 0) |>
-  ungroup() |>
-  group_by(predator, year, iso_week) |>
-  mutate(flux = sum(flux)) |>
-  summarise(weekly_flux = mean(flux), .groups = "drop_last") |>
-  summarise(
-    flux = sum(weekly_flux, na.rm = T),
-    .groups = "drop"
-  ) |>
-  group_by(predator) |>
-  mutate(
-    anomalie = (flux - mean(flux)) / (sd(flux)),
-    predator = factor(predator, levels = order_predator)
-  ) |>
-  ungroup() |>
-  ggplot(aes(x = year, xend = year, y = anomalie, yend = 0)) +
-  geom_hline(yintercept = 0) +
-
-  geom_segment() +
-  geom_point(shape = 21, fill = "white", size = 2) +
-  facet_grid(predator ~ .) +
-  scale_x_continuous(breaks = seq(2008, 2023, 2)) +
-  scale_y_continuous(limits = c(-3, 3))
-
-
-fig3 <- fig3.1 +
-  (fig3.2 /
-    fig3.3) +
-  plot_layout(guides = "collect", widths = c(1, 2))
-
-ggsave(
-  plot = fig3,
-  filename = file.path("output", "figure", "fig3.pdf"),
-  width = 15,
-  height = 10
-)
-
-# Fig S13 ----
-message("Generating Sup. Fig. S13")
-df_pp <- timeseries_fluxes |>
+### Primary-producer --> fish relative flux ----
+rel_flux_pp <- timeseries_fluxes |>
   mutate(
     predator = factor(predator, levels = node_data$node_name),
     prey = factor(prey, levels = node_data$node_name),
@@ -1109,7 +460,7 @@ df_pp <- timeseries_fluxes |>
 
   # Join with zooplankton → phytoplankton contribution
   left_join(
-    rel_contribution_fluxes |>
+    rel_flux_zp |>
       filter(type == "zooplankton", rel_flux > 0) |>
       pivot_wider(names_from = prey, values_from = rel_flux, values_fill = 0) |>
       rename(prey = predator),
@@ -1140,315 +491,224 @@ df_pp <- timeseries_fluxes |>
   ) |>
   ungroup()
 
-
-SupFigS13.1 <- df_pp |>
+### Ambient zooplankton and phytoplankton relative contribution ----
+rel_biomass <-
+  weekly_biomasses |>
   mutate(
-    iso_week = isoweek(sample_week),
-    predator = factor(predator, levels = node_data$node_name),
-    primary_producer = factor(primary_producer, levels = node_data$node_name)
+    TL = case_when(
+      node_name %in% node_data$node_name[node_data$trophic_level == 3] ~ "fish",
+      node_name %in% node_data$node_name[node_data$trophic_level == 2] ~
+        "zooplankton",
+      node_name %in% node_data$node_name[node_data$trophic_level == 1] ~
+        "phytoplankton"
+    )
   ) |>
-  filter(iso_week %in% 2:51) |>
-  group_by(iso_week, predator, primary_producer) |>
-  summarise(y = mean(rel_primary_production, na.rm = TRUE), .groups = "drop") |>
+  group_by(sample_week, TL) |>
+  filter(sum(biomass) > 0) |>
+  mutate(rel_biomass = biomass / sum(biomass)) |>
+  ungroup()
 
-  left_join(tot_fluxes, by = join_by(iso_week, predator)) |>
-  mutate(
-    contribution = consum * y,
-    type = if_else(
-      predator %in% c("Clupea", "Sprattus", "Gasterosteus"),
-      "fish",
-      "zooplankton"
-    ),
-    type = factor(type, levels = c("zooplankton", "fish"))
+## From datafram to matrices ----
+mat_zp <- rel_flux_zp |>
+  filter(type == "fish") |>
+  mutate(type = "selectivity") |>
+  pivot_wider(
+    names_from = prey,
+    values_from = rel_flux,
+    values_fill = 0
   ) |>
-
-  ggplot(aes(x = iso_week, y = contribution, fill = primary_producer)) +
-  geom_area() +
-  facet_grid(predator ~ type, scales = "fixed") +
-  scale_fill_manual(values = color_mapping) +
-  scale_x_continuous(
-    breaks = seq(1, 52, 4.35),
-    labels = month.abb,
-    expand = c(0, 0)
-  ) +
-  scale_y_continuous(breaks = seq(0, 0.02, 0.005)) +
-  labs(x = NULL, y = "Consumption \n [kJ/day/m2]")
-
-phyto_to_fish <- df_pp |>
-  mutate(
-    iso_week = isoweek(sample_week),
-    year = year(sample_week)
-  ) |>
-  filter(iso_week %in% 2:51, year %in% 2008:2023) |>
-  add_season() |>
-  filter(season != "Winter") |>
-
-  group_by(predator, prey = primary_producer, iso_week) |>
-  summarise(
-    y = mean(rel_primary_production, na.rm = TRUE),
-    .groups = "drop_last"
-  ) |>
-  summarise(
-    n_week = n_distinct(iso_week),
-    n_days = n_week * 7,
-    rel_primary_production = mean(y, na.rm = TRUE),
-    .groups = "drop"
-  ) |>
-
-  group_by(predator) |>
-  mutate(
-    rel_primary_production = rel_primary_production /
-      sum(rel_primary_production)
-  ) |>
-  ungroup() |>
-
-  left_join(
-    flux_productive_season |>
-      group_by(predator) |>
-      summarise(tot_flux = sum(flux), .groups = "drop"),
-    by = join_by(predator)
-  )
-
-SupFigS13.2 <- phyto_to_fish |>
-  mutate(
-    phytoplankton_contribution = rel_primary_production * tot_flux,
-    predator = fct_rev(factor(predator, levels = order_predator)),
-    prey = factor(prey, levels = node_data$node_name)
-  ) |>
-
-  ggplot(aes(y = phytoplankton_contribution, x = predator, fill = prey)) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values = color_mapping, guide = "none") +
-  scale_y_continuous(expand = c(0, 0), breaks = 0:2) +
-  #facet_grid(predator ~ ., scales = "free_y") +
-  theme(legend.position = "right") +
-  labs(x = "Total consumption from spring to fall", y = NULL)
-order_phyto <-
-  phyto_to_fish |>
-  mutate(
-    phytoplankton_contribution = rel_primary_production * tot_flux,
-  ) |>
-  group_by(prey) |>
-  summarise(tot = sum(phytoplankton_contribution), .groups = "drop") |>
-  arrange(tot) |>
-  pull(prey)
-SupFigS13.3 <- phyto_to_fish |>
-  mutate(
-    phytoplankton_contribution = rel_primary_production * tot_flux,
-    predator = fct_rev(factor(predator, levels = node_data$node_name)),
-    prey = fct_rev(factor(prey, levels = order_phyto))
-  ) |>
-
-  ggplot(aes(y = phytoplankton_contribution, fill = predator, x = prey)) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values = color_mapping, guide = "none") +
-  scale_y_continuous(expand = c(0, 0), breaks = 0:2) +
-  #facet_grid(predator ~ ., scales = "free_y") +
-  theme(legend.position = "right") +
-  labs(x = "Total outgoing fluxes from spring to fall", y = NULL)
-
-SupFigS13 <-
-  SupFigS13.1 +
-  (SupFigS13.2 /
-    SupFigS13.3 &
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))) +
-  plot_layout(guides = "collect", width = c(1, 2))
-ggsave(
-  plot = SupFigS13,
-  filename = file.path("output", "figure", "SupFigS13.pdf"),
-  width = 10,
-  height = 6
-)
-
-# Ordination ----
-message("Ordination in progress...")
-# For phytoplankton
-mat_pp <- df_pp |>
+  na.omit()
+mat_pp <- rel_flux_pp |>
+  mutate(type = "selectivity") |>
   pivot_wider(
     names_from = primary_producer,
     values_from = rel_primary_production,
     values_fill = 0
   ) |>
   na.omit()
-bray_dist_pp <- vegdist(select(mat_pp, where(is.numeric)), method = "bray")
-pcoa_result_pp <- pcoa(bray_dist_pp)
-site_scores_pp <- pcoa_result_pp$vectors
-envfit_pp <- as.data.frame(scores(
-  envfit(site_scores_pp, select(mat_pp, where(is.numeric)), permutations = 999),
-  display = c("vectors")
-)) |>
-  rownames_to_column(var = "prey") |>
-  rename("Axis1" = Axis.1, "Axis2" = Axis.2)
-eig_pp <- pcoa_result_pp$values$Relative_eig
-pcoa_df_pp <- process_pcoa(pcoa_result_pp, metadata = mat_pp)
-ggsave(
-  plot = PCOA_plot(pcoa_df_pp, eig_pp),
-  filename = file.path("output", "figure", "SupFigS15.pdf"),
-  dpi = 500,
-  width = 8,
-  height = 6
-)
+### Add the ambient primary producers and zooplankton community
+ambient_zp <-
+  rel_biomass |>
+  filter(TL == "zooplankton") |>
+  mutate(predator = "ambient", type = "ambient") |>
+  select(
+    node_name,
+    sample_week,
+    predator,
+    station = "station_name",
+    type,
+    rel_biomass
+  ) |>
+  pivot_wider(
+    names_from = node_name,
+    values_from = rel_biomass,
+    values_fill = 0
+  )
+ambient_pp <-
+  rel_biomass |>
+  filter(TL == "phytoplankton") |>
+  mutate(predator = "ambient", type = "ambient") |>
+  select(
+    node_name,
+    sample_week,
+    predator,
+    station = "station_name",
+    type,
+    rel_biomass
+  ) |>
+  pivot_wider(
+    names_from = node_name,
+    values_from = rel_biomass,
+    values_fill = 0
+  )
 
-# For zooplankton
-mat_zp <-
-  rel_contribution_fluxes |>
-  filter(type == "fish", rel_flux > 0) |>
-  select(sample_week, station, predator, prey, rel_flux) |>
-  pivot_wider(names_from = prey, values_from = rel_flux, values_fill = 0)
-bray_dist_zp <- vegdist(select(mat_zp, where(is.numeric)), method = "bray")
-pcoa_result_zp <- pcoa(bray_dist_zp)
-site_scores_zp <- pcoa_result_zp$vectors
-envfit_zp <- as.data.frame(scores(
-  envfit(site_scores_zp, select(mat_zp, where(is.numeric)), permutations = 999),
-  display = c("vectors")
-)) |>
-  rownames_to_column(var = "prey") |>
-  rename("Axis1" = Axis.1, "Axis2" = Axis.2)
-eig_zp <- pcoa_result_zp$values$Relative_eig
-pcoa_df_zp <- process_pcoa(pcoa_result_zp, metadata = mat_zp)
-ggsave(
-  plot = PCOA_plot(pcoa_df_zp, eig_zp),
-  filename = file.path("output", "figure", "SupFigS14.pdf"),
-  dpi = 500,
-  width = 8,
-  height = 6
+### combine these to the respective matrices
+mat_zp_complete <-
+  mat_zp |>
+  bind_rows(ambient_zp)
+mat_pp_complete <-
+  mat_pp |>
+  bind_rows(ambient_pp)
+# and one matrix for phytoplankton --> zooplankton
+mat_pp2zp <- rel_flux_zp |>
+  filter(
+    type == "zooplankton" #,
+    #For faster computing time, only keep even isoweek to reduce the size of the dataset
+    #isoweek(sample_week) %% 2 == 0
+  ) |>
+  mutate(type = "selectivity") |>
+  pivot_wider(
+    names_from = prey,
+    values_from = rel_flux,
+    values_fill = 0
+  ) |>
+  na.omit() |>
+  bind_rows(ambient_pp)
+### Run the PCoA -----
+matrices <- list(
+  pp = mat_pp_complete,
+  zp = mat_zp_complete,
+  pp2zp = mat_pp2zp
 )
+# Because it is long, make it only run if it hasn't already...
+if (!file.exists(file.path("output", "table", "pcoa.rds"))) {
+  message("The 3 PCoAs are running in parrallel... this takes about 10 min...")
+  suppressPackageStartupMessages(library(furrr))
+  plan(multisession)
+  pcoa_workflow <- future_map(
+    matrices,
+    \(mat) run_pcoa(mat),
+    .options = furrr_options(seed = TRUE)
+  )
+  pcoa_workflow |> saveRDS(file.path("output", "table", "pcoa.rds"))
+} else pcoa_workflow <- readRDS(file.path("output", "table", "pcoa.rds"))
+## primary producers --> fish
+pcoa_df_pp <- pcoa_workflow$pp$pcoa_df
+eig_pp <- pcoa_workflow$pp$eig
+## zooplankton --> fish
+pcoa_df_zp <- pcoa_workflow$zp$pcoa_df
+eig_zp <- pcoa_workflow$zp$eig
+# primary producers --> zooplankton
+pcoa_df_pp2zp <- pcoa_workflow$pp2zp$pcoa_df
+eig_pp2zp <- pcoa_workflow$pp2zp$eig
+
+## Visualisation ----
 # bind envfit with type
 envfit <- bind_rows(
-  envfit_zp |> mutate(type = "zooplankton"),
-  envfit_pp |> mutate(type = "phytoplankton")
+  pcoa_workflow$zp$envfit |> mutate(source = "zooplankton"),
+  pcoa_workflow$pp$envfit |> mutate(source = "phytoplankton")
 )
-# Standardized flux
-standardized_flux <- tot_fluxes |>
-  group_by(predator) |>
-  mutate(z = scale(consum)[, 1]) |>
-  ungroup()
-
-# Plot settings
-shape_vals <- c(21, 22, 24)
-fill_palette <- c("#F3C178", "#D8F1A0", "#065C58")
-
-# Fig 4.1 ----
-message("Generating Fig. 4")
-Fig4.1 <- bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
-  group_by(iso_week, predator, season, type) |>
+# Plot
+message("Fig. 3 PCoA")
+Fig3 <-
+  bind_rows(
+    pcoa_df_zp |> mutate(source = "zooplankton"),
+    pcoa_df_pp |> mutate(source = "phytoplankton")
+  ) |>
+  mutate(source = factor(source, levels = c("zooplankton", "phytoplankton"))) |>
+  group_by(iso_week, predator, season, type, source) |>
   summarise(
     avg1 = mean(Axis1, na.rm = TRUE),
     avg2 = mean(Axis2, na.rm = TRUE),
     .groups = "drop"
   ) |>
-  left_join(standardized_flux, by = join_by(iso_week, predator)) |>
-  filter(iso_week %in% 2:51) |>
-  mutate(type = factor(type, levels = c("zooplankton", "phytoplankton"))) |>
-  ggplot() +
+  ggplot(aes(
+    x = avg1,
+    y = avg2,
+    fill = iso_week,
+    col = iso_week,
+    shape = predator
+  )) +
   geom_segment(
     data = envfit |>
-      mutate(type = factor(type, levels = c("zooplankton", "phytoplankton"))),
+      mutate(
+        source = factor(source, levels = c("zooplankton", "phytoplankton"))
+      ),
     aes(x = Axis1, y = Axis2, xend = 0, yend = 0),
-    arrow = arrow(length = unit(2, 'mm'), ends = "first")
+    arrow = arrow(length = unit(2, 'mm'), ends = "first"),
+    inherit.aes = FALSE
   ) +
   geom_text_repel(
     data = envfit |>
-      mutate(type = factor(type, levels = c("zooplankton", "phytoplankton"))),
+      mutate(
+        source = factor(source, levels = c("zooplankton", "phytoplankton"))
+      ),
     aes(x = Axis1, y = Axis2, label = prey),
+    inherit.aes = FALSE,
     size = 3,
     seed = 100
   ) +
-  geom_path(aes(x = avg1, y = avg2, col = predator, linewidth = z)) +
-  geom_point(
-    aes(
-      x = avg1,
-      y = avg2,
-      fill = iso_week,
-      col = predator,
-      group = predator,
-      shape = predator,
-      size = z
+  geom_path(linewidth = 1) +
+  geom_point(size = 3, col = "black") +
+  facet_grid(type ~ source) +
+  coord_fixed() +
+  scale_shape_manual(
+    values = c(
+      "ambient" = 23,
+      "Sprattus" = 21,
+      "Gasterosteus" = 24,
+      "Clupea" = 22
     )
   ) +
-  facet_grid(. ~ type) +
-  coord_fixed() +
-  scale_shape_manual(values = shape_vals) +
-  scale_color_manual(values = color_mapping, guide = "none") +
-  scale_fill_gradientn(
-    colors = fill_palette,
+  scale_color_gradientn(
+    colors = c("#E18F14", "#D8F1A0", "#022625"),
     values = scales::rescale(c(2, 22, 48)),
     limits = c(1, 52),
     breaks = c(12, 24, 36, 48),
     labels = c("Mar", "Jun", "Sep", "Dec")
   ) +
-  scale_size_continuous(
-    guide = "none",
-    limits = c(-1.5, 1.6),
-    range = c(1, 5)
+  scale_fill_gradientn(
+    colors = c("#E18F14", "#D8F1A0", "#022625"),
+    values = scales::rescale(c(2, 22, 48)),
+    limits = c(1, 52),
+    breaks = c(12, 24, 36, 48),
+    labels = c("Mar", "Jun", "Sep", "Dec")
   ) +
-  scale_linewidth_continuous(
-    guide = "none",
-    limits = c(-1.5, 1.6),
-    range = c(1, 5)
-  ) +
-  scale_x_continuous(limits = c(-0.9, 0.9)) +
-  scale_y_continuous(limits = c(-0.9, 0.9)) +
   labs(x = "PCOA1", y = "PCOA2")
-
-
-# -------
-bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
-  filter(season != "Winter") |>
-  group_by(year = year(sample_week), predator, type) |>
-  summarise(
-    pcoa1 = mean(Axis1, na.rm = TRUE),
-    pcoa2 = mean(Axis2, na.rm = TRUE),
-    .groups = "drop"
-  ) |>
-  pivot_longer(4:5, names_to = "axis", values_to = "pcoa") |>
-  ggplot(aes(x = year, y = pcoa, fill = predator, shape = predator)) +
-  geom_point(size = 3) +
-  facet_grid(type ~ axis) +
-  scale_shape_manual(values = shape_vals)
-#scale_fill_manual(values = color_mapping)
-temp_data_standard <- temperature |>
-  filter(
-    station_name == "BY31 LANDSORTSDJ",
-    isoweek(sample_week) %in% 2:51,
-    year(sample_week) %in% 2008:2023
-  ) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(year = year(sample_week)) |>
-  summarise(temp_avg = mean(temperature, na.rm = T), .groups = "drop") |>
-  #  group_by(season) |>
-  mutate(
-    z = (temp_avg - mean(temp_avg)) / sd(temp_avg),
-    col = ifelse(z < 0, "neg", "pos")
-  )
-bind_pcoa(pcoa_df_pp, pcoa_df_zp) |>
-  filter(season != "Winter", type == "zooplankton") |>
-  group_by(year = year(sample_week), predator, type) |>
-  summarise(
-    pcoa1 = mean(Axis1, na.rm = TRUE),
-    pcoa2 = mean(Axis2, na.rm = TRUE),
-    .groups = "drop"
-  ) |>
-  pivot_longer(4:5, names_to = "axis", values_to = "pcoa") |>
-  left_join(temp_data_standard, by = join_by(year)) |>
-  ggplot(aes(x = z, y = pcoa, fill = predator, shape = predator)) +
-  geom_point(size = 3) +
-  facet_grid(type ~ axis) +
-  scale_shape_manual(values = shape_vals) +
-  geom_smooth(method = "lm", aes(col = predator), se = F) +
-  labs(x = "temperature anomalies", y = NULL)
-#Fig4 <- Fig4.1 /
-#  Fig4.2 +
-#  plot_layout(axis_titles = "collect", axes = "collect")
+# Save
 ggsave(
-  plot = Fig4.1,
-  filename = file.path("output", "figure", "fig4.pdf"),
+  plot = Fig3,
+  filename = file.path("output", "figure", "fig3.pdf"),
   dpi = 500,
-  width = 10,
-  height = 5
+  width = 7.7,
+  height = 6.5
+)
+message(
+  "PCoA1 explains ",
+  round(eig_zp[c(1)] * 100, 1),
+  "% and PCoA2 ",
+  round(eig_zp[c(2)] * 100, 1),
+  "% of the variation in the diet composition ordination"
+)
+message(
+  "PCoA1 explains ",
+  round(eig_pp[c(1)] * 100, 1),
+  "% and PCoA2 ",
+  round(eig_pp[c(2)] * 100, 1),
+  "% of the variation in the primary producer sources ordination"
 )
 
+rm(eig_pp, eig_zp, envfit)
 # Table S3: Permanovas ----
 # This step takes some time about 5 min so it is better to save the output to come back to it later
 if (file.exists(file.path("output", "table", "permanova_zp.csv"))) {
@@ -1462,7 +722,7 @@ if (file.exists(file.path("output", "table", "permanova_zp.csv"))) {
   )
   set.seed(100)
   permanova_zp <- adonis2(
-    formula = bray_dist_zp ~ predator + factor(iso_week),
+    formula = pcoa_workflow$zp$bray ~ predator + factor(iso_week),
     data = mutate(mat_zp, iso_week = isoweek(sample_week)),
     permutations = 999,
     #strata = mat_zp$month,
@@ -1487,7 +747,7 @@ if (file.exists(file.path("output", "table", "permanova_pp.csv"))) {
   )
   set.seed(100)
   permanova_pp <- adonis2(
-    formula = bray_dist_pp ~ predator + factor(iso_week),
+    formula = pcoa_workflow$pp$bray ~ predator + factor(iso_week),
     data = mutate(mat_pp, iso_week = isoweek(sample_week)),
     permutations = 999,
     #strata = mat_pp$month,
@@ -1500,9 +760,8 @@ if (file.exists(file.path("output", "table", "permanova_pp.csv"))) {
     as_tibble() |>
     write_csv(file = file.path("output", "table", "permanova_pp.csv"))
 }
-
-# Fig S16 -----
-message("Generating Sup. Fig. S16")
+# Fig S5: Diet overlap ----
+message("Fig. S5, diet overlap over time")
 inter_overlap_zp <-
   mat_zp |>
   filter(isoweek(sample_week) %in% 2:51) |>
@@ -1512,7 +771,7 @@ inter_overlap_zp <-
   group_by(group_id) |>
   group_split() |>
   map_dfr(
-    ~ interspecific_overlap(.x, 4:11)
+    ~ interspecific_overlap(.x, 5:12)
   ) |>
   mutate(facet = "interspecific", type = "zp") |>
   filter(x != y)
@@ -1525,12 +784,13 @@ inter_overlap_pp <- mat_pp |>
   group_by(group_id) |>
   group_split() |>
   map_dfr(
-    ~ interspecific_overlap(.x, 4:15)
+    ~ interspecific_overlap(.x, 5:16)
   ) |>
   mutate(facet = "interspecific") |>
   filter(x != y)
 
-SupFigS16.a <- inter_overlap_zp |>
+FigS5bd <-
+  inter_overlap_zp |>
   bind_rows(inter_overlap_pp |> mutate(type = "pp")) |>
   mutate(
     interaction = paste(x, y, sep = "_"),
@@ -1577,8 +837,8 @@ SupFigS16.a <- inter_overlap_zp |>
   ) +
 
   facet_grid(type ~ ., scales = "fixed")
-
-SupFig16.b <- inter_overlap_zp |>
+FigS5ac <-
+  inter_overlap_zp |>
   bind_rows(inter_overlap_pp |> mutate(type = "pp")) |>
   mutate(
     interaction = paste(x, y, sep = "_"),
@@ -1617,162 +877,262 @@ SupFig16.b <- inter_overlap_zp |>
     )
   ) +
   facet_grid(type ~ ., scales = "fixed")
-SupFigS16 <- SupFig16.b + SupFigS16.a + plot_layout(guides = "collect")
+FigS5 <- FigS5ac + FigS5bd + plot_layout(guides = "collect")
 ggsave(
-  plot = SupFigS16,
-  filename = file.path("output", "figure", "SupFigS16.pdf"),
+  plot = FigS5,
+  filename = file.path("output", "figure", "SupFigS5.pdf"),
   width = 9,
   height = 4
 )
-# Fig S17-18 ----
-message("Generating Sup. Fig. S17 and S18")
-# Impact of forage ratios
-# or how the forage ratios deviate from the null model
-isoweek_null <- timeseries_null |>
-  filter(year(sample_week) > 2007) |>
-  group_by(predator, prey, iso_week = isoweek(sample_week), station) |>
-  summarise(avg_fluxes = mean(flux, na.rm = T), .groups = "drop")
+rm(FigS5ac, FigS5bd)
 
-ggsave(
-  filename = file.path("output", "figure", "SupFigS17.pdf"),
-  plot = plot_flux_difference("phytoplankton"),
-  height = 10,
-  width = 8,
-  dpi = 500
-)
-
-ggsave(
-  filename = file.path("output", "figure", "SupFigS18.pdf"),
-  plot = plot_flux_difference("zooplankton") +
-    scale_y_continuous(breaks = seq(0, 1, 0.001)),
-  height = 8,
-  width = 8,
-  dpi = 500
-)
-
-# Fig 5 ----
-message("Generating Fig. 5")
-# Preprocessing
-tot_null <- timeseries_null |>
-  filter(year(sample_week) > 2007) |>
-  group_by(station, predator, prey) |>
-  summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop")
-
-flux_diff <- station_fluxes |>
-  left_join(tot_null, by = c("station", "predator", "prey")) |>
+# Fig. 2: Food web topology -----
+# Save the PCoA1 loadings for plotting the foodweb with and without selectivity:
+message("Fig. 2 Food web topology")
+position_zp <- make_seasonal_position(pcoa_df_pp2zp)
+position_fish <- make_seasonal_position(pcoa_df_zp) |>
+  mutate(position_x = 1 - position_x)
+position_pp <-
+  pcoa_workflow$pp2zp$envfit |>
+  mutate(predator = prey, position_x = scales::rescale(Axis1, c(0, 1))) |>
+  select(predator, position_x) |>
   mutate(
-    sig = ifelse(
-      (lower - flux > 0),
-      "Higher",
-      ifelse((upper - flux < 0), "Lower", "Not different")
-    ),
-
-    prey = factor(prey, levels = node_data$node_name),
-    predator = factor(predator, levels = rev(node_data$node_name)),
-    trophic_level = case_when(
-      prey %in% node_data$node_name[node_data$trophic_level == 2] ~
-        "zooplankton",
-      prey %in% node_data$node_name[node_data$trophic_level == 1] ~
-        "phytoplankton"
-    ),
-    rel_mean = mean - flux,
-    rel_upper = upper - flux,
-    rel_lower = lower - flux,
-    rel_null = 0,
-    label = ifelse(sig == "Not different", "", round(rel_mean, 2))
+    position_y = case_when(
+      predator == "Peridiniales" ~ 1.02,
+      predator == "Thalassiosirales" ~ .98,
+      .default = 1
+    )
   ) |>
-  filter(!is.na(flux))
-
-fig5.1 <- ggplot(
-  data = filter(flux_diff, trophic_level == "zooplankton"),
-  aes(x = prey, y = predator, fill = sig)
-) +
-  geom_tile(col = "black") +
-  coord_fixed() +
-  scale_fill_manual(
-    values = c(
-      "Higher" = "#41E2BA",
-      "Lower" = "#2B2D42",
-      "Not different" = "white"
-    )
-  )
-fig5.2 <- ggplot(
-  data = filter(flux_diff, trophic_level == "phytoplankton"),
-  aes(x = prey, y = predator, fill = sig)
-) +
-  geom_tile(col = "black") +
-  coord_fixed() +
-  scale_fill_manual(
-    values = c(
-      "Higher" = "#41E2BA",
-      "Lower" = "#2B2D42",
-      "Not different" = "white"
-    )
+  cross_join(tibble(season = c("Spring", "Summer", "Fall", "Winter"))) |>
+  cross_join(tibble(type = c("ambient", "selectivity")))
+position_data <-
+  bind_rows(
+    position_pp,
+    position_zp |> mutate(position_y = 2),
+    position_fish |> mutate(position_y = 3)
+  ) |>
+  mutate(
+    season = factor(season, levels = c("Spring", "Summer", "Fall", "Winter")),
+    predator = factor(predator, levels = node_data$node_name)
   )
 
-#Fig5 <- plot_flux_diff(flux_diff, "zooplankton", ylim = c(-0.0035, 0.0035)) +
-#  plot_flux_diff(flux_diff, "phytoplankton", ylim = c(-0.02, 0.02)) +
-#  plot_layout(
-#    height = c(8, 15),
-#    guides = "collect",
-#    axes = "collect"
-#  )
-Fig5 <- (fig5.2 +
-  fig5.1 &
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))) +
-  plot_layout(guides = "collect", widths = c(12, 8))
+# Run the function food_web_fig2 for each season and selecitivity combination
+seasons <- c("Spring", "Summer", "Fall", "Winter")
+plots <-
+  c(
+    lapply(seasons, \(x) food_web_fig2(x, selectivity = FALSE)),
+    lapply(seasons, \(x) food_web_fig2(x, selectivity = TRUE))
+  )
+Fig2 <- wrap_plots(plots, guides = "collect", nrow = 2)
 ggsave(
-  Fig5,
-  filename = file.path("output", "figure", "fig5.pdf"),
-  width = 12,
-  height = 6,
-  dpi = 500
+  plot = Fig2,
+  filename = file.path("output", "figure", "Fig2.pdf"),
+  width = 13,
+  height = 10
 )
 
-# Time series analyses -----
-# Some timeseries analyses -----
-## Temperature ----
-temp_data_standard <- temperature |>
+# FigS4: Relative contribution of prey for each trophic level, per season ----
+## With selectivity
+rel_contrib_select <- timeseries_fluxes |>
   filter(
-    station_name == "BY31 LANDSORTSDJ",
+    station == "BY31 LANDSORTSDJ",
     isoweek(sample_week) %in% 2:51,
     year(sample_week) %in% 2008:2023
   ) |>
   add_season() |>
-  filter(season != "Winter") |>
-  group_by(year = year(sample_week)) |>
-  summarise(temp_avg = mean(temperature, na.rm = T), .groups = "drop") |>
-  #  group_by(season) |>
+  group_by(predator, prey, station, season, year) |>
+  summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
+  summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop") |>
   mutate(
-    z = (temp_avg - mean(temp_avg)) / sd(temp_avg),
-    col = ifelse(z < 0, "neg", "pos")
-  )
-
-# Fig 6 ----
-# Some linear regressions
-## Fig 6a ----
-# Annual Biomass
-message("Generating Fig. 6")
-annual_biomass <- weekly_biomasses |>
+    trophic_level = case_when(
+      predator %in% node_data$node_name[node_data$trophic_level == 1] ~
+        "phytoplankton",
+      predator %in% node_data$node_name[node_data$trophic_level == 2] ~
+        "zooplankton",
+      .default = "fish"
+    )
+  ) |>
+  group_by(trophic_level, season, prey) |>
+  summarise(flux = sum(flux_avg), .groups = "drop_last") |>
+  mutate(
+    relFlux = 100 * flux / sum(flux),
+    prey = factor(prey, levels = node_data$node_name),
+    season = factor(season, levels = c("Spring", "Summer", "Fall", "Winter"))
+  ) |>
+  ungroup()
+## Withoutselectivity
+rel_contrib_Noselect <-
+  timeseries_null |>
   filter(
-    station_name == "BY31 LANDSORTSDJ",
-    year(sample_week) > 2007,
-    node_name != "Cryptomonadales"
+    station == "BY31 LANDSORTSDJ",
+    isoweek(sample_week) %in% 2:51,
+    year(sample_week) %in% 2008:2023
   ) |>
   add_season() |>
-  filter(season != "Winter") |>
-  group_by(year = year(sample_week), season, node_name) |>
-  summarise(biomass_avg = mean(biomass, na.rm = T), .groups = "drop") |>
-  left_join(node_data, by = join_by(node_name)) |>
-  group_by(year, season, trophic_level) |>
-  mutate(rel_biomass = biomass_avg / sum(biomass_avg, na.rm = T)) |>
-  ungroup() |>
+  group_by(predator, prey, station, season, year = year(sample_week)) |>
+  summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop_last") |>
+  summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop") |>
   mutate(
-    node_name = factor(node_name, levels = node_data$node_name)
+    trophic_level = case_when(
+      predator %in% node_data$node_name[node_data$trophic_level == 1] ~
+        "phytoplankton",
+      predator %in% node_data$node_name[node_data$trophic_level == 2] ~
+        "zooplankton",
+      .default = "fish"
+    )
+  ) |>
+  group_by(trophic_level, season, prey) |>
+  summarise(flux = sum(flux_avg), .groups = "drop_last") |>
+  mutate(
+    relFlux = 100 * flux / sum(flux),
+    prey = factor(prey, levels = node_data$node_name),
+    season = factor(season, levels = c("Spring", "Summer", "Fall", "Winter"))
+  ) |>
+  ungroup()
+# Plot
+FigS4 <- rel_contrib_Noselect |>
+  mutate(selectivity = F) |>
+  bind_rows(rel_contrib_select |> mutate(selectivity = T)) |>
+  mutate(
+    trophic_level = factor(trophic_level, levels = c("zooplankton", "fish"))
+  ) |>
+  ggplot(aes(x = season, y = relFlux, fill = prey)) +
+  geom_bar(stat = "identity") +
+  facet_grid(selectivity ~ trophic_level) +
+  scale_fill_manual(values = color_mapping) +
+  theme(legend.position = "bottom")
+ggsave(
+  plot = FigS4,
+  filename = file.path("output", "figure", "SupFigS4.pdf"),
+  width = 8,
+  height = 6
+)
+
+# Fig. 1: first and last food web -----
+message("Fig. 1 First and last food web")
+position_zp <- make_position_fig1(pcoa_df_pp2zp)
+position_fish <- make_position_fig1(pcoa_df_zp) |>
+  mutate(position_x = 1 - position_x)
+position_pp <-
+  pcoa_workflow$pp2zp$envfit |>
+  mutate(predator = prey, position_x = scales::rescale(Axis1, c(0, 1))) |>
+  select(predator, position_x) |>
+  cross_join(tibble(sample_week = unique(position_zp$sample_week))) |>
+  cross_join(tibble(type = c("ambient", "selectivity")))
+position_data <-
+  bind_rows(
+    position_pp |> mutate(position_y = 1),
+    position_zp |> mutate(position_y = 2),
+    position_fish |> mutate(position_y = 3)
   )
-## Fig 6b ----
-# Diet overlap
-overlap_vs_temp <- inter_overlap_zp |>
+
+plots <-
+  c(
+    lapply(c(T, F), \(x) food_web_fig1(x, selectivity = FALSE)),
+    lapply(c(T, F), \(x) food_web_fig1(x, selectivity = TRUE))
+  )
+fig1 <- wrap_plots(plots, guides = "collect", nrow = 2)
+ggsave(
+  plot = fig1,
+  filename = file.path("output", "figure", "Fig1.pdf"),
+  width = 5,
+  height = 5
+)
+# Fig. 4: Network Analysis -----
+message("Fig. 4 some network analyses")
+network_metrics_df <-
+  timeseries_fluxes |>
+  group_by(sample_week) |>
+  group_map(
+    ~ {
+      mat <- .x |>
+        select(predator, prey, mean) |>
+        pivot_wider(values_from = mean, names_from = prey, values_fill = 0) |>
+        column_to_rownames("predator") |>
+        as.matrix() |>
+        t()
+      tibble(
+        sample_week = as.Date(.y$sample_week),
+        connectance = lw(mat, parameter = "connectance"),
+        vulnerability = lw(mat, parameter = "vulnerability"),
+        generality = lw(mat, parameter = "generality")
+      )
+    }
+  ) |>
+  bind_rows() |>
+  add_season()
+network_metrics_null <-
+  timeseries_null |>
+  group_by(sample_week) |>
+  group_map(
+    ~ {
+      mat <- .x |>
+        select(predator, prey, flux) |>
+        pivot_wider(values_from = flux, names_from = prey, values_fill = 0) |>
+        column_to_rownames("predator") |>
+        as.matrix() |>
+        t()
+      tibble(
+        sample_week = as.Date(.y$sample_week),
+        connectance = lw(mat, parameter = "connectance"),
+        vulnerability = lw(mat, parameter = "vulnerability"),
+        generality = lw(mat, parameter = "generality")
+      )
+    }
+  ) |>
+  bind_rows() |>
+  add_season()
+
+Fig4 <-
+  network_metrics_df |>
+  pivot_longer(2:4, values_to = "values", names_to = "parameter") |>
+  mutate(selectivity = "selectivity") |>
+  rbind(
+    network_metrics_null |>
+      pivot_longer(2:4, values_to = "values", names_to = "parameter") |>
+      mutate(selectivity = "noSelectivity")
+  ) |>
+  group_by(iso_week, parameter, selectivity) |>
+  summarise(avg = mean(values), SD = sd(values), .groups = "drop") |>
+  mutate(parameter = paste("link weighted", parameter)) |>
+  ggplot(aes(
+    x = iso_week,
+    y = avg,
+    ymin = avg - SD,
+    ymax = avg + SD,
+    col = selectivity,
+    fill = selectivity
+  )) +
+  geom_ribbon(alpha = .5, col = NA) +
+  geom_line(linewidth = 1) +
+  facet_grid(parameter ~ ., scales = "free", switch = "y") +
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    axis.text = element_text(color = "black")
+  ) +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(
+    breaks = seq(1, 52.1775, 4.348125),
+    labels = month.abb,
+    expand = c(0, 0)
+  ) +
+  scale_fill_manual(values = c("#466995", "#9F8B7C")) +
+  scale_color_manual(values = c("#466995", "#9F8B7C"))
+ggsave(
+  plot = Fig4,
+  filename = file.path("output", "figure", "fig4.pdf"),
+  dpi = 500,
+  width = 5,
+  height = 7
+)
+
+# Fig. 5: Warming impacts on diet overlap ----
+message("Fig. 5 how warming impacts diet overlap?")
+overlap_vs_temp <-
+  inter_overlap_zp |>
   group_by(
     x,
     y,
@@ -1793,7 +1153,7 @@ overlap_vs_temp <- inter_overlap_zp |>
       interaction
     )
   ) |>
-  left_join(temp_data_standard, by = join_by(year))
+  left_join(df_test_temperature, by = join_by(year))
 
 mod_overlap_summary <- run_model_workflow(
   df = overlap_vs_temp,
@@ -1801,104 +1161,9 @@ mod_overlap_summary <- run_model_workflow(
   formula_expr = "overlap ~ z",
   filename_suffix = "_overlap_vs_temperature_anomalie.pdf",
   plot_title = "overlap vs temperature anomalie"
-)
-# primary overlap
-primary_vs_temp <- inter_overlap_pp |>
-  group_by(
-    x,
-    y,
-    sample_week = sample_week.x,
-    iso_week = isoweek(sample_week.x),
-    year = year(sample_week.x)
-  ) |>
-  summarise(value = mean(value), .groups = "drop") |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(x, y, year) |>
-  summarise(overlap = mean(value), .groups = "drop") |>
-  mutate(
-    interaction = paste(x, y, sep = "_"),
-    interaction = ifelse(
-      interaction == "Clupea_Gasterosteus",
-      "Gasterosteus_Clupea",
-      interaction
-    )
-  ) |>
-  left_join(temp_data_standard, by = join_by(year))
-
-mod_primary_summary <- run_model_workflow(
-  df = primary_vs_temp,
-  group_var = interaction,
-  formula_expr = "overlap ~ z",
-  filename_suffix = "_primary_ overlap_vs_temperature_anomalie.pdf",
-  plot_title = "primary overlap vs temperature anomalie"
-)
-# Based on trophic level (i.e., sum all node from the same trophic level):
-tot_biomass <- annual_biomass |>
-  group_by(year, type) |>
-  summarise(biomass = sum(biomass_avg), .groups = "drop") |>
-  left_join(
-    temp_data_standard,
-    by = join_by(year)
-  )
-mod_biomass_summary <- run_model_workflow(
-  df = tot_biomass,
-  group_var = type,
-  formula_expr = "biomass ~ z",
-  filename_suffix = "_biomass_vs_temperature_anomalie.pdf",
-  plot_title = "biomass vs temperature anomalie"
-)
-## Fig 6c ----
-# Predation pressure analyses
-#flux_and_temp <- timeseries_fluxes |>
-#  left_join(
-#    temp_data_standard, # |> filter(season=="Summer"),
-#    by = join_by(year)
-#  ) |>
-#  filter(
-#    station == "BY31 LANDSORTSDJ",
-#    isoweek(sample_week) %in% 2:51,
-#    year(sample_week) %in% 2008:2023
-#  ) |>
-#  add_season() |>
-#  filter(season != "Winter") |>
-#  left_join(node_data, by = join_by(predator == node_name)) |>
-#  group_by(year = year(sample_week), predator, prey, col, type, z) |>
-#  summarise(flux = mean(mean, na.rm = T), .groups = "drop") |>
-#  group_by(predator, year, col, type) |>
-#  mutate(rel_flux = flux / sum(flux)) |>
-#  ungroup()
-#tot_consum <-
-#  flux_and_temp |>
-#  group_by(year, predator, type) |>
-#  summarise(flux = mean(flux), .groups = "drop") |>
-#  left_join(
-#    temp_data_standard, # |> filter(season == "Summer"),
-#    by = join_by(year)
-#  ) |>
-#  mutate(prey = ifelse(type == "fish", "zooplankton", "phytoplankton"))
-tot_pred <- pred_pressure_ts |>
-  rename("prey" = type, "predation_pressure" = y) |>
-  left_join(temp_data_standard, by = join_by(year))
-
-mod_pressure_summary <- run_model_workflow(
-  df = tot_pred,
-  group_var = prey,
-  formula_expr = "predation_pressure ~ z",
-  filename_suffix = "_predation_pressure_vs_temperature_anomalie.pdf",
-  plot_title = "predation pressure vs temperature anomalie"
-)
-
-
-models_combined <- list(
-  predation_pressure = mod_pressure_summary |> rename(group = prey),
-  biomass = mod_biomass_summary |> rename(group = type),
-  overlap = mod_overlap_summary |> rename(group = interaction),
-  primary_overlap = mod_primary_summary |> rename(group = interaction)
 ) |>
-  bind_rows(.id = "model") |>
-  ungroup() |>
   filter(term == "slope") |>
+  ungroup() |>
   mutate(
     p_adj = p.adjust(p.value, method = "fdr"),
     p_adj_sig = case_when(
@@ -1908,138 +1173,55 @@ models_combined <- list(
     ),
     p_adj_sig = factor(p_adj_sig, levels = c("< 0.05", "< 0.1", "> 0.1"))
   ) |>
-  select(group, model, term, estimate, r.squared, p.value, p_adj, p_adj_sig)
-
-line_values = c("< 0.05" = 1, "< 0.1" = 2, "> 0.1" = 3)
-color_values = c(
-  "fish" = "#feedde",
-  "phytoplankton" = "#006837",
-  "zooplankton" = "#fe9929",
-  "Gasterosteus_Clupea" = "#74a9cf",
-  "Clupea_Sprattus" = "#ffffd4",
-  "Gasterosteus_Sprattus" = "#b30000",
-  "ratio" = "black"
-)
-Fig6.a <- tot_biomass |>
-  left_join(
-    models_combined |> rename("type" = group) |> filter(model == "biomass"),
-    by = join_by(type)
-  ) |>
-  ggplot(aes(
-    x = z,
-    y = biomass,
-    fill = type,
-    col = type,
-    linetype = p_adj_sig
-  )) +
-  geom_point(shape = 21, col = "black", size = 3) +
-  stat_smooth(method = "lm", se = F, formula = 'y ~ x') +
-  scale_linetype_manual(values = line_values) +
-  scale_color_manual(values = color_values) +
-  scale_fill_manual(values = color_values) +
-  labs(
-    x = "Temperature anomalies \n (z-scores)",
-    y = "Average biomass from spring to fall \n [g/m2]"
+  select(
+    interaction,
+    model,
+    term,
+    estimate,
+    r.squared,
+    p.value,
+    p_adj,
+    p_adj_sig
   )
-Fig6.b <- tot_pred |>
+
+Fig5a <- overlap_vs_temp |>
   left_join(
-    models_combined |>
-      rename("prey" = group) |>
-      filter(model == "predation_pressure"),
-    by = join_by(prey)
+    mod_overlap_summary,
+    by = join_by(interaction)
   ) |>
   ggplot(aes(
     x = z,
-    y = predation_pressure,
-    fill = prey,
-    col = prey,
+    y = overlap,
+    fill = interaction,
+    col = interaction,
     linetype = p_adj_sig
   )) +
+
   geom_point(shape = 21, col = "black", size = 3) +
   stat_smooth(method = "lm", se = F, formula = 'y ~ x') +
-  scale_linetype_manual(values = line_values) +
-  scale_color_manual(values = color_values) +
-  scale_fill_manual(values = color_values) +
-  scale_y_continuous(
-    sec.axis = sec_axis(
-      ~ . / 5,
-      name = "Predation pressure \n on zooplankton \n [kJ/g]"
+  scale_linetype_manual(values = c("< 0.05" = 1, "< 0.1" = 2, "> 0.1" = NA)) +
+  scale_color_manual(
+    values = c(
+      "Gasterosteus_Clupea" = "#74a9cf",
+      "Clupea_Sprattus" = "#ffffd4",
+      "Gasterosteus_Sprattus" = "#b30000"
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Gasterosteus_Clupea" = "#74a9cf",
+      "Clupea_Sprattus" = "#ffffd4",
+      "Gasterosteus_Sprattus" = "#b30000"
     )
   ) +
   labs(
     x = "Temperature anomalies \n (z-scores)",
-    y = "Predation pressure \n on phytoplankton \n [kJ/g]"
-  )
-
-Fig6.c <- overlap_vs_temp |>
-  left_join(
-    models_combined |>
-      rename("interaction" = group) |>
-      filter(model == "overlap"),
-    by = join_by(interaction)
-  ) |>
-  ggplot(aes(
-    x = z,
-    y = overlap,
-    fill = interaction,
-    col = interaction,
-    linetype = p_adj_sig
-  )) +
-
-  geom_point(shape = 21, col = "black", size = 3) +
-  stat_smooth(method = "lm", se = F, formula = 'y ~ x') +
-  scale_linetype_manual(values = line_values) +
-  scale_color_manual(values = color_values) +
-  scale_fill_manual(values = color_values) +
-  labs(
-    x = "Temperature anomalies \n (z-scores)",
     y = "Diet overlap"
   )
-Fig6.d <- primary_vs_temp |>
-  left_join(
-    models_combined |>
-      rename("interaction" = group) |>
-      filter(model == "primary_overlap"),
-    by = join_by(interaction)
-  ) |>
-  ggplot(aes(
-    x = z,
-    y = overlap,
-    fill = interaction,
-    col = interaction,
-    linetype = p_adj_sig
-  )) +
 
-  geom_point(shape = 21, col = "black", size = 3) +
-  stat_smooth(method = "lm", se = F, formula = 'y ~ x') +
-  scale_linetype_manual(values = line_values) +
-  scale_color_manual(values = color_values) +
-  scale_fill_manual(values = color_values) +
-  labs(
-    x = "Temperature anomalies \n (z-scores)",
-    y = "primary producers overlap"
-  )
-
-Fig6 <- Fig6.a /
-  Fig6.b /
-  Fig6.c /
-  Fig6.d +
-  plot_layout(guides = "collect", axes = "collect")
-ggsave(
-  plot = Fig6,
-  filename = file.path(
-    "output",
-    "figure",
-    "fig6.pdf"
-  ),
-  height = 8,
-  width = 7
-)
-# Fig 7 ----
-# Correlation analyses
 # Biomass anomalies
-message("Generating Fig. 7")
-biomass_anomalies <- weekly_biomasses |>
+biomass_anomalies <-
+  weekly_biomasses |>
   filter(
     station_name == "BY31 LANDSORTSDJ",
     year(sample_week) %in% 2008:2023,
@@ -2055,7 +1237,8 @@ biomass_anomalies <- weekly_biomasses |>
   select(-biomass) |>
   mutate(parameter = "biomass_anomalies")
 # Contribution to higher trophic level
-contribution <- timeseries_fluxes |>
+contribution <-
+  timeseries_fluxes |>
   filter(
     station == "BY31 LANDSORTSDJ",
     year(sample_week) %in% 2008:2023
@@ -2069,106 +1252,17 @@ contribution <- timeseries_fluxes |>
   group_by(type, year) |>
   mutate(value = value / sum(value), parameter = "contribution") |>
   ungroup() |>
+  group_by(node_name, station, parameter = "contribution_anomalies") |>
+  mutate(value = (value - mean(value)) / sd(value)) |>
+  ungroup() |>
   select(node_name, station, year, value, parameter)
-# Predation pressure on lower trophic level
-predation_pressure_on_lower_trophic_level <- timeseries_fluxes |>
-  filter(
-    station == "BY31 LANDSORTSDJ",
-    year(sample_week) %in% 2008:2023
-  ) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(predator, station, year = year(sample_week), sample_week) |>
-  summarise(flux = sum(mean, na.rm = T), .groups = "drop_last") |>
-  summarise(consumption = mean(flux), .groups = "drop") |>
-  mutate(
-    prey = ifelse(
-      predator %in% c("Clupea", "Sprattus", "Gasterosteus"),
-      "zooplankton",
-      "phytoplankton"
-    )
-  ) |>
-  left_join(
-    weekly_biomasses |>
-      filter(
-        station_name == "BY31 LANDSORTSDJ",
-        year(sample_week) %in% 2008:2023
-      ) |>
-      add_season() |>
-      filter(season != "Winter") |>
-      left_join(node_data, join_by(node_name)) |>
-      group_by(
-        prey = type,
-        station_name,
-        year = year(sample_week),
-        sample_week
-      ) |>
-      summarise(biomass = sum(biomass, na.rm = T), .groups = "drop_last") |>
-      summarise(biomass = mean(biomass), .groups = "drop"),
-    by = join_by(year, prey)
-  ) |>
-  mutate(
-    value = consumption / biomass,
-    parameter = "predation_pressure_on_lower_trophic_level"
-  ) |>
-  select(node_name = predator, station, year, value, parameter)
-# Predation pressure by higher trophic level
-predation_pressure_by_higher_trophic_level <- timeseries_fluxes |>
-  filter(
-    station == "BY31 LANDSORTSDJ",
-    year(sample_week) %in% 2008:2023
-  ) |>
-  add_season() |>
-  filter(season != "Winter") |>
-  group_by(prey, station, year = year(sample_week), sample_week) |>
-  summarise(flux = sum(mean, na.rm = T), .groups = "drop_last") |>
-  summarise(contribution = mean(flux), .groups = "drop") |>
-  left_join(node_data, by = join_by(prey == node_name)) |>
-  mutate(
-    predator = ifelse(
-      type == "zooplankton",
-      "fish",
-      "zooplankton"
-    )
-  ) |>
-  left_join(
-    weekly_biomasses |>
-      filter(
-        station_name == "BY31 LANDSORTSDJ",
-        year(sample_week) %in% 2008:2023
-      ) |>
-      add_season() |>
-      filter(season != "Winter") |>
-      group_by(
-        prey = node_name,
-        station_name,
-        year = year(sample_week),
-        sample_week
-      ) |>
-      summarise(biomass = sum(biomass, na.rm = T), .groups = "drop_last") |>
-      summarise(biomass = mean(biomass), .groups = "drop"),
-    by = join_by(prey, year)
-  ) |>
-  mutate(
-    value = contribution / biomass,
-    parameter = "predation_pressure_by_higher_trophic_level"
-  ) |>
-  select(node_name = prey, station, year, value, parameter)
-
 # Combine and add temperature anomalies
-correlation_df <- bind_rows(
-  biomass_anomalies,
-  contribution,
-  predation_pressure_on_lower_trophic_level,
-  predation_pressure_by_higher_trophic_level
-) |>
-  left_join(temp_data_standard, by = join_by(year))
-bg_df <- tibble(
-  node_name = 1:(length(node_data$node_name) - 1),
-  idx = seq_along(node_name)
-) |>
-  filter(idx %% 2 == 0)
-Fig7 <- correlation_df |>
+correlation_results <-
+  bind_rows(
+    biomass_anomalies,
+    contribution
+  ) |>
+  left_join(df_test_temperature, by = join_by(year)) |>
   group_by(node_name, station, parameter) |>
   summarise(
     cor_test = list(cor.test(value, z, method = "spearman")),
@@ -2183,62 +1277,368 @@ Fig7 <- correlation_df |>
     p_adj = p.adjust(p.value, method = "fdr"),
     p_adj_sig = case_when(
       p_adj <= 0.05 ~ "*",
-      p_adj <= 0.1 ~ " ",
+      p_adj <= 0.1 ~ ".",
       TRUE ~ ""
     ),
-    p_adj_sig = factor(p_adj_sig, levels = c("*", " ", "")),
+    p_adj_sig = factor(p_adj_sig, levels = c("*", ".", "")),
     node_name = factor(node_name, levels = node_data$node_name),
     parameter = fct_rev(factor(
       parameter,
       levels = c(
         "biomass_anomalies",
-        "contribution",
-        "predation_pressure_by_higher_trophic_level",
-        "predation_pressure_on_lower_trophic_level"
+        "contribution_anomalies"
       )
     ))
+  )
+
+Fig5b <-
+  bind_rows(
+    biomass_anomalies,
+    contribution
+  ) |>
+  left_join(df_test_temperature, by = join_by(year)) |>
+  left_join(correlation_results, by = join_by(node_name, station, parameter)) |>
+  mutate(
+    TL = case_when(
+      node_name %in% node_data$node_name[node_data$trophic_level == 3] ~ "fish",
+      node_name %in% node_data$node_name[node_data$trophic_level == 2] ~
+        "zooplankton",
+      node_name %in% node_data$node_name[node_data$trophic_level == 1] ~
+        "phytoplankton"
+    ),
+    TL = factor(TL, levels = c("phytoplankton", "zooplankton", "fish"))
   ) |>
   ggplot(aes(
-    y = parameter,
-    x = node_name,
-    fill = estimate,
-    label = p_adj_sig
+    x = z,
+    y = value,
+    col = node_name,
+    fill = node_name,
+    linetype = p_adj_sig,
+    alpha = p_adj_sig
   )) +
-  geom_rect(
-    data = bg_df,
-    aes(
-      xmin = node_name - 0.5,
-      xmax = node_name + 0.5,
-      ymin = -Inf,
-      ymax = Inf
+  geom_point(col = 1, shape = 21, aes(size = p_adj_sig)) +
+  geom_smooth(method = "lm", se = F, formula = 'y ~ x') +
+  facet_grid(TL ~ parameter) +
+  scale_linetype_manual(values = c("*" = 1, "." = 2, " " = NA)) +
+  scale_alpha_manual(values = c(1, 0.4)) +
+  scale_size_manual(values = c(2, 1)) +
+  scale_fill_manual(values = color_mapping) +
+  scale_color_manual(values = color_mapping)
+Fig5 <- Fig5a + Fig5b
+ggsave(
+  plot = Fig5,
+  filename = file.path("output", "figure", "fig5.pdf"),
+  dpi = 500,
+  width = 15,
+  height = 5
+)
+# Fig S7 - S8: all correlations -----
+FigS7 <-
+  biomass_anomalies |>
+  left_join(df_test_temperature, by = join_by(year)) |>
+  left_join(correlation_results, by = join_by(node_name, station, parameter)) |>
+  mutate(
+    TL = case_when(
+      node_name %in% node_data$node_name[node_data$trophic_level == 3] ~ "fish",
+      node_name %in% node_data$node_name[node_data$trophic_level == 2] ~
+        "zooplankton",
+      node_name %in% node_data$node_name[node_data$trophic_level == 1] ~
+        "phytoplankton"
     ),
-    fill = "gray80",
+    TL = factor(TL, levels = c("phytoplankton", "zooplankton", "fish")),
+    node_name = factor(node_name, levels = node_data$node_name)
+  ) |>
+  ggplot(aes(
+    x = z,
+    y = value,
+    col = node_name,
+    fill = node_name
+  )) +
+  geom_point(col = 1, shape = 21) +
+  #geom_smooth(method = "lm", se = F, formula = 'y ~ x') +
+  facet_wrap(. ~ node_name) +
+  scale_fill_manual(values = color_mapping) +
+  #scale_color_manual(values = color_mapping) +
+  geom_text(
+    data = biomass_anomalies |>
+      left_join(df_test_temperature, by = join_by(year)) |>
+      left_join(
+        correlation_results,
+        by = join_by(node_name, station, parameter)
+      ) |>
+      mutate(
+        TL = case_when(
+          node_name %in% node_data$node_name[node_data$trophic_level == 3] ~
+            "fish",
+          node_name %in% node_data$node_name[node_data$trophic_level == 2] ~
+            "zooplankton",
+          node_name %in% node_data$node_name[node_data$trophic_level == 1] ~
+            "phytoplankton"
+        ),
+        TL = factor(TL, levels = c("phytoplankton", "zooplankton", "fish")),
+        node_name = factor(node_name, levels = node_data$node_name)
+      ) |>
+      select(node_name, parameter, estimate, p_adj) |>
+      unique(),
+    mapping = aes(
+      x = -.5,
+      y = 2,
+      label = paste0("rho = ", round(estimate, 2), "\nP = ", round(p_adj, 3))
+    ),
     inherit.aes = FALSE
   ) +
-  geom_point(shape = 24, aes(size = abs(estimate))) +
-  geom_text() +
-  scale_size_continuous(
-    range = c(.5, 7),
-    limits = c(0, 1),
-    breaks = c(0, .4, .8)
-  ) +
-  scale_fill_gradient2(
-    low = "#01665e",
-    mid = "white",
-    high = "#8c510a",
-    midpoint = 0,
-    limits = c(-1, 1),
-    breaks = seq(-0.8, .8, .4)
-  ) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+  theme(legend.position = "none") +
+  labs(
+    x = "Temperature anomalies (z-scores)",
+    y = "Biomass anomalies (z-scores)"
+  )
 ggsave(
-  plot = Fig7,
-  filename = file.path(
-    "output",
-    "figure",
-    "fig7.pdf"
-  ),
-  height = 4,
-  width = 10
+  plot = FigS7,
+  filename = file.path("output", "figure", "SupFigS7.pdf"),
+  dpi = 500,
+  width = 7,
+  height = 8
 )
-message("Everything has run smoothly :)")
+FigS8 <-
+  contribution |>
+  left_join(df_test_temperature, by = join_by(year)) |>
+  left_join(correlation_results, by = join_by(node_name, station, parameter)) |>
+  mutate(
+    TL = case_when(
+      node_name %in% node_data$node_name[node_data$trophic_level == 3] ~ "fish",
+      node_name %in% node_data$node_name[node_data$trophic_level == 2] ~
+        "zooplankton",
+      node_name %in% node_data$node_name[node_data$trophic_level == 1] ~
+        "phytoplankton"
+    ),
+    TL = factor(TL, levels = c("phytoplankton", "zooplankton", "fish")),
+    node_name = factor(node_name, levels = node_data$node_name)
+  ) |>
+  ggplot(aes(
+    x = z,
+    y = value,
+    col = node_name,
+    fill = node_name
+  )) +
+  geom_point(col = 1, shape = 21) +
+  #geom_smooth(method = "lm", se = F, formula = 'y ~ x') +
+  facet_wrap(. ~ node_name) +
+  scale_fill_manual(values = color_mapping) +
+  #scale_color_manual(values = color_mapping) +
+  geom_text(
+    data = contribution |>
+      left_join(df_test_temperature, by = join_by(year)) |>
+      left_join(
+        correlation_results,
+        by = join_by(node_name, station, parameter)
+      ) |>
+      mutate(
+        TL = case_when(
+          node_name %in% node_data$node_name[node_data$trophic_level == 3] ~
+            "fish",
+          node_name %in% node_data$node_name[node_data$trophic_level == 2] ~
+            "zooplankton",
+          node_name %in% node_data$node_name[node_data$trophic_level == 1] ~
+            "phytoplankton"
+        ),
+        TL = factor(TL, levels = c("phytoplankton", "zooplankton", "fish")),
+        node_name = factor(node_name, levels = node_data$node_name)
+      ) |>
+      select(node_name, parameter, estimate, p_adj) |>
+      unique(),
+    mapping = aes(
+      x = -.5,
+      y = 2,
+      label = paste0("rho = ", round(estimate, 2), "\nP = ", round(p_adj, 3))
+    ),
+    inherit.aes = FALSE
+  ) +
+  theme(legend.position = "none") +
+  labs(
+    x = "Temperature anomalies (z-scores)",
+    y = "Relative outgoing flux anomalies (z-scores)"
+  )
+ggsave(
+  plot = FigS8,
+  filename = file.path("output", "figure", "SupFigS8.pdf"),
+  dpi = 500,
+  width = 7,
+  height = 7
+)
+# Fig S1: Biomass, outgoing fluxes and predation pressure dynamics ----
+message("Fig. S1 Biomass, outgoing fluxes and predation pressure dynamics")
+figs1_df <- timeseries_fluxes |>
+  left_join(node_data, by = c(prey = "node_name")) |>
+  left_join(weekly_biomasses, by = join_by(sample_week, prey == node_name)) |>
+  group_by(
+    trophic_level = case_when(
+      trophic_level == 1 ~ "phytoplankton",
+      trophic_level == 2 ~ "zooplankton",
+      trophic_level == 3 ~ "fish"
+    ),
+    iso_week,
+    sample_week
+  ) |>
+  summarise(
+    outgoing_flux = sum(mean),
+    standing_biomass = sum(biomass),
+    predation_pressure = outgoing_flux /
+      standing_biomass,
+    .groups = "drop"
+  )
+
+FigS1a <- figs1_df |>
+  pivot_longer(4:6, names_to = "parameter") |>
+  mutate(
+    value = ifelse(
+      parameter == "outgoing_flux" & trophic_level == "zooplankton",
+      value * 10,
+      value
+    ),
+    parameter = factor(
+      parameter,
+      levels = c("standing_biomass", "outgoing_flux", "predation_pressure")
+    )
+  ) |>
+  group_by(trophic_level, iso_week, parameter) |>
+  summarise(avg = mean(value), sd = sd(value), .groups = "drop") |>
+  ggplot(aes(
+    x = iso_week,
+    y = avg,
+    ymin = avg - sd,
+    ymax = avg + sd,
+    fill = trophic_level,
+    col = trophic_level
+  )) +
+  geom_ribbon(alpha = .2, col = NA) +
+  geom_line() +
+  facet_grid(parameter ~ ., scales = "free_y") +
+  scale_fill_manual(
+    values = c(
+      "phytoplankton" = "#006837",
+      "zooplankton" = "#fe9929",
+      "ratio" = "black"
+    )
+  ) +
+  scale_color_manual(
+    values = c(
+      "phytoplankton" = "#006837",
+      "zooplankton" = "#fe9929",
+      "ratio" = "black"
+    )
+  ) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(
+    breaks = seq(1, 52.1775, 4.348125),
+    labels = month.abb, #c("Jan", "Mar", "May", "Jul", "Sep", "Nov"),
+    expand = c(0, 0)
+  ) +
+  labs(x = NULL) +
+  theme(legend.position = "bottom")
+FigS1b <- figs1_df |>
+  pivot_longer(4:6, names_to = "parameter") |>
+  mutate(
+    value = ifelse(
+      parameter == "outgoing_flux" & trophic_level == "zooplankton",
+      value * 10,
+      value
+    ),
+    parameter = factor(
+      parameter,
+      levels = c("standing_biomass", "outgoing_flux", "predation_pressure")
+    )
+  ) |>
+  filter(iso_week %in% 11:48) |>
+  group_by(trophic_level, year = year(sample_week), parameter) |>
+  summarise(avg = mean(value), .groups = "drop") |>
+  ggplot(aes(x = year, y = avg, fill = trophic_level, col = trophic_level)) +
+  geom_line() +
+  geom_point(shape = 21, col = "black", size = 2) +
+  scale_fill_manual(
+    values = c(
+      "phytoplankton" = "#006837",
+      "zooplankton" = "#fe9929",
+      "ratio" = "black"
+    )
+  ) +
+  scale_color_manual(
+    values = c(
+      "phytoplankton" = "#006837",
+      "zooplankton" = "#fe9929",
+      "ratio" = "black"
+    )
+  ) +
+  theme(legend.position = "bottom") +
+  facet_grid(parameter ~ ., scales = "free")
+FigS1 <- FigS1a + FigS1b
+ggsave(
+  filename = file.path("output", "figure", "SupFigS1.pdf"),
+  plot = FigS1,
+  height = 7,
+  width = 6,
+  dpi = 500
+)
+tot_flux <- timeseries_fluxes |>
+  add_season() |>
+  filter(season != "Winter") |>
+  group_by(
+    trophic_level = ifelse(
+      predator %in% node_data$node_name[node_data$trophic_level == 2],
+      "zooplankton",
+      "fish"
+    ),
+    year = year(sample_week)
+  ) |>
+  summarise(flux = sum(mean, na.rm = T) * 7, .groups = "drop_last") |>
+  summarise(AVG = mean(flux), SD = sd(flux))
+message(
+  "On average ",
+  tot_flux |> filter(trophic_level == "zooplankton") |> pull(AVG) |> round(1),
+  " kJ/m2 (SD = ",
+  tot_flux |> filter(trophic_level == "zooplankton") |> pull(SD) |> round(1),
+  ") are transfered from phytoplankton to zooplankton over the productive season"
+)
+percent_tot <- timeseries_fluxes |>
+  add_season() |>
+  filter(season != "Winter") |>
+  group_by(
+    trophic_level = ifelse(
+      predator %in% node_data$node_name[node_data$trophic_level == 2],
+      "zooplankton",
+      "fish"
+    ),
+    year = year(sample_week)
+  ) |>
+  summarise(flux = sum(mean, na.rm = T) * 7, .groups = "drop") |>
+  pivot_wider(values_from = flux, names_from = trophic_level) |>
+  mutate(percent = 100 * fish / zooplankton)
+message(
+  "Between ",
+  percent_tot |> pull(percent) |> min() |> round(1),
+  " and ",
+  percent_tot |> pull(percent) |> max() |> round(1),
+  "% reached the three fish nodes"
+)
+# Fig S2 - 3: Impact on forage ratios on the fluxes ----
+message("Generating Sup. Fig. S2 & S3")
+# Impact of forage ratios
+# or how the forage ratios deviate from the null model
+isoweek_null <- timeseries_null |>
+  filter(year(sample_week) > 2007) |>
+  group_by(predator, prey, iso_week = isoweek(sample_week), station) |>
+  summarise(avg_fluxes = mean(flux, na.rm = T), .groups = "drop")
+ggsave(
+  filename = file.path("output", "figure", "SupFigS2.pdf"),
+  plot = plot_flux_difference("phytoplankton"),
+  height = 10,
+  width = 8,
+  dpi = 500
+)
+ggsave(
+  filename = file.path("output", "figure", "SupFigS3.pdf"),
+  plot = plot_flux_difference("zooplankton") +
+    scale_y_continuous(breaks = seq(0, 1, 0.001)),
+  height = 8,
+  width = 8,
+  dpi = 500
+)
