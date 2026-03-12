@@ -260,7 +260,7 @@ make_seasonal_position <- function(df) {
 }
 
 #Plot the food web for figure 2
-food_web_fig2 <- function(s = "Spring", selectivity = TRUE) {
+food_web_fig2 <- function(s = "Summer", selectivity = F) {
   # Select correct data and type value
   data_src <- if (selectivity) timeseries_fluxes else timeseries_null
   t_val <- if (selectivity) "selectivity" else "ambient"
@@ -348,6 +348,93 @@ food_web_fig2 <- function(s = "Spring", selectivity = TRUE) {
     labs(x = NULL, y = NULL)
 }
 
+# Similar but for annual averages
+food_web_annual <- function(selectivity = TRUE) {
+  # Select correct data and type value
+  data_src <- if (selectivity) timeseries_fluxes else timeseries_null
+  t_val <- if (selectivity) "selectivity" else "ambient"
+
+  # Point positions (shared except optional recode)
+  point_position <- position_data_avg |>
+    rename(name = predator) |>
+    filter(type == t_val)
+
+  if (!selectivity) {
+    point_position <- point_position |>
+      mutate(
+        name = case_when(
+          position_y == 2 ~ "zooplankton",
+          position_y == 3 ~ "fish",
+          TRUE ~ name
+        )
+      )
+  }
+
+  # Base filtering
+  fw <- data_src |>
+    filter(
+      station == "BY31 LANDSORTSDJ",
+      isoweek(sample_week) %in% 2:51,
+      year(sample_week) %in% 2008:2023
+    ) |>
+    add_season()
+
+  # Summaries differ slightly by branch
+  if (selectivity) {
+    fw <- fw |>
+      group_by(predator, prey, station, year) |>
+      summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
+  } else {
+    fw <- fw |>
+      group_by(predator, prey, station, year = year(sample_week)) |>
+      summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        predator = case_when(
+          predator %in% node_data$node_name[node_data$type == "fish"] ~ "fish",
+          predator %in% node_data$node_name[node_data$type == "zooplankton"] ~
+            "zooplankton",
+          TRUE ~ predator
+        ),
+        prey = case_when(
+          prey %in% node_data$node_name[node_data$type == "zooplankton"] ~
+            "zooplankton",
+          TRUE ~ prey
+        )
+      ) |>
+      group_by(predator, prey, station, year) |>
+      summarise(flux = sum(flux, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
+  }
+
+  # Build graph
+  g <- fw |>
+    as_tbl_graph() |>
+    activate(nodes) |>
+    left_join(point_position, by = join_by(name))
+
+  # Plot
+  ggraph(g, layout = "manual", x = position_x, y = position_y) +
+    geom_edge_link(aes(edge_width = sqrt(flux_avg))) +
+    geom_point(
+      data = point_position,
+      aes(x = position_x, y = position_y, fill = name),
+      shape = 21,
+      size = 5
+    ) +
+    scale_fill_manual(
+      values = c(color_mapping, zooplankton = "#fe9929", fish = "#feedde")
+    ) +
+    scale_edge_width(range = c(.1, 3), limits = c(0, sqrt(.5))) +
+    coord_fixed(ratio = 1 / 2) +
+    #    facet_grid(. ~ season) +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      legend.position = "right"
+    ) +
+    labs(x = NULL, y = NULL)
+}
 # Same but for fig: 1
 # select first and last date:
 make_position_fig1 <- function(df) {

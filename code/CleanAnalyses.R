@@ -930,7 +930,39 @@ ggsave(
   width = 13,
   height = 10
 )
+# Average food web ----
+# Tue Feb 17 14:23:10 2026 ------------------------------
+position_zp_avg <- pcoa_df_pp2zp |>
+  group_by(type, predator, season = "annual") |>
+  summarise(Axis1 = mean(Axis1), .groups = "drop") |>
+  rbind(pcoa_df_pp2zp |> select(type, predator, season, Axis1)) |>
+  make_seasonal_position()
 
+position_fish_avg <- pcoa_df_zp |>
+  group_by(type, predator, season = "annual") |>
+  summarise(Axis1 = mean(Axis1), .groups = "drop") |>
+  rbind(pcoa_df_zp |> select(type, predator, season, Axis1)) |>
+  make_seasonal_position() |>
+  mutate(position_x = 1 - position_x)
+
+position_data_avg <-
+  bind_rows(
+    position_pp |> filter(season == "Spring") |> select(-season),
+    position_zp_avg |>
+      mutate(position_y = 2) |>
+      filter(season == "annual") |>
+      select(-season),
+    position_fish_avg |>
+      mutate(position_y = 3) |>
+      filter(season == "annual") |>
+      select(-season)
+  ) |>
+  mutate(
+    predator = factor(predator, levels = node_data$node_name)
+  )
+
+food_web_annual(selectivity = F) /
+  food_web_annual(selectivity = T)
 # FigS4: Relative contribution of prey for each trophic level, per season ----
 ## With selectivity
 rel_contrib_select <- timeseries_fluxes |>
@@ -955,9 +987,36 @@ rel_contrib_select <- timeseries_fluxes |>
   group_by(trophic_level, season, prey) |>
   summarise(flux = sum(flux_avg), .groups = "drop_last") |>
   mutate(
-    relFlux = 100 * flux / sum(flux),
-    prey = factor(prey, levels = node_data$node_name),
-    season = factor(season, levels = c("Spring", "Summer", "Fall", "Winter"))
+    relFlux = 100 * flux / sum(flux)
+  ) |>
+  ungroup() |>
+  rbind(
+    timeseries_fluxes |>
+      filter(
+        station == "BY31 LANDSORTSDJ",
+        isoweek(sample_week) %in% 2:51,
+        year(sample_week) %in% 2008:2023
+      ) |>
+
+      group_by(predator, prey, station, year) |>
+      summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        trophic_level = case_when(
+          predator %in% node_data$node_name[node_data$trophic_level == 1] ~
+            "phytoplankton",
+          predator %in% node_data$node_name[node_data$trophic_level == 2] ~
+            "zooplankton",
+          .default = "fish"
+        )
+      ) |>
+      group_by(trophic_level, prey) |>
+      summarise(flux = sum(flux_avg), .groups = "drop_last") |>
+      mutate(
+        relFlux = 100 * flux / sum(flux),
+        prey = factor(prey, levels = node_data$node_name),
+        season = "annual"
+      )
   ) |>
   ungroup()
 ## Withoutselectivity
@@ -984,17 +1043,47 @@ rel_contrib_Noselect <-
   group_by(trophic_level, season, prey) |>
   summarise(flux = sum(flux_avg), .groups = "drop_last") |>
   mutate(
-    relFlux = 100 * flux / sum(flux),
-    prey = factor(prey, levels = node_data$node_name),
-    season = factor(season, levels = c("Spring", "Summer", "Fall", "Winter"))
+    relFlux = 100 * flux / sum(flux)
   ) |>
-  ungroup()
+  ungroup() |>
+  rbind(
+    timeseries_null |>
+      filter(
+        station == "BY31 LANDSORTSDJ",
+        isoweek(sample_week) %in% 2:51,
+        year(sample_week) %in% 2008:2023
+      ) |>
+      group_by(predator, prey, station, year = year(sample_week)) |>
+      summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        trophic_level = case_when(
+          predator %in% node_data$node_name[node_data$trophic_level == 1] ~
+            "phytoplankton",
+          predator %in% node_data$node_name[node_data$trophic_level == 2] ~
+            "zooplankton",
+          .default = "fish"
+        )
+      ) |>
+      group_by(trophic_level, prey) |>
+      summarise(flux = sum(flux_avg), .groups = "drop_last") |>
+      mutate(
+        relFlux = 100 * flux / sum(flux),
+        season = "annual"
+      ) |>
+      ungroup()
+  )
 # Plot
 FigS4 <- rel_contrib_Noselect |>
   mutate(selectivity = F) |>
   bind_rows(rel_contrib_select |> mutate(selectivity = T)) |>
   mutate(
-    trophic_level = factor(trophic_level, levels = c("zooplankton", "fish"))
+    trophic_level = factor(trophic_level, levels = c("zooplankton", "fish")),
+    season = factor(
+      season,
+      levels = c("annual", "Spring", "Summer", "Fall", "Winter")
+    ),
+    prey = factor(prey, levels = node_data$node_name)
   ) |>
   ggplot(aes(x = season, y = relFlux, fill = prey)) +
   geom_bar(stat = "identity") +
