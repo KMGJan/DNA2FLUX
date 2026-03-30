@@ -22,12 +22,15 @@ if (!all(file.exists(fluxPaths))) {
 }
 rm(processedFluxes, fluxPaths)
 # Create the directories output/figure and output/table
-if (!dir.exists(file.path("output", "figure")))
+if (!dir.exists(file.path("output", "figure"))) {
   dir.create(file.path("output", "figure"), recursive = T)
-if (!dir.exists(file.path("output", "residuals")))
+}
+if (!dir.exists(file.path("output", "residuals"))) {
   dir.create(file.path("output", "residuals"), recursive = T)
-if (!dir.exists(file.path("output", "table")))
+}
+if (!dir.exists(file.path("output", "table"))) {
   dir.create(file.path("output", "table"), recursive = T)
+}
 
 # Create the map
 if (!file.exists(file.path("output/figure/map.pdf"))) {
@@ -601,7 +604,9 @@ if (!file.exists(file.path("output", "table", "pcoa.rds"))) {
     .options = furrr_options(seed = TRUE)
   )
   pcoa_workflow |> saveRDS(file.path("output", "table", "pcoa.rds"))
-} else pcoa_workflow <- readRDS(file.path("output", "table", "pcoa.rds"))
+} else {
+  pcoa_workflow <- readRDS(file.path("output", "table", "pcoa.rds"))
+}
 ## primary producers --> fish
 pcoa_df_pp <- pcoa_workflow$pp$pcoa_df
 eig_pp <- pcoa_workflow$pp$eig
@@ -620,12 +625,17 @@ envfit <- bind_rows(
 )
 # Plot
 message("Fig. 3 PCoA")
-Fig3 <-
-  bind_rows(
-    pcoa_df_zp |> mutate(source = "zooplankton"),
-    pcoa_df_pp |> mutate(source = "phytoplankton")
+
+# Mon Mar 30 10:36:01 2026 ------------------------------
+
+Fig3 <- bind_rows(
+  pcoa_df_zp |> mutate(source = "zooplankton"),
+  pcoa_df_pp |> mutate(source = "phytoplankton")
+) |>
+  mutate(
+    source = factor(source, levels = c("zooplankton", "phytoplankton")),
+    predator = factor(predator, levels = c('ambient', node_data$node_name))
   ) |>
-  mutate(source = factor(source, levels = c("zooplankton", "phytoplankton"))) |>
   group_by(iso_week, predator, season, type, source) |>
   summarise(
     avg1 = mean(Axis1, na.rm = TRUE),
@@ -636,8 +646,7 @@ Fig3 <-
     x = avg1,
     y = avg2,
     fill = iso_week,
-    col = iso_week,
-    shape = predator
+    col = iso_week
   )) +
   geom_segment(
     data = envfit |>
@@ -658,27 +667,11 @@ Fig3 <-
     size = 3,
     seed = 100
   ) +
-  geom_path(linewidth = 1) +
-  geom_point(size = 3, col = "black") +
-  facet_grid(type ~ source) +
+  geom_point(size = 2, col = "black", shape = 21) +
+  facet_grid(source ~ predator) +
   coord_fixed() +
-  scale_shape_manual(
-    values = c(
-      "ambient" = 23,
-      "Sprattus" = 21,
-      "Gasterosteus" = 24,
-      "Clupea" = 22
-    )
-  ) +
-  scale_color_gradientn(
-    colors = c("#E18F14", "#D8F1A0", "#022625"),
-    values = scales::rescale(c(2, 22, 48)),
-    limits = c(1, 52),
-    breaks = c(12, 24, 36, 48),
-    labels = c("Mar", "Jun", "Sep", "Dec")
-  ) +
   scale_fill_gradientn(
-    colors = c("#E18F14", "#D8F1A0", "#022625"),
+    colors = c("#e66101", "white", "#5e3c99"),
     values = scales::rescale(c(2, 22, 48)),
     limits = c(1, 52),
     breaks = c(12, 24, 36, 48),
@@ -690,8 +683,8 @@ ggsave(
   plot = Fig3,
   filename = file.path("output", "figure", "fig3.pdf"),
   dpi = 500,
-  width = 7.7,
-  height = 6.5
+  width = 7.5,
+  height = 4
 )
 message(
   "PCoA1 explains ",
@@ -905,11 +898,49 @@ position_pp <-
   ) |>
   cross_join(tibble(season = c("Spring", "Summer", "Fall", "Winter"))) |>
   cross_join(tibble(type = c("ambient", "selectivity")))
+
+# Mon Mar 30 11:41:19 2026 ------------------------------
+# Add some jitter for the fish and zooplankton in the neutral model
+set.seed(10)
 position_data <-
   bind_rows(
     position_pp,
-    position_zp |> mutate(position_y = 2),
-    position_fish |> mutate(position_y = 3)
+    position_zp |>
+      filter(type == 'ambient') |>
+      select(-predator) |>
+      cross_join(tibble(
+        predator = node_data$node_name[node_data$type == 'zooplankton']
+      )) |>
+      group_by(type, season) |>
+      mutate(
+        position_x = jitter(position_x, amount = .05),
+        position_y = 2,
+        position_y = jitter(position_y, amount = .15)
+      ) |>
+      ungroup() |>
+      bind_rows(
+        position_zp |>
+          filter(type != 'ambient') |>
+          mutate(position_y = 2)
+      ),
+    position_fish |>
+      filter(type == 'ambient') |>
+      select(-predator) |>
+      cross_join(tibble(
+        predator = node_data$node_name[node_data$type == 'fish']
+      )) |>
+      group_by(type, season) |>
+      mutate(
+        position_x = jitter(position_x, amount = .05),
+        position_y = 3,
+        position_y = jitter(position_y, amount = .15)
+      ) |>
+      ungroup() |>
+      bind_rows(
+        position_fish |>
+          filter(type != 'ambient') |>
+          mutate(position_y = 3)
+      )
   ) |>
   mutate(
     season = factor(season, levels = c("Spring", "Summer", "Fall", "Winter")),
@@ -930,39 +961,6 @@ ggsave(
   width = 13,
   height = 10
 )
-# Average food web ----
-# Tue Feb 17 14:23:10 2026 ------------------------------
-position_zp_avg <- pcoa_df_pp2zp |>
-  group_by(type, predator, season = "annual") |>
-  summarise(Axis1 = mean(Axis1), .groups = "drop") |>
-  rbind(pcoa_df_pp2zp |> select(type, predator, season, Axis1)) |>
-  make_seasonal_position()
-
-position_fish_avg <- pcoa_df_zp |>
-  group_by(type, predator, season = "annual") |>
-  summarise(Axis1 = mean(Axis1), .groups = "drop") |>
-  rbind(pcoa_df_zp |> select(type, predator, season, Axis1)) |>
-  make_seasonal_position() |>
-  mutate(position_x = 1 - position_x)
-
-position_data_avg <-
-  bind_rows(
-    position_pp |> filter(season == "Spring") |> select(-season),
-    position_zp_avg |>
-      mutate(position_y = 2) |>
-      filter(season == "annual") |>
-      select(-season),
-    position_fish_avg |>
-      mutate(position_y = 3) |>
-      filter(season == "annual") |>
-      select(-season)
-  ) |>
-  mutate(
-    predator = factor(predator, levels = node_data$node_name)
-  )
-
-food_web_annual(selectivity = F) /
-  food_web_annual(selectivity = T)
 # FigS4: Relative contribution of prey for each trophic level, per season ----
 ## With selectivity
 rel_contrib_select <- timeseries_fluxes |>
@@ -1108,12 +1106,44 @@ position_pp <-
   select(predator, position_x) |>
   cross_join(tibble(sample_week = unique(position_zp$sample_week))) |>
   cross_join(tibble(type = c("ambient", "selectivity")))
-position_data <-
-  bind_rows(
-    position_pp |> mutate(position_y = 1),
-    position_zp |> mutate(position_y = 2),
-    position_fish |> mutate(position_y = 3)
-  )
+# Mon Mar 30 13:38:04 2026 ------------------------------
+# Adding jitter for zooplankton and fish under neutral food web
+set.seed(10)
+position_data <- bind_rows(
+  position_pp |> mutate(position_y = 1),
+  position_zp |>
+    filter(type == 'ambient') |>
+    select(-predator) |>
+    cross_join(tibble(
+      predator = node_data$node_name[node_data$type == 'zooplankton']
+    )) |>
+    mutate(
+      position_x = jitter(position_x, amount = .05),
+      position_y = 2,
+      position_y = jitter(position_y, amount = .1)
+    ) |>
+    bind_rows(
+      position_zp |>
+        filter(type != 'ambient') |>
+        mutate(position_y = 2)
+    ),
+  position_fish |>
+    filter(type == 'ambient') |>
+    select(-predator) |>
+    cross_join(tibble(
+      predator = node_data$node_name[node_data$type == 'fish']
+    )) |>
+    mutate(
+      position_x = jitter(position_x, amount = .05),
+      position_y = 3,
+      position_y = jitter(position_y, amount = .1)
+    ) |>
+    bind_rows(
+      position_fish |>
+        filter(type != 'ambient') |>
+        mutate(position_y = 3)
+    )
+)
 
 plots <-
   c(
@@ -1397,29 +1427,25 @@ Fig5b <-
     ),
     TL = factor(TL, levels = c("phytoplankton", "zooplankton", "fish"))
   ) |>
+  filter(p_adj <= .05) |>
   ggplot(aes(
     x = z,
     y = value,
     col = node_name,
-    fill = node_name,
-    linetype = p_adj_sig,
-    alpha = p_adj_sig
+    fill = node_name
   )) +
-  geom_point(col = 1, shape = 21, aes(size = p_adj_sig)) +
+  geom_point(col = 1, shape = 21) +
   geom_smooth(method = "lm", se = F, formula = 'y ~ x') +
   facet_grid(TL ~ parameter) +
-  scale_linetype_manual(values = c("*" = 1, "." = 2, " " = NA)) +
-  scale_alpha_manual(values = c(1, 0.4)) +
-  scale_size_manual(values = c(2, 1)) +
   scale_fill_manual(values = color_mapping) +
   scale_color_manual(values = color_mapping)
-Fig5 <- Fig5a + Fig5b
+Fig5 <- Fig5a / Fig5b
 ggsave(
   plot = Fig5,
   filename = file.path("output", "figure", "fig5.pdf"),
   dpi = 500,
-  width = 15,
-  height = 5
+  width = 7,
+  height = 8
 )
 # Fig S7 - S8: all correlations -----
 FigS7 <-
@@ -1470,11 +1496,12 @@ FigS7 <-
       select(node_name, parameter, estimate, p_adj) |>
       unique(),
     mapping = aes(
-      x = -.5,
-      y = 2,
-      label = paste0("rho = ", round(estimate, 2), "\nP = ", round(p_adj, 3))
+      x = 0,
+      y = 2.2,
+      label = paste0("rho = ", round(estimate, 2), "; P = ", round(p_adj, 3))
     ),
-    inherit.aes = FALSE
+    inherit.aes = FALSE,
+    size = 2.7
   ) +
   theme(legend.position = "none") +
   labs(
@@ -1536,11 +1563,12 @@ FigS8 <-
       select(node_name, parameter, estimate, p_adj) |>
       unique(),
     mapping = aes(
-      x = -.5,
-      y = 2,
-      label = paste0("rho = ", round(estimate, 2), "\nP = ", round(p_adj, 3))
+      x = 0,
+      y = 2.2,
+      label = paste0("rho = ", round(estimate, 2), "; P = ", round(p_adj, 3))
     ),
-    inherit.aes = FALSE
+    inherit.aes = FALSE,
+    size = 2.7
   ) +
   theme(legend.position = "none") +
   labs(
@@ -1708,6 +1736,7 @@ message(
   percent_tot |> pull(percent) |> max() |> round(1),
   "% reached the three fish nodes"
 )
+
 # Fig S2 - 3: Impact on forage ratios on the fluxes ----
 message("Generating Sup. Fig. S2 & S3")
 # Impact of forage ratios

@@ -270,17 +270,6 @@ food_web_fig2 <- function(s = "Summer", selectivity = F) {
     rename(name = predator) |>
     filter(season == s, type == t_val)
 
-  if (!selectivity) {
-    point_position <- point_position |>
-      mutate(
-        name = case_when(
-          position_y == 2 ~ "zooplankton",
-          position_y == 3 ~ "fish",
-          TRUE ~ name
-        )
-      )
-  }
-
   # Base filtering
   fw <- data_src |>
     filter(
@@ -300,22 +289,7 @@ food_web_fig2 <- function(s = "Summer", selectivity = F) {
   } else {
     fw <- fw |>
       group_by(predator, prey, station, season, year = year(sample_week)) |>
-      summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop") |>
-      mutate(
-        predator = case_when(
-          predator %in% node_data$node_name[node_data$type == "fish"] ~ "fish",
-          predator %in% node_data$node_name[node_data$type == "zooplankton"] ~
-            "zooplankton",
-          TRUE ~ predator
-        ),
-        prey = case_when(
-          prey %in% node_data$node_name[node_data$type == "zooplankton"] ~
-            "zooplankton",
-          TRUE ~ prey
-        )
-      ) |>
-      group_by(predator, prey, station, season, year) |>
-      summarise(flux = sum(flux, na.rm = TRUE), .groups = "drop_last") |>
+      summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop_last") |>
       summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
   }
 
@@ -335,10 +309,10 @@ food_web_fig2 <- function(s = "Summer", selectivity = F) {
       size = 5
     ) +
     scale_fill_manual(
-      values = c(color_mapping, zooplankton = "#fe9929", fish = "#feedde")
+      values = c(color_mapping)
     ) +
-    scale_edge_width(range = c(.1, 3), limits = c(0, sqrt(.5))) +
-    coord_fixed(ratio = 1 / 2) +
+    scale_edge_width(range = c(.1, 1), limits = c(0, sqrt(.15))) +
+    coord_fixed(ratio = 1 / 2, xlim = c(-0.1, 1.1), ylim = c(0.9, 3.2)) +
     facet_grid(. ~ season) +
     theme(
       axis.text.x = element_blank(),
@@ -348,93 +322,6 @@ food_web_fig2 <- function(s = "Summer", selectivity = F) {
     labs(x = NULL, y = NULL)
 }
 
-# Similar but for annual averages
-food_web_annual <- function(selectivity = TRUE) {
-  # Select correct data and type value
-  data_src <- if (selectivity) timeseries_fluxes else timeseries_null
-  t_val <- if (selectivity) "selectivity" else "ambient"
-
-  # Point positions (shared except optional recode)
-  point_position <- position_data_avg |>
-    rename(name = predator) |>
-    filter(type == t_val)
-
-  if (!selectivity) {
-    point_position <- point_position |>
-      mutate(
-        name = case_when(
-          position_y == 2 ~ "zooplankton",
-          position_y == 3 ~ "fish",
-          TRUE ~ name
-        )
-      )
-  }
-
-  # Base filtering
-  fw <- data_src |>
-    filter(
-      station == "BY31 LANDSORTSDJ",
-      isoweek(sample_week) %in% 2:51,
-      year(sample_week) %in% 2008:2023
-    ) |>
-    add_season()
-
-  # Summaries differ slightly by branch
-  if (selectivity) {
-    fw <- fw |>
-      group_by(predator, prey, station, year) |>
-      summarise(flux = mean(mean, na.rm = TRUE), .groups = "drop_last") |>
-      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
-  } else {
-    fw <- fw |>
-      group_by(predator, prey, station, year = year(sample_week)) |>
-      summarise(flux = mean(flux, na.rm = TRUE), .groups = "drop") |>
-      mutate(
-        predator = case_when(
-          predator %in% node_data$node_name[node_data$type == "fish"] ~ "fish",
-          predator %in% node_data$node_name[node_data$type == "zooplankton"] ~
-            "zooplankton",
-          TRUE ~ predator
-        ),
-        prey = case_when(
-          prey %in% node_data$node_name[node_data$type == "zooplankton"] ~
-            "zooplankton",
-          TRUE ~ prey
-        )
-      ) |>
-      group_by(predator, prey, station, year) |>
-      summarise(flux = sum(flux, na.rm = TRUE), .groups = "drop_last") |>
-      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
-  }
-
-  # Build graph
-  g <- fw |>
-    as_tbl_graph() |>
-    activate(nodes) |>
-    left_join(point_position, by = join_by(name))
-
-  # Plot
-  ggraph(g, layout = "manual", x = position_x, y = position_y) +
-    geom_edge_link(aes(edge_width = sqrt(flux_avg))) +
-    geom_point(
-      data = point_position,
-      aes(x = position_x, y = position_y, fill = name),
-      shape = 21,
-      size = 5
-    ) +
-    scale_fill_manual(
-      values = c(color_mapping, zooplankton = "#fe9929", fish = "#feedde")
-    ) +
-    scale_edge_width(range = c(.1, 3), limits = c(0, sqrt(.5))) +
-    coord_fixed(ratio = 1 / 2) +
-    #    facet_grid(. ~ season) +
-    theme(
-      axis.text.x = element_blank(),
-      axis.ticks.x = element_blank(),
-      legend.position = "right"
-    ) +
-    labs(x = NULL, y = NULL)
-}
 # Same but for fig: 1
 # select first and last date:
 make_position_fig1 <- function(df) {
@@ -447,7 +334,7 @@ make_position_fig1 <- function(df) {
     summarise(position_x = mean(Axis1), .groups = "drop")
 }
 #plot 4 food webs (2 dates with and without selectivity)
-food_web_fig1 <- function(first = FALSE, selectivity = TRUE) {
+food_web_fig1 <- function(first = FALSE, selectivity = FALSE) {
   all_weeks <- position_data |> pull(sample_week) |> unique()
   date <- if (first) min(all_weeks) else max(all_weeks)
   # Select correct data and type value
@@ -458,17 +345,6 @@ food_web_fig1 <- function(first = FALSE, selectivity = TRUE) {
   point_position <- position_data |>
     rename(name = predator) |>
     filter(sample_week == date, type == t_val)
-
-  if (!selectivity) {
-    point_position <- point_position |>
-      mutate(
-        name = case_when(
-          position_y == 2 ~ "zooplankton",
-          position_y == 3 ~ "fish",
-          TRUE ~ name
-        )
-      )
-  }
 
   # Base filtering
   fw <- data_src |>
@@ -486,22 +362,7 @@ food_web_fig1 <- function(first = FALSE, selectivity = TRUE) {
       select(predator, prey, station, sample_week, "flux_avg" = mean)
   } else {
     fw <- fw |>
-      mutate(
-        predator = case_when(
-          predator %in% node_data$node_name[node_data$type == "fish"] ~ "fish",
-          predator %in% node_data$node_name[node_data$type == "zooplankton"] ~
-            "zooplankton",
-          TRUE ~ predator
-        ),
-        prey = case_when(
-          prey %in% node_data$node_name[node_data$type == "zooplankton"] ~
-            "zooplankton",
-          TRUE ~ prey
-        )
-      ) |>
-      group_by(predator, prey, station, sample_week) |>
-      summarise(flux = sum(flux, na.rm = TRUE), .groups = "drop_last") |>
-      summarise(flux_avg = mean(flux, na.rm = TRUE), .groups = "drop")
+      select(predator, prey, station, sample_week, "flux_avg" = flux)
   }
 
   # Build graph
@@ -521,10 +382,10 @@ food_web_fig1 <- function(first = FALSE, selectivity = TRUE) {
       size = 5
     ) +
     scale_fill_manual(
-      values = c(color_mapping, zooplankton = "#fe9929", fish = "#feedde")
+      values = c(color_mapping)
     ) +
-    scale_edge_width(range = c(.1, 3), limits = c(0, sqrt(.5))) +
-    coord_fixed(ratio = 1 / 2) +
+    scale_edge_width(range = c(.1, 1), limits = c(0, sqrt(.15))) +
+    coord_fixed(ratio = 1 / 2, xlim = c(-0.1, 1.1), ylim = c(0.9, 3.2)) +
     facet_grid(. ~ sample_week) +
     theme(
       axis.text.x = element_blank(),
@@ -533,6 +394,7 @@ food_web_fig1 <- function(first = FALSE, selectivity = TRUE) {
     ) +
     labs(x = NULL, y = NULL)
 }
+
 # Network Metrics ----
 # Function from https://doi.org/10.1111/1365-2656.13447
 lw <- function(fluxes, loop = FALSE, parameter = "connectance") {
@@ -595,8 +457,12 @@ lw <- function(fluxes, loop = FALSE, parameter = "connectance") {
   # weighted quantitative Vulnerability
   lwV <- sum(sum.out * N.con / sum(W.net))
 
-  if (parameter == "connectance") return(lwC)
-  if (parameter == "generality") return(lwG)
+  if (parameter == "connectance") {
+    return(lwC)
+  }
+  if (parameter == "generality") {
+    return(lwG)
+  }
   if (parameter == "vulnerability") return(lwV)
 }
 # Over the entire timeseries
