@@ -901,21 +901,29 @@ position_pp <-
 
 # Mon Mar 30 11:41:19 2026 ------------------------------
 # Add some jitter for the fish and zooplankton in the neutral model
-set.seed(10)
+# Tue Mar 31 16:41:54 2026 ------------------------------
+# make so that the jitter is always the same for each node, independent of the season
+set.seed(102)
 position_data <-
   bind_rows(
     position_pp,
     position_zp |>
       filter(type == 'ambient') |>
       select(-predator) |>
-      cross_join(tibble(
-        predator = node_data$node_name[node_data$type == 'zooplankton']
-      )) |>
+      cross_join(
+        tibble(
+          predator = node_data$node_name[node_data$type == 'zooplankton'],
+          jitter = 0
+        ) |>
+          mutate(
+            jitter_y = jitter(jitter, amount = .12),
+            jitter_x = jitter(jitter, amount = .07)
+          )
+      ) |>
       group_by(type, season) |>
       mutate(
-        position_x = jitter(position_x, amount = .05),
-        position_y = 2,
-        position_y = jitter(position_y, amount = .15)
+        position_x = position_x + jitter_x,
+        position_y = 2 + jitter_y
       ) |>
       ungroup() |>
       bind_rows(
@@ -926,14 +934,20 @@ position_data <-
     position_fish |>
       filter(type == 'ambient') |>
       select(-predator) |>
-      cross_join(tibble(
-        predator = node_data$node_name[node_data$type == 'fish']
-      )) |>
+      cross_join(
+        tibble(
+          predator = node_data$node_name[node_data$type == 'fish'],
+          jitter = 0
+        ) |>
+          mutate(
+            jitter_y = jitter(jitter, amount = .1),
+            jitter_x = jitter(jitter, amount = .05)
+          )
+      ) |>
       group_by(type, season) |>
       mutate(
-        position_x = jitter(position_x, amount = .05),
-        position_y = 3,
-        position_y = jitter(position_y, amount = .15)
+        position_x = position_x + jitter_x,
+        position_y = 3 + jitter_y
       ) |>
       ungroup() |>
       bind_rows(
@@ -1104,23 +1118,38 @@ position_pp <-
   pcoa_workflow$pp2zp$envfit |>
   mutate(predator = prey, position_x = scales::rescale(Axis1, c(0, 1))) |>
   select(predator, position_x) |>
+  mutate(
+    position_y = case_when(
+      predator == "Peridiniales" ~ 1.02,
+      predator == "Thalassiosirales" ~ .98,
+      .default = 1
+    )
+  ) |>
   cross_join(tibble(sample_week = unique(position_zp$sample_week))) |>
   cross_join(tibble(type = c("ambient", "selectivity")))
 # Mon Mar 30 13:38:04 2026 ------------------------------
 # Adding jitter for zooplankton and fish under neutral food web
-set.seed(10)
+# Tue Mar 31 16:41:54 2026 ------------------------------
+# make so that the jitter is always the same for each node, independent of the season
+set.seed(102)
 position_data <- bind_rows(
-  position_pp |> mutate(position_y = 1),
+  position_pp,
   position_zp |>
     filter(type == 'ambient') |>
     select(-predator) |>
-    cross_join(tibble(
-      predator = node_data$node_name[node_data$type == 'zooplankton']
-    )) |>
+    cross_join(
+      tibble(
+        predator = node_data$node_name[node_data$type == 'zooplankton'],
+        jitter = 0
+      ) |>
+        mutate(
+          jitter_y = jitter(jitter, amount = .12),
+          jitter_x = jitter(jitter, amount = .07)
+        )
+    ) |>
     mutate(
-      position_x = jitter(position_x, amount = .05),
-      position_y = 2,
-      position_y = jitter(position_y, amount = .1)
+      position_x = position_x + jitter_x,
+      position_y = 2 + jitter_y
     ) |>
     bind_rows(
       position_zp |>
@@ -1130,13 +1159,19 @@ position_data <- bind_rows(
   position_fish |>
     filter(type == 'ambient') |>
     select(-predator) |>
-    cross_join(tibble(
-      predator = node_data$node_name[node_data$type == 'fish']
-    )) |>
+    cross_join(
+      tibble(
+        predator = node_data$node_name[node_data$type == 'fish'],
+        jitter = 0
+      ) |>
+        mutate(
+          jitter_y = jitter(jitter, amount = .1),
+          jitter_x = jitter(jitter, amount = .05)
+        )
+    ) |>
     mutate(
-      position_x = jitter(position_x, amount = .05),
-      position_y = 3,
-      position_y = jitter(position_y, amount = .1)
+      position_x = position_x + jitter_x,
+      position_y = 3 + jitter_y
     ) |>
     bind_rows(
       position_fish |>
