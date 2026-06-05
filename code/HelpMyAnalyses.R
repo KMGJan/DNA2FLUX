@@ -260,7 +260,7 @@ make_seasonal_position <- function(df) {
 }
 
 #Plot the food web for figure 2
-food_web_fig2 <- function(s = "Summer", selectivity = F) {
+food_web_fig2 <- function(s = "Productive", selectivity = F) {
   # Select correct data and type value
   data_src <- if (selectivity) timeseries_fluxes else timeseries_null
   t_val <- if (selectivity) "selectivity" else "ambient"
@@ -277,8 +277,12 @@ food_web_fig2 <- function(s = "Summer", selectivity = F) {
       isoweek(sample_week) %in% 2:51,
       year(sample_week) %in% 2008:2023
     ) |>
-    add_season() |>
-    filter(season == s)
+    add_season()
+  if (s == "Productive") {
+    fw <- fw |> filter(season != "Winter") |> mutate(season = "Productive")
+  } else {
+    fw <- fw |> filter(season == s)
+  }
 
   # Summaries differ slightly by branch
   if (selectivity) {
