@@ -1015,7 +1015,8 @@ ggsave(
 )
 # FigS4: Relative contribution of prey for each trophic level, per season ----
 ## With selectivity
-rel_contrib_select <- timeseries_fluxes |>
+rel_contrib_select <-
+  timeseries_fluxes |>
   filter(
     station == "BY31 LANDSORTSDJ",
     isoweek(sample_week) %in% 2:51,
@@ -1044,7 +1045,7 @@ rel_contrib_select <- timeseries_fluxes |>
     timeseries_fluxes |>
       filter(
         station == "BY31 LANDSORTSDJ",
-        isoweek(sample_week) %in% 2:51,
+        isoweek(sample_week) %in% 11:48,
         year(sample_week) %in% 2008:2023
       ) |>
 
@@ -1069,6 +1070,8 @@ rel_contrib_select <- timeseries_fluxes |>
       )
   ) |>
   ungroup()
+
+
 ## Withoutselectivity
 rel_contrib_Noselect <-
   timeseries_null |>
@@ -1100,7 +1103,7 @@ rel_contrib_Noselect <-
     timeseries_null |>
       filter(
         station == "BY31 LANDSORTSDJ",
-        isoweek(sample_week) %in% 2:51,
+        isoweek(sample_week) %in% 11:48,
         year(sample_week) %in% 2008:2023
       ) |>
       group_by(predator, prey, station, year = year(sample_week)) |>
@@ -1123,6 +1126,7 @@ rel_contrib_Noselect <-
       ) |>
       ungroup()
   )
+
 # Plot
 FigS4 <- rel_contrib_Noselect |>
   mutate(selectivity = F) |>
@@ -1320,6 +1324,55 @@ ggsave(
   width = 5,
   height = 7
 )
+# Wed Jun 24 08:48:24 2026 ------------------------------
+network_temp <- network_metrics_df |>
+  pivot_longer(2:4, values_to = "values", names_to = "parameter") |>
+  filter(season != 'Winter') |>
+  group_by(parameter, season, year = year(sample_week)) |>
+  summarise(metrics = mean(values), .groups = 'drop') |>
+  left_join(df_test_temperature, by = join_by(year)) |>
+  mutate(group = paste(season, parameter, sep = '_'))
+
+run_model_workflow(
+  df = network_temp,
+  group_var = group,
+  formula_expr = "metrics ~ z",
+  filename_suffix = "_vs_temperature_anomalie.pdf",
+  plot_title = "network metrics vs temperature anomalie"
+) |>
+  filter(term == "slope") |>
+  ungroup() |>
+  mutate(
+    p_adj = p.adjust(p.value, method = "fdr"),
+    p_adj_sig = case_when(
+      p_adj <= 0.05 ~ "< 0.05",
+      p_adj <= 0.1 ~ "< 0.1",
+      TRUE ~ "> 0.1"
+    ),
+    p_adj_sig = factor(p_adj_sig, levels = c("< 0.05", "< 0.1", "> 0.1"))
+  ) |>
+  select(
+    group,
+    model,
+    term,
+    estimate,
+    r.squared,
+    p.value,
+    p_adj,
+    p_adj_sig
+  )
+
+network_temp |>
+  mutate(
+    season = factor(season, levels = c('Spring', 'Summer', 'Fall', 'Winter'))
+  ) |>
+  ggplot(aes(x = z, y = metrics)) +
+  geom_smooth(method = 'lm', se = T, col = 'black') +
+  geom_point(shape = 21, size = 2, fill = 'white') +
+  facet_grid(parameter ~ season, scales = 'free') +
+
+  labs(x = 'temperature anomalie (z-score)')
+
 
 # Fig. 5: Warming impacts on diet overlap ----
 message("Fig. 5 how warming impacts diet overlap?")
@@ -1789,7 +1842,8 @@ mod_longterm_summary <- run_model_workflow(
     p_adj_sig
   ) |>
   mutate(r.squared = round(r.squared, 3))
-
+# Wed Jun 24 11:02:11 2026 ------------------------------
+# Add fish biomass
 FigS1b <-
   df_test_longterm |>
   left_join(mod_longterm_summary, by = join_by(group)) |>
@@ -1799,7 +1853,7 @@ FigS1b <-
       levels = c('standing_biomass', 'outgoing_flux', 'predation_pressure')
     )
   ) |>
-  filter(trophic_level != 'fish') |>
+  #filter(trophic_level = 'fish') |>
   ggplot(aes(
     x = z,
     y = z_param,
