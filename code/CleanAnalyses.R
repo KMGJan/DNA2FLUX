@@ -1735,6 +1735,7 @@ df_test_longterm <- longterm_foodweb_df |>
       mutate(z_param = (avg - mean(avg)) / sd(avg))
   ) |>
   left_join(df_test_temperature, by = join_by(year)) |>
+  filter(parameter != 'predation_pressure') |>
   mutate(group = paste(trophic_level, parameter, sep = '_'))
 
 
