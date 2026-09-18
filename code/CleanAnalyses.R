@@ -712,7 +712,8 @@ if (file.exists(file.path("output", "table", "permanova_zp.csv"))) {
   )
   set.seed(100)
   permanova_zp <- adonis2(
-    formula = pcoa_workflow$zp$bray ~ predator + factor(iso_week),
+    formula = vegdist(mat_zp[5:12], method = "bray") ~ predator +
+      factor(iso_week),
     data = mutate(mat_zp, iso_week = isoweek(sample_week)),
     permutations = 999,
     #strata = mat_zp$month,
@@ -737,7 +738,8 @@ if (file.exists(file.path("output", "table", "permanova_pp.csv"))) {
   )
   set.seed(100)
   permanova_pp <- adonis2(
-    formula = pcoa_workflow$pp$bray ~ predator + factor(iso_week),
+    formula = vegdist(mat_pp[5:16], method = "bray") ~ predator +
+      factor(iso_week),
     data = mutate(mat_pp, iso_week = isoweek(sample_week)),
     permutations = 999,
     #strata = mat_pp$month,
@@ -750,6 +752,8 @@ if (file.exists(file.path("output", "table", "permanova_pp.csv"))) {
     as_tibble() |>
     write_csv(file = file.path("output", "table", "permanova_pp.csv"))
 }
+
+mat_zp_complete
 # Diet overlap ----
 message("Fig. 3d-e, diet overlap over time")
 inter_overlap_zp <-
