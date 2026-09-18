@@ -74,6 +74,7 @@ smhi_stations <-
     file.path("data", "processed", "shark", "phytoplankton.csv"),
     show_col_types = FALSE
   ) |>
+  separate(col = station_name, into = c("station_name", "suffix"), sep = " ") |>
   select(station_name, sample_latitude_dd, sample_longitude_dd) |>
   unique() |>
   slice(1:4)
@@ -172,12 +173,13 @@ map <-
     color = "black"
   ) +
   # Add plankton sampling
-  ggsflabel::geom_sf_text_repel(
+  ggsflabel::geom_sf_label_repel(
     data = smhi_shp,
     mapping = aes(label = station_name),
-    seed = 10,
+    seed = 102,
     force = 100,
-    col = "#235452"
+    col = "#235452",
+    fill = "white"
   ) +
   geom_sf(
     data = smhi_shp,
